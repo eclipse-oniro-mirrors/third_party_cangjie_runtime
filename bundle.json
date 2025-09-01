@@ -1,0 +1,31 @@
+{
+    "name": "@ohos/cangjie_runtime",
+    "description": "In the Cangjie programming language, program execution relies on the capabilities of both the runtime and the standard library.",
+    "version": "6.0",
+    "license": "Apache-2.0 with Runtime Library Exceptions",
+    "publishAs": "code-segment",
+    "segment": {
+        "destPath": "third_party/cangjie/cangjie_runtime"
+    },
+    "dirs": {},
+    "scripts": {},
+    "licensePath": "./LICENSE",
+    "component": {
+        "name": "cangjie_runtime",
+        "subsystem": "arkcompiler",
+        "syscap": [],
+        "features": [],
+        "adapted_system_type": [ "standard" ],
+        "rom": "25MB",
+        "ram": "20MB",
+        "deps": {
+            "components": [],
+            "third_party": []
+        },
+        "build": {
+            "sub_component": [],
+            "inner_kits": [],
+            "test": []
+        }
+    }
+}
