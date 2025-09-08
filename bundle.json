@@ -12,7 +12,7 @@
     "licensePath": "./LICENSE",
     "component": {
         "name": "cangjie_runtime",
-        "subsystem": "arkcompiler",
+        "subsystem": "thirdparty",
         "syscap": [],
         "features": [],
         "adapted_system_type": [ "standard" ],
@@ -23,7 +23,9 @@
             "third_party": []
         },
         "build": {
-            "sub_component": [],
+            "sub_component": [
+                "//third_party/cangjie/cangjie_runtime:cangjie_prebuilts_package"
+            ],
             "inner_kits": [],
             "test": []
         }
