@@ -1,0 +1,132 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("platform.gni")
+
+template("cangjie_prebuilts") {
+  _deps = []
+  forward_variables_from(invoker, ["prebuilt_libs_path", "prebuilt_libs", "special_libs", "runtime_libs", "fullname_prebuilt_libs"])
+  foreach(lib_name, prebuilt_libs) {
+    ohos_prebuilt_shared_library("lib${lib_name}") {
+      source = "${prebuilt_libs_path}/lib${lib_name}.${cj_config.dyn_extension}"
+      enable_strip = true
+      install_enable = true
+      part_name = "cangjie_ark_interop"
+      subsystem_name = "arkcompiler"
+      relative_install_dir = "platformsdk/cjsdk"
+      install_images = [ "system" ]
+    }
+    _deps += [":lib${lib_name}"]
+  }
+
+  foreach(lib_name, special_libs) {
+    ohos_prebuilt_shared_library("lib${lib_name}") {
+      source = "${prebuilt_libs_path}/lib${lib_name}.${cj_config.dyn_extension}"
+      enable_strip = true
+      install_enable = true
+      part_name = "cangjie_ark_interop"
+      subsystem_name = "arkcompiler"
+      relative_install_dir = "chipset-sdk"
+      install_images = [ "system" ]
+      innerapi_tags = ["chipsetsdk_indirect"]
+    }
+    _deps += [":lib${lib_name}"]
+  }
+
+  foreach(lib_name, runtime_libs) {
+    ohos_prebuilt_shared_library("lib${lib_name}") {
+      source = "${prebuilt_libs_path}/lib${lib_name}.${cj_config.dyn_extension}"
+      enable_strip = true
+      install_enable = true
+      part_name = "cangjie_ark_interop"
+      subsystem_name = "arkcompiler"
+      relative_install_dir = "platformsdk/cjsdk/runtime"
+      install_images = [ "system" ]
+    }
+    _deps += [":lib${lib_name}"]
+  }
+
+  foreach(full_lib_name, fullname_prebuilt_libs) {
+    ohos_prebuilt_shared_library(full_lib_name) {
+      source = "${prebuilt_libs_path}/${full_lib_name}"
+      enable_strip = true
+      install_enable = true
+      part_name = "cangjie_ark_interop"
+      subsystem_name = "arkcompiler"
+      relative_install_dir = "platformsdk/cjsdk"
+      install_images = [ "system" ]
+    }
+    _deps += [":${full_lib_name}"]
+  }
+
+  group(target_name) {
+    deps = _deps
+  }
+}
+
+cangjie_prebuilts("cangjie_prebuilts_package") {
+  prebuilt_libs_path = "${prebults_cangjie_sdk_linux_x86_64_path}/runtime/lib/${cj_config.platform_target}"
+  prebuilt_libs = [
+    "cangjie-dynamicLoader-opensslFFI",
+    "cangjie-std-argopt",
+    "cangjie-std-ast",
+    "cangjie-std-binary",
+    "cangjie-std-collection.concurrent",
+    "cangjie-std-collection",
+    "cangjie-std-console",
+    "cangjie-std-convert",
+    "cangjie-std-core",
+    "cangjie-std-crypto.cipher",
+    "cangjie-std-crypto.digest",
+    "cangjie-std-crypto",
+    "cangjie-std-database",
+    "cangjie-std-database.sql",
+    "cangjie-std-deriving.api",
+    "cangjie-std-deriving.builtins",
+    "cangjie-std-deriving.impl",
+    "cangjie-std-deriving.resolve",
+    "cangjie-std-env",
+    "cangjie-std-fs",
+    "cangjie-std-io",
+    "cangjie-std-math.numeric",
+    "cangjie-std-math",
+    "cangjie-std-net",
+    "cangjie-std-objectpool",
+    "cangjie-std-overflow",
+    "cangjie-std-posix",
+    "cangjie-std-process",
+    "cangjie-std-random",
+    "cangjie-std-ref",
+    "cangjie-std-reflect",
+    "cangjie-std-regex",
+    "cangjie-std-runtime",
+    "cangjie-std-sort",
+    "cangjie-std-sync",
+    "cangjie-std-time",
+    "cangjie-std",
+    "cangjie-std-unicode"
+  ]
+  special_libs = [
+    "cangjie-demangle"
+  ]
+  runtime_libs = [
+    "cangjie-runtime",
+    "boundscheck"
+  ]
+  fullname_prebuilt_libs = [
+    "libpcre2-8.so",
+    "libpcre2-8.so.0",
+    "libpcre2-8.so.0.13.0",
+  ]
+}
