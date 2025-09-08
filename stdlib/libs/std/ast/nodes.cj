@@ -48,8 +48,8 @@ abstract sealed class Node <: ToTokens {
 }
 
 public class Annotation <: Node {
-    init(at: Token, identifier: Token, lSquare: Token, args: ArrayList<Argument>, rSquare: Token,
-        attrs: Tokens, cond: Option<Expr>) {
+    init(at: Token, identifier: Token, lSquare: Token, args: ArrayList<Argument>, rSquare: Token, attrs: Tokens,
+        cond: Option<Expr>) {
         super()
         at_ = at
         identifier_ = identifier
@@ -140,16 +140,21 @@ public class Annotation <: Node {
         var ret = Tokens()
         ret.append(at_).append(identifier_)
         match (identifier_.value) {
-            case "When" => ret.append(lSquare_).append(cond_.getOrThrow().toTokens()).append(rSquare_).append(Token(NL))
-            case "Attribute" => if (attrs_.size == 0) {
-                ret.append(Token(NL))
-            } else {
-                ret.append(lSquare_)
-                for (i in 0..attrs_.size - 1) {
-                    ret.append(attrs_[i]).append(Token(TokenKind.COMMA))
+            case "When" => ret
+                .append(lSquare_)
+                .append(cond_.getOrThrow().toTokens())
+                .append(rSquare_)
+                .append(Token(NL))
+            case "Attribute" =>
+                if (attrs_.size == 0) {
+                    ret.append(Token(NL))
+                } else {
+                    ret.append(lSquare_)
+                    for (i in 0..attrs_.size - 1) {
+                        ret.append(attrs_[i]).append(Token(TokenKind.COMMA))
+                    }
+                    ret.append(attrs_[attrs_.size - 1]).append(rSquare_).append(Token(NL))
                 }
-                ret.append(attrs_[attrs_.size - 1]).append(rSquare_).append(Token(NL))
-            }
             case _ =>
                 if (!args_.isEmpty()) {
                     ret.append(lSquare_)
@@ -328,14 +333,6 @@ public class GenericConstraint <: Node {
         bitAnds_ = bitAnds
     }
 
-    init(ty: TypeNode, upbound: Token, upperBounds: ArrayList<TypeNode>, bitAnds: Tokens) {
-        super()
-        keyword_ = keyword
-        ty_ = ty
-        upbound_ = upbound
-        upperBounds_ = upperBounds
-        bitAnds_ = bitAnds
-    }
     public init() {}
     private var keyword_: Token = Token()
     private var ty_: TypeNode = RefType()
@@ -489,7 +486,13 @@ public class Body <: Node {
                 ret.append(Token(NL).addPosition(decl.endPos))
             }
         }
-        ret.append(rBrace_).append(Token(TokenKind.NL))
+        var rBracePos = rBrace_.pos
+        // if last pos of ret equal to rbrace.pos, refresh rbrace.pos, for lexer will delete rbrace when see pos equal to node.endPos
+        if (ret[ret.size - 1].pos == rBracePos) {
+            rBracePos = Position(rBracePos.fileID, rBracePos.line, rBracePos.column + 1)
+        }
+        ret.append(((rBrace_)).addPosition(rBracePos))
+        ret.append(Token(NL).addPosition(rBracePos.fileID, rBracePos.line, rBracePos.column + 1))
         return ret
     }
 
@@ -532,10 +535,6 @@ public class Argument <: Node {
         colon_ = colon
         expr_ = expr
         comma_ = comma
-    }
-    init(expr: Expr) {
-        super()
-        expr_ = expr
     }
     public init() {}
     private var inout_: Token = Token()
@@ -822,11 +821,12 @@ public class MatchCase <: Node {
  * Program is the Cangjie source File node.
  */
 public class Program <: Node {
-    init(pkgHeader: PackageHeader, importLists: ArrayList<ImportList>, decls: ArrayList<Decl>) {
+    init(pkgHeader: PackageHeader, importLists: ArrayList<ImportList>, decls: ArrayList<Decl>, ftrDirective: FeaturesDirective) {
         super()
         pkgHeader_ = pkgHeader
         importLists_ = importLists
         decls_ = decls
+        ftrDirective_ = ftrDirective
     }
     public init(inputs: Tokens) {
         try {
@@ -836,15 +836,27 @@ public class Program <: Node {
             this.pkgHeader_ = program.pkgHeader_
             this.importLists_ = program.importLists_
             this.decls_ = program.decls_
+            this.ftrDirective_ = program.ftrDirective_
         } catch (e: ParseASTException) {
             throw ASTException("Cannot construct the 'Program' node.")
         }
     }
     public init() {
     }
+
     private var pkgHeader_: PackageHeader = PackageHeader()
     private var importLists_: ArrayList<ImportList> = ArrayList<ImportList>()
     private var decls_: ArrayList<Decl> = ArrayList<Decl>()
+    private var ftrDirective_: FeaturesDirective = FeaturesDirective()
+
+    public mut prop featuresDirective: FeaturesDirective {
+        get() {
+            ftrDirective_
+        }
+        set(v) {
+            ftrDirective_ = v
+        }
+    }
     public mut prop packageHeader: PackageHeader {
         get() {
             pkgHeader_
@@ -870,7 +882,11 @@ public class Program <: Node {
         }
     }
     public func toTokens(): Tokens {
-        var ret = Tokens().append(pkgHeader_)
+        var ret = Tokens()
+        if (!ftrDirective_.isEmpty()) {
+            ret.append(ftrDirective_.toTokens())
+        }
+        ret.append(pkgHeader_)
         if (!importLists_.isEmpty()) {
             ret.append(importLists_.toTokens())
         }
@@ -888,6 +904,7 @@ public class Program <: Node {
         if (v.needBreakTraverse()) {
             return
         }
+        ftrDirective_.traverse(v)
         pkgHeader_.traverse(v)
         for (im in importLists_) {
             im.traverse(v)
@@ -904,6 +921,10 @@ public class Program <: Node {
         if (indent != 0 || beginNode) {
             currentIndent++
         }
+        if (!ftrDirective_.isEmpty()) {
+            ret += getIndent(currentIndent) + "-featuresDirective: "
+            ret += ftrDirective_.dump(currentIndent + 1)
+        }
         ret += getIndent(currentIndent) + "-packageHeader: "
         ret += pkgHeader_.dump(currentIndent + 1)
         for (i in 0..importLists_.size) {
@@ -916,6 +937,179 @@ public class Program <: Node {
         }
         ret += getIndent(indent) + "}\n"
         ret
+    }
+}
+
+public class FeatureId <: Node {
+    init(identifiers: Tokens, dots: Tokens) {
+        super()
+        identifiers_ = identifiers
+        dots_ = dots
+    }
+
+    public init() {}
+    private var identifiers_: Tokens = Tokens()
+    private var dots_: Tokens = Tokens()
+
+    public mut prop identifiers: Tokens {
+        get() {
+            identifiers_
+        }
+        set(v) {
+            checkTokensType(v, IDENTIFIER)
+            identifiers_ = v
+        }
+    }
+    public mut prop dots: Tokens {
+        get() {
+            dots_
+        }
+        set(v) {
+            checkTokensType(v, DOT)
+            dots_ = v
+        }
+    }
+
+    public func toTokens(): Tokens {
+        var ret = Tokens()
+        var idx = 0
+        for (ident in identifiers_) {
+            ret.append(ident)
+            if (idx < dots_.size) {
+                ret.append(dots_[idx])
+                idx++
+            }
+        }
+        return ret
+    }
+
+    public func traverse(v: Visitor): Unit {
+        v.visit(this)
+        return
+    }
+
+    protected func dump(indent: UInt16): String {
+        currentIndent = indent
+        var ret: String = "FeatureId {\n"
+        if (indent != 0 || beginNode) {
+            currentIndent++
+        }
+        var idx = 0
+        for (tkn in identifiers_) {
+            ret += getTokenIndent("-identifier", tkn, currentIndent)
+            if (idx < dots_.size) {
+                ret += getTokenIndent("-dot", dots_[idx], currentIndent)
+                idx++
+            }
+        }
+        ret += getIndent(indent) + "}\n"
+        return ret
+    }
+
+}
+
+public class FeaturesDirective <: Node {
+    init(keyword: Token, commas: Tokens, content: ArrayList<FeatureId>) {
+        super()
+        keyword_ = keyword
+        commas_ = commas
+        content_ = content
+    }
+    public init (inputs: Tokens) {
+        try {
+            let features = parseProgram(inputs).featuresDirective
+            if (features.content_.isEmpty()) {
+                throw ASTException("Cannot construct the 'FeaturesDirective' node.")
+            }
+            this.begin_ = features.beginPos
+            this.end_ = features.endPos
+            this.keyword_ = features.keyword_
+            this.commas_ = features.commas_
+            this.content_ = features.content_
+        } catch (e: ParseASTException) {
+            throw ASTException("Cannot construct the 'FeaturesDirective' node.")
+        }
+    }
+
+    public init() {}
+    private var keyword_: Token = Token(TokenKind.FEATURES)
+    private var commas_: Tokens = Tokens()
+    private var content_: ArrayList<FeatureId> = ArrayList<FeatureId>()
+
+    public mut prop keyword: Token {
+        get() {
+            keyword_
+        }
+        set(v) {
+            checkTokenType(v, FEATURES)
+            keyword_ = v
+        }
+    }
+    public mut prop commas: Tokens {
+        get() {
+            commas_
+        }
+        set(v) {
+            checkTokensType(v, COMMA)
+            commas_ = v
+        }
+    }
+    public mut prop content: ArrayList<FeatureId> {
+        get() {
+            content_
+        }
+        set(v) {
+            content_ = v
+        }
+    }
+
+    public func toTokens(): Tokens {
+        var ret = Tokens()
+        ret.append(keyword_)
+        var idx = 0
+        for (item in content_) {
+            ret.append(item.toTokens())
+            if (idx < commas_.size) {
+                ret.append(commas_[idx])
+                idx ++
+            }
+        }
+        let endTok = ret[ret.size - 1]
+        let endPos = endTok.pos
+        ret.append(Token(TokenKind.NL).addPosition(endPos.fileID, endPos.line, endPos.column + Int32(endTok.value.size)))
+        return ret
+    }
+
+    public func traverse(v: Visitor): Unit {
+        v.visit(this)
+        for (fc in content_) {
+            fc.traverse(v)
+        }
+        return
+    }
+
+    protected func dump(indent: UInt16): String {
+        currentIndent = indent
+        if (indent != 0 || beginNode) {
+            currentIndent++
+        }
+        var idx = 0
+        var ret: String = "FeaturesDirective {\n"
+        ret += getTokenIndent("-keyword", keyword_, currentIndent)
+        for (item in content_) {
+            ret += getIndent(currentIndent) + "-featureId: "
+            ret += item.dump(currentIndent + 1)
+            if (idx < commas_.size) {
+                ret += getTokenIndent("-comma", commas_[idx], currentIndent + 1)
+                idx++
+            }
+        }
+        ret += getIndent(indent) + "}\n"
+        return ret
+    }
+
+    public func isEmpty(): Bool {
+        return content_.isEmpty()
     }
 }
 
@@ -1382,7 +1576,8 @@ public class Constructor <: Node {
         annotations_ = annotations
         identifier_ = identifier
     }
-    init(annotations: ArrayList<Annotation>, identifier: Token, lParen: Token, params: ArrayList<TypeNode>, commas: Tokens, rParen: Token) {
+    init(annotations: ArrayList<Annotation>, identifier: Token, lParen: Token, params: ArrayList<TypeNode>,
+        commas: Tokens, rParen: Token) {
         super()
         annotations_ = annotations
         identifier_ = identifier
@@ -1448,8 +1643,7 @@ public class Constructor <: Node {
         if (!params_.isEmpty()) {
             ret.append(lParen_)
             if (commas_.size == 0) {
-                commas_ = Tokens(
-                    Array(params_.size - 1) {
+                commas_ = Tokens(Array(params_.size - 1) {
                     i => Token(TokenKind.COMMA).addPosition(
                         params_[i].endPos.fileID,
                         params_[i].endPos.line,
@@ -1530,7 +1724,7 @@ extend<T> ArrayList<T> <: ToTokens {
             case arguments: ArrayList<Argument> =>
                 for (i in 0..arguments.size) {
                     ret.append(arguments[i].toTokens())
-                    if (ret[ret.size - 1].kind != COMMA && i != arguments.size - 1) {
+                    if (ret.size != 0 && ret[ret.size - 1].kind != COMMA && i != arguments.size - 1) {
                         ret.append(Token(COMMA))
                     }
                 }
@@ -1541,7 +1735,7 @@ extend<T> ArrayList<T> <: ToTokens {
             case funcParams: ArrayList<FuncParam> =>
                 for (i in 0..funcParams.size) {
                     ret.append(funcParams[i].toTokens())
-                    if (ret[ret.size - 1].kind != COMMA && i != funcParams.size - 1) {
+                    if (ret.size != 0 && ret[ret.size - 1].kind != COMMA && i != funcParams.size - 1) {
                         ret.append(Token(COMMA))
                     }
                 }

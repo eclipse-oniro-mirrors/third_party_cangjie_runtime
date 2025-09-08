@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
 # This source file is part of the Cangjie project, licensed under Apache-2.0
 # with Runtime Library Exception.
@@ -6,7 +8,6 @@
 
 # The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
-#!/bin/bash
 set -e
 
 CURRENT_PATH="$(readlink -f "$0")"

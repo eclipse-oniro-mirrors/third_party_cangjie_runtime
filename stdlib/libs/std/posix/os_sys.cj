@@ -52,7 +52,7 @@ public const F_OK: Int32 = 0x0
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "Windows" || os == "macOS"]
+@When[os == "Linux" || os == "Windows" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func access(path: String, mode: Int32): Int32 {
     checkPath(path)
@@ -77,7 +77,7 @@ public func access(path: String, mode: Int32): Int32 {
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "macOS"]
+@When[os == "Linux" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func faccessat(fd: Int32, path: String, mode: Int32, flag: Int32): Int32 {
     checkPath(path)
@@ -98,7 +98,7 @@ public func faccessat(fd: Int32, path: String, mode: Int32, flag: Int32): Int32 
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "Windows" || os == "macOS"]
+@When[os == "Linux" || os == "Windows" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func umask(cmask: UInt32): UInt32 {
     return unsafe { CJ_OS_Umask(cmask) }
@@ -116,7 +116,7 @@ public func umask(cmask: UInt32): UInt32 {
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "macOS"]
+@When[os == "Linux" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func chown(path: String, owner: UInt32, group: UInt32): Int32 {
     checkPath(path)
@@ -140,7 +140,7 @@ public func chown(path: String, owner: UInt32, group: UInt32): Int32 {
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "macOS"]
+@When[os == "Linux" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func fchown(fd: Int32, owner: UInt32, group: UInt32): Int32 {
     return unsafe { CJ_OS_Fchown(fd, owner, group) }
@@ -159,7 +159,7 @@ public func fchown(fd: Int32, owner: UInt32, group: UInt32): Int32 {
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "macOS"]
+@When[os == "Linux" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func lchown(path: String, owner: UInt32, group: UInt32): Int32 {
     checkPath(path)
@@ -185,7 +185,7 @@ public func lchown(path: String, owner: UInt32, group: UInt32): Int32 {
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "macOS"]
+@When[os == "Linux" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func fchownat(fd: Int32, path: String, owner: UInt32, group: UInt32, flag: Int32): Int32 {
     checkPath(path)
@@ -208,7 +208,7 @@ public func fchownat(fd: Int32, path: String, owner: UInt32, group: UInt32, flag
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "Windows" || os == "macOS"]
+@When[os == "Linux" || os == "Windows" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func chmod(path: String, mode: UInt32): Int32 {
     checkPath(path)
@@ -230,7 +230,7 @@ public func chmod(path: String, mode: UInt32): Int32 {
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "macOS"]
+@When[os == "Linux" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func fchmod(fd: Int32, mode: UInt32): Int32 {
     return unsafe { CJ_OS_Fchmod(fd, mode) }
@@ -249,7 +249,7 @@ public func fchmod(fd: Int32, mode: UInt32): Int32 {
  *
  * @since 0.16.5
  */
-@When[os == "Linux" || os == "macOS"]
+@When[os == "Linux" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func fchmodat(fd: Int32, path: String, mode: UInt32, flag: Int32): Int32 {
     checkPath(path)
@@ -270,7 +270,7 @@ public func fchmodat(fd: Int32, path: String, mode: UInt32, flag: Int32): Int32 
  *
  * @since 0.18.5
  */
-@When[os == "Linux" || os == "Windows" || os == "macOS"]
+@When[os == "Linux" || os == "Windows" || os == "macOS" || os == "iOS"]
 @Deprecated
 public func isatty(fd: Int32): Bool {
     return unsafe { CJ_OS_Isatty(fd) }

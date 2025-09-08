@@ -38,11 +38,11 @@ sealed abstract class ConfigurationKey <: Equatable<ConfigurationKey> & Hashable
 
     protected func equals(that: ConfigurationKey): Bool
 
-    public override operator func ==(that: ConfigurationKey): Bool {
+    public override operator func ==(that: ConfigurationKey) {
         equals(that)
     }
 
-    public override operator func !=(that: ConfigurationKey): Bool {
+    public override operator func !=(that: ConfigurationKey) {
         !equals(that)
     }
 }
@@ -211,6 +211,8 @@ public class Configuration <: ToString {
         for ((k, v) in child.storage) {
             if (k.equals(TAGS_CONCAT_KEY)) {
                 // 08.08.2024. This was the only case which had to be merged differently
+                // If you want to add another, then please:
+                // TODO: consider making a merge strategy abstraction for ConfigurationKey
                 let typedV = v as Array<String> ?? Array()
                 let toPut = typedV |> concat(clone.get(KeyTags.tags) ?? Array()) |> collectHashSet
                 clone.storage.add(k, toPut.toArray())

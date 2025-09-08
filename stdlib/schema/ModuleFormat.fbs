@@ -358,6 +358,8 @@ enum ExprKind : uint16 {
   VJPExpr,
   ForInExpr,
   IfAvailableExpr,
+  PerformExpr,
+  ResumeExpr,
 }
 
 enum CallKind : uint8 {
@@ -509,6 +511,7 @@ enum PatternKind:int8 {
   TypePattern,
   EnumPattern,
   ExceptTypePattern,
+  CommandTypePattern,
 }
 
 table Pattern {

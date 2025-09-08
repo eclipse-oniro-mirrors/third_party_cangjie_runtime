@@ -52,6 +52,7 @@ namespace MapleRuntime {
 
 extern "C" ObjRef MCC_NewObject(const TypeInfo* klass, MSize size)
 {
+    DCHECK(size == (AlignUp<size_t>(klass->GetInstanceSize(), 8) + TYPEINFO_PTR_SIZE)); // 8-byte alignment
     ObjRef obj = ObjectManager::NewObject(klass, size);
     if (obj == nullptr) {
         ExceptionManager::CheckAndThrowPendingException("ObjectManager::NewObject return nullptr");
@@ -61,6 +62,7 @@ extern "C" ObjRef MCC_NewObject(const TypeInfo* klass, MSize size)
 
 extern "C" ObjRef MCC_NewWeakRefObject(const TypeInfo* klass, MSize size)
 {
+    DCHECK(size == (AlignUp<size_t>(klass->GetInstanceSize(), 8) + TYPEINFO_PTR_SIZE)); // 8-byte alignment
     ObjRef obj = ObjectManager::NewWeakRefObject(klass, size);
     if (obj == nullptr) {
         ExceptionManager::CheckAndThrowPendingException("ObjectManager::NewWeakRefObject return nullptr");
@@ -70,6 +72,7 @@ extern "C" ObjRef MCC_NewWeakRefObject(const TypeInfo* klass, MSize size)
 
 extern "C" ObjRef MCC_NewPinnedObject(const TypeInfo* klass, MSize size, bool isFinalizer)
 {
+    DCHECK(size == (AlignUp<size_t>(klass->GetInstanceSize(), 8) + TYPEINFO_PTR_SIZE)); // 8-byte alignment
     ObjRef obj = ObjectManager::NewPinnedObject(klass, size, isFinalizer);
     if (obj == nullptr) {
         ExceptionManager::CheckAndThrowPendingException("ObjectManager::NewPinnedObject return nullptr");
@@ -79,6 +82,7 @@ extern "C" ObjRef MCC_NewPinnedObject(const TypeInfo* klass, MSize size, bool is
 
 extern "C" ObjRef MCC_NewFinalizer(const TypeInfo* klass, MSize size)
 {
+    DCHECK(size == (AlignUp<size_t>(klass->GetInstanceSize(), 8) + TYPEINFO_PTR_SIZE)); // 8-byte alignment
     ObjRef obj = ObjectManager::NewFinalizer(klass, size);
     if (obj == nullptr) {
         ExceptionManager::CheckAndThrowPendingException("ObjectManager::NewFinalizer return nullptr");
@@ -147,6 +151,10 @@ extern "C" ArrayRef MCC_NewArray64(const TypeInfo* arrayInfo, MIndex nElems)
 
 extern "C" void MCC_WriteRefField(const ObjectPtr ref, const ObjectPtr obj, RefField<false>* field)
 {
+#ifdef __arm__
+    field->SetTargetObject(ref);
+    return;
+#endif
     if (!Heap::IsHeapAddress(obj)) {
         field->SetTargetObject(ref);
         return;
@@ -162,17 +170,29 @@ extern "C" void MCC_WriteStructField(ObjectPtr obj, MAddress dst, size_t dstLen,
                      "memcpy_s failed");
         return;
     }
+#ifdef __arm__
+    CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(dst), dstLen, reinterpret_cast<void*>(src), srcLen) == EOK, "memcpy_s failed on arm32");
+    return;
+#endif
     Heap::GetBarrier().WriteStruct(obj, dst, dstLen, src, srcLen);
 }
 
 extern "C" void MCC_WriteStaticRef(const ObjectPtr ref, RefField<false>* field)
 {
+#ifdef __arm__
+    field->SetTargetObject(ref);
+    return;
+#endif
     Heap::GetBarrier().WriteStaticRef(*field, ref);
 }
 
 extern "C" void MCC_WriteStaticStruct(MAddress dst, size_t dstLen, MAddress src, size_t srcLen, const GCTib gcTib)
 {
     CHECK_DETAIL((dst != 0u && src != 0u), "MCC_WriteStaticStruct wrong parameter, dst: %p src: %p", dst, src);
+#ifdef __arm__
+    CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(dst), dstLen, reinterpret_cast<void*>(src), srcLen) == EOK, "memcpy_s failed on arm32");
+    return;
+#endif
     Heap::GetBarrier().WriteStaticStruct(dst, dstLen, src, srcLen, gcTib);
 }
 
@@ -191,6 +211,11 @@ extern "C" void CJ_MCC_ArrayCopyRef(const ObjectPtr dstObj, MAddress dstField, s
         return;
     }
     MRT_ASSERT(dstSize <= SECUREC_MEM_MAX_LEN, "size too big in CJ_MCC_ArrayCopy");
+#ifdef __arm__
+    CHECK_DETAIL(memmove_s(reinterpret_cast<void*>(dstField), dstSize, reinterpret_cast<void*>(srcField), srcSize) ==
+                           EOK, "memmove_s failed");
+    return;
+#endif
     Heap::GetBarrier().CopyRefArray(dstObj, dstField, dstSize, srcObj, srcField, srcSize);
 }
 
@@ -201,28 +226,52 @@ extern "C" void CJ_MCC_ArrayCopyStruct(const ObjectPtr dstObj, MAddress dstField
         return;
     }
     MRT_ASSERT(dstSize <= SECUREC_MEM_MAX_LEN, "size too big in CJ_MCC_ArrayCopy");
+#ifdef __arm__
+    CHECK_DETAIL(memmove_s(reinterpret_cast<void*>(dstField), dstSize, reinterpret_cast<void*>(srcField), srcSize) ==
+                           EOK, "memmove_s failed");
+    return;
+#endif
     Heap::GetBarrier().CopyStructArray(dstObj, dstField, dstSize, srcObj, srcField, srcSize);
 }
 extern "C" void MCC_AtomicWriteReference(const ObjectPtr ref, const ObjectPtr obj, RefField<true>* field,
                                          MemoryOrder order)
 {
+#ifdef __arm__
+    field->SetTargetObject(ref, order);
+    return;
+#endif
     Heap::GetBarrier().AtomicWriteReference(obj, *field, ref, order);
 }
 
 extern "C" ObjectPtr MCC_AtomicReadReference(const ObjectPtr obj, RefField<true>* field, MemoryOrder order)
 {
+#ifdef __arm__
+    RefField<false> tmpField(field->GetFieldValue(order));
+    return tmpField.GetTargetObject();
+#endif
     return Heap::GetBarrier().AtomicReadReference(obj, *field, order);
 }
 
 extern "C" ObjectPtr MCC_AtomicSwapReference(const ObjectPtr ref, const ObjectPtr obj, RefField<true>* field,
                                              MemoryOrder order)
 {
+#ifdef __arm__
+    MAddress oldValue = field->Exchange(ref, order);
+    RefField<> oldField(oldValue);
+    return oldField.GetTargetObject();
+#endif
     return Heap::GetBarrier().AtomicSwapReference(obj, *field, ref, order);
 }
 
 extern "C" bool MCC_AtomicCompareSwapReference(const ObjectPtr oldRef, const ObjectPtr newRef, const ObjectPtr obj,
                                                RefField<true>* field, MemoryOrder succOrder, MemoryOrder failOrder)
 {
+#ifdef __arm__
+    MAddress oldFieldValue = field->GetFieldValue(std::memory_order_seq_cst);
+    RefField<false> oldField(oldFieldValue);
+    oldField.GetTargetObject();
+    return field->CompareExchange(oldRef, newRef, succOrder, failOrder);
+#endif
     return Heap::GetBarrier().CompareAndSwapReference(obj, *field, oldRef, newRef, succOrder, failOrder);
 }
 
@@ -590,11 +639,11 @@ extern "C" ObjectPtr MCC_GetSubPackages(PackageInfo* packageInfo, TypeInfo* arra
         rawArrayObj->SetPrimitiveElement(idx, reinterpret_cast<int64_t>(subPackages[idx]));
     }
     U32 size = arrayTi->GetInstanceSize();
-    MObject* obj = ObjectManager::NewObject(arrayTi, MRT_ALIGN(size + sizeof(TypeInfo*), sizeof(TypeInfo*)),
-        AllocType::RAW_POINTER_OBJECT);
+    MSize objSize = MRT_ALIGN(size + TYPEINFO_PTR_SIZE, TYPEINFO_PTR_SIZE);
+    MObject* obj = ObjectManager::NewObject(arrayTi, objSize, AllocType::RAW_POINTER_OBJECT);
     // set rawArray
-    Heap::GetBarrier().WriteReference(obj, obj->GetRefField(sizeof(TypeInfo*)), static_cast<BaseObject*>(rawArrayObj));
-    CJArray* cjArray = reinterpret_cast<CJArray*>(reinterpret_cast<Uptr>(obj) + sizeof(TypeInfo*));
+    Heap::GetBarrier().WriteReference(obj, obj->GetRefField(TYPEINFO_PTR_SIZE), static_cast<BaseObject*>(rawArrayObj));
+    CJArray* cjArray = reinterpret_cast<CJArray*>(reinterpret_cast<Uptr>(obj) + TYPEINFO_PTR_SIZE);
     cjArray->start = 0;
     cjArray->length = subPkgCnt;
     AllocBuffer* buffer = AllocBuffer::GetAllocBuffer();
@@ -761,10 +810,10 @@ extern "C" TypeInfo* MCC_GetOrCreateTypeInfoForReflect(TypeTemplate* tt, void* a
     }
 
     Uptr base = reinterpret_cast<Uptr>(&(cjArray->rawPtr->data));
-    void* mem = calloc(len, sizeof(TypeInfo*));
+    void* mem = calloc(len, TYPEINFO_PTR_SIZE);
     TypeInfo** typeInfos = static_cast<TypeInfo**>(mem);
     for (U64 idx = 0; idx < len; ++idx) {
-        typeInfos[idx] = *reinterpret_cast<TypeInfo**>(base + idx * sizeof(TypeInfo*));
+        typeInfos[idx] = *reinterpret_cast<TypeInfo**>(base + idx * TYPEINFO_PTR_SIZE);
     }
     TypeInfo* ti = TypeInfoManager::GetInstance()->GetOrCreateTypeInfo(tt, len, typeInfos);
     free(mem);
@@ -910,11 +959,17 @@ extern "C" void* MCC_GetParameterAnnotations(ParameterInfo* parameterInfo, TypeI
 
 extern "C" ObjectPtr CJ_MCC_ReadRefField(ObjectPtr obj, RefField<false>* field)
 {
+#ifdef __arm__
+    return field->GetTargetObject();
+#endif
     return Heap::GetHeap().GetBarrier().ReadReference(obj, *field);
 }
 
 extern "C" ObjectPtr CJ_MCC_ReadWeakRef(ObjectPtr obj, RefField<false>* field)
 {
+#ifdef __arm__
+    return field->GetTargetObject();
+#endif
     return Heap::GetHeap().GetBarrier().ReadWeakRef(obj, *field);
 }
 extern "C" void CJ_MCC_ReadStructField(MAddress dstPtr, ObjectPtr obj, MAddress srcField, size_t size)
@@ -927,14 +982,26 @@ extern "C" void CJ_MCC_ReadStructField(MAddress dstPtr, ObjectPtr obj, MAddress 
     if (size == 0) {
         return;
     }
+#ifdef __arm__
+    (void)obj;
+    CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(dstPtr), size, reinterpret_cast<void*>(srcField), size) == EOK, "memcpy_s failed on arm32");
+    return;
+#endif
     Heap::GetHeap().GetBarrier().ReadStruct(dstPtr, obj, srcField, size);
 }
 extern "C" ObjectPtr CJ_MCC_ReadStaticRef(RefField<false>* field)
 {
+#ifdef __arm__
+    return field->GetTargetObject();
+#endif
     return Heap::GetHeap().GetBarrier().ReadStaticRef(*field);
 }
 extern "C" void CJ_MCC_ReadStaticStruct(MAddress dstPtr, size_t dstSize, MAddress srcPtr, size_t srcSize, GCTib gctib)
 {
+#ifdef __arm__
+    CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(dstPtr), dstSize, reinterpret_cast<void*>(srcPtr), srcSize) == EOK, "memcpy_s failed on arm32");
+    return;
+#endif
     Heap::GetHeap().GetBarrier().ReadStaticStruct(dstPtr, srcPtr, dstSize, gctib);
 }
 extern "C" void* MCC_GetTypeInfoAnnotations(TypeInfo* cls, TypeInfo* arrayTi) { return cls->GetAnnotations(arrayTi); }
@@ -953,7 +1020,9 @@ extern "C" bool CJ_MCC_IsSubType(TypeInfo* typeInfo, TypeInfo* superTypeInfo)
     if (typeInfo == superTypeInfo) {
         return true;
     }
-    return typeInfo->IsSubType(superTypeInfo);
+    
+    bool isSub = typeInfo->IsSubType(superTypeInfo);
+    return isSub;
 }
 
 static bool IsTupleTypeOf(ObjectPtr obj, TypeInfo* typeInfo, TypeInfo* targetTypeInfo)
@@ -1018,6 +1087,13 @@ extern "C" void CJ_MCC_WriteGeneric(const ObjectPtr obj, void* fieldPtr, const O
     if (src == nullptr || size == 0) {
         return;
     }
+#ifdef __arm__
+    CHECK_DETAIL(memcpy_s(fieldPtr, size,
+                          reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(src) + TYPEINFO_PTR_SIZE),
+                          size) == EOK,
+                 "WriteGeneric memcpy_s failed");
+    return;
+#endif
     Heap::GetBarrier().WriteGeneric(obj, fieldPtr, src, size);
 }
 
@@ -1027,14 +1103,22 @@ extern "C" void CJ_MCC_AssignGeneric(ObjectPtr dst, ObjectPtr src, TypeInfo* typ
     if (instanceSize == 0) {
         return;
     }
+#ifdef __arm__
+    CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(dst) + TYPEINFO_PTR_SIZE),
+                          instanceSize,
+                          reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(src) + TYPEINFO_PTR_SIZE),
+                          instanceSize) == EOK,
+                 "MCC_AssignGeneric memcpy_s failed");
+    return;
+#endif
     if (!typeInfo->HasRefField()) {
-        CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(dst) + sizeof(TypeInfo*)),
+        CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(dst) + TYPEINFO_PTR_SIZE),
                               instanceSize,
-                              reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(src) + sizeof(TypeInfo*)),
+                              reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(src) + TYPEINFO_PTR_SIZE),
                               instanceSize) == EOK,
                      "MCC_AssignGeneric memcpy_s failed");
     } else {
-        MAddress dstAddr = reinterpret_cast<MAddress>(dst) + sizeof(TypeInfo*);
+        MAddress dstAddr = reinterpret_cast<MAddress>(dst) + TYPEINFO_PTR_SIZE;
         Heap::GetBarrier().WriteGeneric(dst, reinterpret_cast<void*>(dstAddr), src, instanceSize);
     }
 }
@@ -1045,15 +1129,21 @@ extern "C" void CJ_MCC_WriteGenericPayload(ObjectPtr dst, MAddress srcField, siz
     if (srcSize == 0) {
         return;
     }
+
     if (!typeInfo->HasRefField()) {
-        CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(dst) + sizeof(TypeInfo*)),
+        CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(dst) + TYPEINFO_PTR_SIZE),
                               GENERIC_PAYLOAD_SIZE,
                               reinterpret_cast<void*>(srcField),
                               srcSize) == EOK,
                      "MCC_WriteGenericPayload memcpy_s failed");
     } else {
-        MAddress dstAddr = reinterpret_cast<MAddress>(dst) + sizeof(TypeInfo*);
+        MAddress dstAddr = reinterpret_cast<MAddress>(dst) + TYPEINFO_PTR_SIZE;
+#ifdef __arm__
+        CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(dstAddr), srcSize, reinterpret_cast<void*>(srcField), srcSize) == EOK,
+                     "memcpy_s failed");
+#else
         Heap::GetBarrier().WriteStruct(dst, dstAddr, srcSize, srcField, srcSize);
+#endif
     }
 }
 
@@ -1062,6 +1152,12 @@ extern "C" void CJ_MCC_ReadGeneric(const ObjectPtr dstPtr, ObjectPtr obj, void* 
     if (size == 0) {
         return;
     }
+#ifdef __arm__
+    CHECK_DETAIL(memcpy_s(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(dstPtr) + TYPEINFO_PTR_SIZE),
+                          size, fieldPtr, size) == EOK,
+                 "ReadGeneric memcpy_s failed");
+    return;
+#endif
     Heap::GetBarrier().ReadGeneric(dstPtr, obj, fieldPtr, size);
 }
 
@@ -1089,6 +1185,8 @@ extern "C" ArrayRef MCC_NewArrayGeneric(const TypeInfo* arrayInfo, MIndex nElems
     I8 type = componentTypeInfo->GetType();
     switch (type) {
         case TypeKind::TYPE_KIND_CLASS:
+        case TypeKind::TYPE_KIND_EXPORTED_REF:
+        case TypeKind::TYPE_KIND_FOREIGN_PROXY:
         case TypeKind::TYPE_KIND_WEAKREF_CLASS:
         case TypeKind::TYPE_KIND_INTERFACE:
         case TypeKind::TYPE_KIND_TEMP_ENUM:
@@ -1164,12 +1262,19 @@ extern "C" void CJ_MCC_ArrayCopyGeneric(const ObjectPtr dstObj, MAddress dstFiel
     }
     switch (type) {
         case TypeKind::TYPE_KIND_CLASS:
+        case TypeKind::TYPE_KIND_EXPORTED_REF:
+        case TypeKind::TYPE_KIND_FOREIGN_PROXY:
         case TypeKind::TYPE_KIND_WEAKREF_CLASS:
         case TypeKind::TYPE_KIND_INTERFACE:
         case TypeKind::TYPE_KIND_TEMP_ENUM:
         case TypeKind::TYPE_KIND_RAWARRAY:
         case TypeKind::TYPE_KIND_FUNC: {
+#ifdef __arm__
+            CHECK_DETAIL(memmove_s(reinterpret_cast<void*>(dstField), dstSize, reinterpret_cast<void*>(srcField), srcSize) ==
+                                   EOK, "memmove_s failed");
+#else
             Heap::GetBarrier().CopyRefArray(dstObj, dstField, dstSize, srcObj, srcField, srcSize);
+#endif
             break;
         }
         case TypeKind::TYPE_KIND_UNIT:
@@ -1201,7 +1306,12 @@ extern "C" void CJ_MCC_ArrayCopyGeneric(const ObjectPtr dstObj, MAddress dstFiel
         case TypeKind::TYPE_KIND_TUPLE:
         case TypeKind::TYPE_KIND_STRUCT:
         case TypeKind::TYPE_KIND_ENUM: {
+#ifdef __arm__
+            CHECK_DETAIL(memmove_s(reinterpret_cast<void*>(dstField), dstSize, reinterpret_cast<void*>(srcField), srcSize) ==
+                                   EOK, "memmove_s failed");
+#else
             Heap::GetBarrier().CopyStructArray(dstObj, dstField, dstSize, srcObj, srcField, srcSize);
+#endif
             break;
         }
         default:
@@ -1215,6 +1325,27 @@ extern "C" void CJ_MCC_CopyStructField(BaseObject* dstBase, void* dstField, size
 extern "C" int32_t __ccc_personality_v0() { return 0; }
 // @deprecated
 extern "C" void CJ_MCC_IVCallInstrumentation(TypeInfo* cls, const char* callBaseKey) {}
+
+void CJ_MCC_CrossAccessBarrier(U64 cjExport)
+{
+    Heap::GetHeap().CrossAccessBarrier(cjExport);
+}
+
+U64 CJ_MCC_CreateExportHandle(BaseObject *obj)
+{
+    U64 id = Heap::GetHeap().RegisterExportRoot(obj);
+    return id;
+}
+
+BaseObject* CJ_MCC_GetExportedRef(U64 id)
+{
+    return Heap::GetHeap().GetExportObject(id);
+}
+void CJ_MCC_RemoveExportedRef(U64 id)
+{
+    Heap::GetHeap().RemoveExportObject(id);
+}
+
 
 #if defined(__OHOS__)
 void* ARKTS_CreateEngine = nullptr;

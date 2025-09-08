@@ -382,7 +382,7 @@ sealed abstract class DataStrategyProcessor<T> {
     }
 
     func processNextWith(
-        configuration: Configuration,
+        _: Configuration,
         runSingle: (T, Array<InputParameter>) -> RunStepResult
     ): ProcessorResult {
         try {

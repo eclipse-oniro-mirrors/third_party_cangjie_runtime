@@ -40,6 +40,8 @@ public:
     RegionSpace& theSpace;
 };
 
+using CrossRefHandler = void(*)(BaseObject*, BaseObject*);
+
 class WCollector : public CopyCollector {
 public:
     explicit WCollector(Allocator& allocator, CollectorResources& resources)
@@ -56,14 +58,27 @@ public:
 
     bool ShouldIgnoreRequest(GCRequest& request) override;
     bool MarkObject(BaseObject* obj) const override;
-    bool ResurrectObject(BaseObject* obj) override;
+    bool ResurrectObject(BaseObject* obj, size_t offset, RegionInfo* regionInfo) override;
 
     void EnumRefFieldRoot(RefField<>& ref, RootSet& rootSet) const override;
     void TraceRefField(BaseObject* obj, RefField<>& ref, WorkStack& workStack) const;
     void TraceObjectRefFields(BaseObject* obj, WorkStack& workStack) override;
     BaseObject* GetAndTryTagObj(BaseObject* obj, RefField<>& field) override;
     BaseObject* ForwardObject(BaseObject* fromVersion) override;
-
+    void PostResolveCycleTask();
+    void PrepareCycleRef()
+    {
+        std::lock_guard<std::mutex> lg(cycleWorkStackMtx);
+        cycleRefWorkStack.insert(discoveredExternObjects.begin(), discoveredExternObjects.end());
+        discoveredExternObjects.clear();
+    }
+    void MergeResurrectExportObjects()
+    {
+        std::lock_guard<std::mutex> lg(resurrectExportMtx);
+        resurrectedExportObjectes.insert(resurrectedExportObjectesForwardPhase.begin(),
+            resurrectedExportObjectesForwardPhase.end());
+        resurrectedExportObjectesForwardPhase.clear();
+    }
     void FlipTagID() { currentTagID ^= 1; }
     uint16_t GetCurrentTagID() override { return currentTagID; }
     uint16_t GetPreviousTagID() const { return currentTagID ^ 1; }
@@ -85,6 +100,8 @@ public:
         RegionSpace& space = reinterpret_cast<RegionSpace&>(theAllocator);
         space.RemoveRawPointerObject(obj);
     }
+
+    void ResolveCycleRef() override;
 
     // BaseObject* ForwardFixRefField(RefField<>& field) const;
     BaseObject* ForwardUpdateRawRef(ObjectRef& ref);
@@ -113,15 +130,24 @@ public:
     bool IsUnmovableFromObject(BaseObject* obj) const override;
 
     // this is called when caller assures from-object/from-region still exists.
-    BaseObject* GetForwardPointer(BaseObject* fromObj) { return fwdTable.RouteObject(fromObj); }
+    BaseObject* GetForwardPointer(BaseObject* fromObj, RegionInfo* region)
+    {
+        RegionSpace& space = reinterpret_cast<RegionSpace&>(theAllocator);
+        return space.GetRegionManager().RouteObject(fromObj, region);
+    }
 
     BaseObject* FindToVersion(BaseObject* obj) const override
     {
-        return const_cast<WCollector*>(this)->fwdTable.RouteObject(obj);
+        RegionInfo* fromRegionInfo = RegionInfo::GetGhostFromRegionAt(reinterpret_cast<MAddress>(obj));
+        if (fromRegionInfo == nullptr) {
+            return nullptr;
+        }
+        RegionSpace& space = reinterpret_cast<RegionSpace&>(theAllocator);
+        return space.GetRegionManager().RouteObject(obj);
     }
 
 protected:
-    BaseObject* ForwardObjectImpl(BaseObject* obj);
+    BaseObject* ForwardObjectImpl(BaseObject* obj, RegionInfo* ghostFromRegion);
     BaseObject* ForwardObjectExclusive(BaseObject* obj) override;
 
     bool TryUntagRefField(BaseObject* obj, RefField<>& field, BaseObject*& target) const override;
@@ -172,7 +198,11 @@ private:
     void PreforwardConcurrencyModelRoots();
     void PostTrace();
     void Preforward();
+    void PreforwardAllExportFromRoots();
     void PreforwardFinalizerProcessorRoots();
+    void PreforwardDiscoveredExternObjects();
+    void PreforwardAllResurrectExportFromObjects();
+    CrossRefHandler GetCrossRefHandler(BaseObject* foreignProxy);
 
     ForwardTable fwdTable;
     // gc index 0 or 1 is used to distinguish previous gc and current gc.

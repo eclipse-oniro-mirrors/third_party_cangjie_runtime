@@ -30,7 +30,7 @@ MAddress RegionSpace::TryAllocateOnce(size_t allocSize, AllocType allocType)
     return allocBuffer->Allocate(allocSize, allocType);
 }
 
-bool RegionSpace::ShouldRetryAllocation(size_t& tryTimes) const
+bool RegionSpace::ShouldRetryAllocation(size_t& tryTimes, size_t size) const
 {
     if (!IsRuntimeThread() && tryTimes <= static_cast<size_t>(TryAllocationThreshold::RESCHEDULE)) {
         CJThreadResched(); // reschedule this thread for throughput.
@@ -56,6 +56,7 @@ bool RegionSpace::ShouldRetryAllocation(size_t& tryTimes) const
         }
         return true;
     }
+    VLOG(REPORT, "Cannot allocate memory of %zu(B), throw an OutOfMemory exception", size);
     ExceptionManager::OutOfMemory();
     return false;
 }
@@ -74,7 +75,7 @@ MAddress RegionSpace::Allocate(size_t size, AllocType allocType)
         if (IsGcThread()) {
             return 0; // it means gc doesn't have enough space to move this object.
         }
-        if (!ShouldRetryAllocation(tryTimes)) {
+        if (!ShouldRetryAllocation(tryTimes, size)) {
             break;
         }
         (void)sched_yield();
@@ -90,7 +91,7 @@ MAddress RegionSpace::Allocate(size_t size, AllocType allocType)
 void RegionSpace::Init(const HeapParam& vmHeapParam)
 {
     MemMap::Option opt = MemMap::DEFAULT_OPTIONS;
-    opt.tag = "region_heap";
+    opt.tag = "cangjie_heap";
     size_t heapSize = vmHeapParam.heapSize * 1024;
     size_t totalSize = RegionManager::GetHeapMemorySize(heapSize);
     size_t unitNum = RegionManager::GetHeapUnitCount(heapSize);
@@ -135,7 +136,7 @@ AllocBuffer* AllocBuffer::GetAllocBuffer() { return ThreadLocal::GetAllocBuffer(
 
 AllocBuffer::~AllocBuffer()
 {
-    if (LIKELY(tlRegion != RegionInfo::NullRegion())) {
+    if (LIKELY(tlRegion != RegionInfo::NullRegion()) && tlRegion != nullptr) {
         RegionSpace& theAllocator = reinterpret_cast<RegionSpace&>(Heap::GetHeap().GetAllocator());
         RegionManager& manager = theAllocator.GetRegionManager();
         manager.RemoveThreadLocalRegion(tlRegion);
@@ -150,6 +151,11 @@ void AllocBuffer::Init()
                   "need to modify the offset of this value in llvm-project at the same time");
     tlRegion = RegionInfo::NullRegion();
     Heap::GetHeap().RegisterAllocBuffer(*this);
+}
+
+void AllocBuffer::Fini()
+{
+    Heap::GetHeap().RemoveAllocBuffer(*this);
 }
 
 MAddress AllocBuffer::Allocate(size_t totalSize, AllocType allocType)
@@ -206,21 +212,34 @@ MAddress AllocBuffer::AllocateImpl(size_t totalSize, AllocType allocType)
         }
         return r->Alloc(totalSize);
     }
+    // AllocateThreadLocalRegion is a safepoint, in which cj thread rescheule may happen.
+    // tlRegion is bound to specific thread, so we need to forbid reschedule.
     CJThreadPreemptOffCntAdd();
     r = manager.AllocateThreadLocalRegion();
     CJThreadPreemptOffCntSub();
     if (UNLIKELY(r == nullptr)) {
         return 0;
     }
+    // tlRegion may be set in PreforwardPhase handler while allocating region.
+    // Null region means tlRegion is not set.
     if (tlRegion == RegionInfo::NullRegion()) {
         tlRegion = r;
-    } else if (!SetPreparedRegion(r)) {
-        manager.ReclaimRegion(r);
+        return r->Alloc(totalSize);
     }
-    if (LIKELY(!IsGcThread() && theAllocator.IsAsyncAllocationEnable())) {
-        theAllocator.AddHungryBuffer(*this);
-        Heap::GetHeap().GetFinalizerProcessor().NotifyToFeedAllocBuffers();
+    // tlRegion has been set in preforward phase.
+    MAddress addr = tlRegion->Alloc(totalSize);
+    if (addr != 0) {
+        if (!SetPreparedRegion(r)) {
+            // r is inserted in thread-local region list when allocated, we need to remove it from the list.
+            manager.RemoveThreadLocalRegion(r);
+            manager.ReclaimRegion(r);
+        }
+        return addr;
     }
+    // tlRegion is not enough for allocation, so we use r.
+    manager.RemoveThreadLocalRegion(tlRegion);
+    manager.EnlistFullThreadLocalRegion(tlRegion);
+    tlRegion = r;
     return r->Alloc(totalSize);
 }
 
@@ -235,7 +254,6 @@ MAddress AllocBuffer::AllocateRawPointerObject(size_t totalSize)
     }
     RegionManager& manager = reinterpret_cast<RegionSpace&>(Heap::GetHeap().GetAllocator()).GetRegionManager();
     size_t needUnitNum = AlignUp(totalSize, RegionInfo::UNIT_SIZE) / RegionInfo::UNIT_SIZE;
-    // region should have at least 2 unit
     if (totalSize <= manager.GetThreadLocalRegionSize()) {
         region = manager.TakeRegion(needUnitNum, RegionInfo::UnitRole::SMALL_SIZED_UNITS);
         if (region == nullptr) {
@@ -285,6 +303,8 @@ void RegionSpace::FeedHungryBuffers()
         }
     }
     if (region != nullptr) {
+        // The region is inserted in thread-local region list when allocated, we need to remove it from the list.
+        regionManager.RemoveThreadLocalRegion(region);
         regionManager.CollectRegion(region);
     }
 }

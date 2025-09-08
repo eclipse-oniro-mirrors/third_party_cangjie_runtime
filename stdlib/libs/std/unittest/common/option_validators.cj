@@ -37,7 +37,7 @@ type Validator = (Any) -> OptionValidity
 public var unittestOptionsRegistryClosed = false
 
 // validators registry is closed when defaultConfiguration is created
-let validators: HashMap<String, ArrayList<Validator>> = HashMap()
+let VALIDATORS: HashMap<String, ArrayList<Validator>> = HashMap()
 
 public struct OptionInfo {
     OptionInfo(
@@ -49,7 +49,7 @@ public struct OptionInfo {
 }
 
 public let optionsInfo: HashMap<String, OptionInfo> = HashMap()
-let mutex = ReentrantMutex()
+let MUTEX = ReentrantMutex()
 let VALIDATOR_NAME = "UnittestOption"
 
 func checkOptionValueAndGetConfigurationKey<T>(key: KeyFor<T>, value: T): ConfigurationKey {
@@ -63,8 +63,8 @@ func checkOptionValueByNameAndGetConfigurationKey<T>(name: String, value: T): Co
     }
     let option = "Option '${name}'${valueStr}"
 
-    if (let Some(validators) <- validators.get(name)) {
-        for (validator in validators) {
+    if (let Some(VALIDATORS) <- VALIDATORS.get(name)) {
+        for (validator in VALIDATORS) {
             let status = validator(value)
             match (status) {
                 case UnknownOptionType => continue
@@ -86,12 +86,12 @@ public func registerOptionValidator(name: String, validator: Validator): Unit {
         throw UnittestOptionValidationException("Validator registry closed. Move your validator on top level.")
     }
 
-    synchronized(mutex) {
-        if (!validators.contains(name)) {
-            validators.add(name, ArrayList())
+    synchronized(MUTEX) {
+        if (!VALIDATORS.contains(name)) {
+            VALIDATORS.add(name, ArrayList())
         }
 
-        validators[name].add(validator)
+        VALIDATORS[name].add(validator)
     }
 }
 
@@ -100,7 +100,7 @@ public func setOptionInfo(
     types: Array<String>,
     description!: ?String = None
 ): Unit {
-    synchronized(mutex) {
+    synchronized(MUTEX) {
         var info = OptionInfo(name, true, description)
         for (ty in types) {
             info.types[ty] = None
@@ -115,7 +115,7 @@ public func setOrUpdateOptionInfo(
     ty: String,
     typeDescription: String
 ): Unit {
-    synchronized(mutex) {
+    synchronized(MUTEX) {
         if (!optionsInfo.contains(name)) {
             optionsInfo.add(name, OptionInfo(name, false, description))
         }

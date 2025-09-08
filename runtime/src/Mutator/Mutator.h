@@ -450,6 +450,34 @@ public:
         SetInSaferegion(SaferegionState::SAFE_REGION_TRUE);
     }
 
+    // This interface is used for initiating the mutator who is created by foreign thread.
+    // This interface must be called by the foreign thread after the tl data is initialized.
+    void InitForeignCJThread()
+    {
+        InitTid();
+        foreignThreadInfo.isForeignThread = true;
+        foreignThreadInfo.isExit = false;
+        foreignThreadInfo.allocBuffer = ThreadLocal::GetAllocBuffer();
+        foreignThreadInfo.schedule = ThreadLocal::GetThreadLocalData()->schedule;
+    }
+
+    bool IsForeignThreadExit() const
+    {
+        return foreignThreadInfo.isForeignThread && foreignThreadInfo.isExit;
+    }
+
+    bool IsForeignThread() const
+    {
+        return foreignThreadInfo.isForeignThread;
+    }
+
+    void SetForeignCJThreadExit()
+    {
+        foreignThreadInfo.isExit = true;
+    }
+
+    void ReleaseForeignThread();
+
 protected:
     // for managed stack
     void VisitStackRoots(const RootVisitor& func);
@@ -516,12 +544,19 @@ private:
     uintptr_t stackSize = 0;
 
     std::atomic<CpuProfileState> cpuProfileState = { NO_CPUPROFILE };
+    struct ForeignThreadInfo {
+        bool isForeignThread = { false };
+        bool isExit = { false };
+        AllocBuffer* allocBuffer = { nullptr };
+        ScheduleHandle schedule = { nullptr };
+    } foreignThreadInfo;
 };
 
 // This function is mainly used to initialize the context of mutator.
 // Ensured that updated fa is the caller layer of the managed function to be called.
 extern "C" void MRT_PreRunManagedCode(Mutator* mutator, int layers,
                                       ThreadLocalData* threadData);
+extern "C" void MRT_SetStackGrow(bool enableStackScale);
 } // namespace MapleRuntime
 
 #endif // MRT_MUTATOR_H

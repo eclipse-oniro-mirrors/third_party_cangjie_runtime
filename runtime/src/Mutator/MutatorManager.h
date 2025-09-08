@@ -41,6 +41,9 @@ const uint32_t LOCK_OWNER_MUTATOR = LOCK_OWNER_GC + 1;
 bool IsRuntimeThread();
 bool IsGcThread();
 extern "C" void HandleSafepoint(ThreadLocalData* tlData);
+#if defined (__arm__)
+extern "C" void HandleSafepointForArm(ThreadLocalData* tlData);
+#endif
 
 using MutatorVisitor = std::function<void(Mutator&)>;
 
@@ -107,7 +110,7 @@ public:
     // Visit all mutators, hold mutatorListLock firstly
     void VisitAllMutators(MutatorVisitor func);
 
-    // Some functions about stw/lsync
+    // Some functions about stw
     void StopTheWorld(bool syncGCPhase, GCPhase phase);
     void StartTheWorld() noexcept;
     void StartLightSync(bool syncGCPhase, GCPhase phase);

@@ -20,6 +20,7 @@
 namespace MapleRuntime {
 class TypeInfo;
 class TypeTemplate;
+extern const size_t TYPEINFO_PTR_SIZE;
 
 // PackageInfo includes classes, global functions, global variable.
 // global function layout likes MethodInfo.
@@ -48,7 +49,7 @@ public:
     {
         U32 packageAlign = 16;
         size_t packageSize = sizeof(PackageInfo);
-        packageSize += typeInfoCnt * sizeof(TypeInfo*);
+        packageSize += typeInfoCnt * TYPEINFO_PTR_SIZE;
         packageSize += typeTemplateCnt * sizeof(TypeTemplate*);
         packageSize += globalMethodCnt * sizeof(DataRefOffset64<MethodInfo>);
         packageSize += globalVariableCnt * sizeof(DataRefOffset64<InstanceFieldInfo>);

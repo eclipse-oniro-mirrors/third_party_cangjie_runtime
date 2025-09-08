@@ -83,6 +83,10 @@ struct RegionBitmap {
         }
         size_t markWordSize = regionSize / (kMarkedBytesPerBit * kBitsPerWord);
         uint8_t calFactor = factor > markWordSize ? markWordSize : factor;
+        if (markWordSize % calFactor) {
+            // The markWordSize needs to be rounded up to ensure it is divisible by calFactor.
+            markWordSize = markWordSize + calFactor - markWordSize % calFactor;
+        }
         partLiveBytes[maskInfo.headWordIdx / (markWordSize / calFactor)].fetch_add(
             __builtin_popcountll(maskInfo.headMaskBits));
         liveBytes.fetch_add(byteCnt);
@@ -128,21 +132,40 @@ struct RegionBitmap {
         return ret;
     }
 
-    uint64_t GetPreLiveBytes(size_t offset, size_t regionSize)
+    struct PreMaskInfo {
+        int8_t partIndex;
+        uint64_t mask;
+        ssize_t StepSize;
+        ssize_t index;
+    };
+
+    static void GetPreMaskInfo(size_t offset, size_t regionSize, PreMaskInfo& maskInfo)
+    {
+        maskInfo.index = offset / (kBitsPerWord * kMarkedBytesPerBit);
+        size_t markWordSize = regionSize / (kMarkedBytesPerBit * kBitsPerWord);
+        uint8_t calFactor = factor > markWordSize ? markWordSize : factor;
+        if (markWordSize % calFactor) {
+            // The markWordSize needs to be rounded up to ensure it is divisible by calFactor.
+            markWordSize = markWordSize + calFactor - markWordSize % calFactor;
+        }
+        maskInfo.partIndex = maskInfo.index / (markWordSize / calFactor) - 1;
+        size_t bitIndex = (offset / kMarkedBytesPerBit) % kBitsPerWord;
+        maskInfo.mask = (static_cast<uint64_t>(1) << bitIndex) - 1;
+        maskInfo.StepSize = markWordSize / calFactor;
+    }
+
+    uint64_t GetPreLiveBytes(const PreMaskInfo& maskInfo)
     {
         uint64_t preLiveBits = 0;
         ssize_t partStartIndex = 0;
-        ssize_t index = offset / (kBitsPerWord * kMarkedBytesPerBit);
-        size_t markWordSize = regionSize / (kMarkedBytesPerBit * kBitsPerWord);
-        uint8_t calFactor = factor > markWordSize ? markWordSize : factor;
-        int8_t partIndex = index / (markWordSize / calFactor) - 1;
+        int8_t partIndex = maskInfo.partIndex;
         while (partIndex >= 0) {
             preLiveBits += partLiveBytes[partIndex--];
-            partStartIndex += (markWordSize / calFactor);
+            partStartIndex += maskInfo.StepSize;
         }
-        size_t bitIndex = (offset / kMarkedBytesPerBit) % kBitsPerWord;
-        uint64_t mask = (static_cast<uint64_t>(1) << bitIndex) - 1;
-        size_t liveBits = __builtin_popcountll(markWords[index].load() & mask);
+        ssize_t index = maskInfo.index;
+        size_t liveBits = __builtin_popcountll(markWords[index].load() & maskInfo.mask);
+
         if (index == partStartIndex) {
             return (preLiveBits + liveBits) * kMarkedBytesPerBit;
         }
@@ -164,12 +187,14 @@ struct LiveInfo {
 
     uint64_t GetPreLiveBytes(size_t offset, size_t regionSize)
     {
+        RegionBitmap::PreMaskInfo maskInfo;
+        RegionBitmap::GetPreMaskInfo(offset, regionSize, maskInfo);
         uint64_t liveBytes = 0;
         if (markBitmap != nullptr) {
-            liveBytes += markBitmap->GetPreLiveBytes(offset, regionSize);
+            liveBytes += markBitmap->GetPreLiveBytes(maskInfo);
         }
         if (resurrectBitmap != nullptr) {
-            liveBytes += resurrectBitmap->GetPreLiveBytes(offset, regionSize);
+            liveBytes += resurrectBitmap->GetPreLiveBytes(maskInfo);
         }
         return liveBytes;
     }
