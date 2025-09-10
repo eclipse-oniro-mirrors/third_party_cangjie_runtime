@@ -16,18 +16,25 @@ import("platform.gni")
 
 template("cangjie_prebuilts") {
   _deps = []
-  forward_variables_from(invoker, ["prebuilt_libs_path", "prebuilt_libs", "special_libs", "runtime_libs", "fullname_prebuilt_libs"])
+  forward_variables_from(invoker,
+                         [
+                           "prebuilt_libs_path",
+                           "prebuilt_libs",
+                           "special_libs",
+                           "runtime_libs",
+                           "fullname_prebuilt_libs",
+                         ])
   foreach(lib_name, prebuilt_libs) {
     ohos_prebuilt_shared_library("lib${lib_name}") {
       source = "${prebuilt_libs_path}/lib${lib_name}.${cj_config.dyn_extension}"
       enable_strip = true
       install_enable = true
-      part_name = "cangjie_ark_interop"
-      subsystem_name = "arkcompiler"
+      part_name = "cangjie_runtime"
+      subsystem_name = "thirdparty"
       relative_install_dir = "platformsdk/cjsdk"
       install_images = [ "system" ]
     }
-    _deps += [":lib${lib_name}"]
+    _deps += [ ":lib${lib_name}" ]
   }
 
   foreach(lib_name, special_libs) {
@@ -35,13 +42,13 @@ template("cangjie_prebuilts") {
       source = "${prebuilt_libs_path}/lib${lib_name}.${cj_config.dyn_extension}"
       enable_strip = true
       install_enable = true
-      part_name = "cangjie_ark_interop"
-      subsystem_name = "arkcompiler"
+      part_name = "cangjie_runtime"
+      subsystem_name = "thirdparty"
       relative_install_dir = "chipset-sdk"
       install_images = [ "system" ]
-      innerapi_tags = ["chipsetsdk_indirect"]
+      innerapi_tags = [ "chipsetsdk_indirect" ]
     }
-    _deps += [":lib${lib_name}"]
+    _deps += [ ":lib${lib_name}" ]
   }
 
   foreach(lib_name, runtime_libs) {
@@ -49,12 +56,12 @@ template("cangjie_prebuilts") {
       source = "${prebuilt_libs_path}/lib${lib_name}.${cj_config.dyn_extension}"
       enable_strip = true
       install_enable = true
-      part_name = "cangjie_ark_interop"
-      subsystem_name = "arkcompiler"
+      part_name = "cangjie_runtime"
+      subsystem_name = "thirdparty"
       relative_install_dir = "platformsdk/cjsdk/runtime"
       install_images = [ "system" ]
     }
-    _deps += [":lib${lib_name}"]
+    _deps += [ ":lib${lib_name}" ]
   }
 
   foreach(full_lib_name, fullname_prebuilt_libs) {
@@ -62,12 +69,12 @@ template("cangjie_prebuilts") {
       source = "${prebuilt_libs_path}/${full_lib_name}"
       enable_strip = true
       install_enable = true
-      part_name = "cangjie_ark_interop"
-      subsystem_name = "arkcompiler"
+      part_name = "cangjie_runtime"
+      subsystem_name = "thirdparty"
       relative_install_dir = "platformsdk/cjsdk"
       install_images = [ "system" ]
     }
-    _deps += [":${full_lib_name}"]
+    _deps += [ ":${full_lib_name}" ]
   }
 
   group(target_name) {
@@ -115,14 +122,12 @@ cangjie_prebuilts("cangjie_prebuilts_package") {
     "cangjie-std-sync",
     "cangjie-std-time",
     "cangjie-std",
-    "cangjie-std-unicode"
+    "cangjie-std-unicode",
   ]
-  special_libs = [
-    "cangjie-demangle"
-  ]
+  special_libs = [ "cangjie-demangle" ]
   runtime_libs = [
     "cangjie-runtime",
-    "boundscheck"
+    "boundscheck",
   ]
   fullname_prebuilt_libs = [
     "libpcre2-8.so",

@@ -10,8 +10,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//build/ohos.gni")
 
-prebults_cangjie_sdk_linux_x86_64_path = "//prebuilts/cangjie_sdk/linux-x64/cangjie"
+if (is_asan && use_hwasan) {
+  prebults_cangjie_sdk_linux_x86_64_path =
+      "//prebuilts/cangjie_sdk/linux-x64-hwasan/cangjie"
+} else {
+  prebults_cangjie_sdk_linux_x86_64_path =
+      "//prebuilts/cangjie_sdk/linux-x64/cangjie"
+}
 
 cj_config = {
   platform_target = ""
