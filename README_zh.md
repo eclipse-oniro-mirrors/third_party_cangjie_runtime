@@ -1,6 +1,17 @@
 # 仓颉运行时与仓颉编程语言标准库
 
-在仓颉编程语言中，程序执行依赖于运行时和标准库的能力。​仓颉运行时作为轻量高效的基础引擎，负责程序运行时的内存、线程等核心资源管理；标准库提供了常用的功能和工具，为开发者构建应用功能奠定了坚实基础。
+在仓颉编程语言中，程序执行依赖于运行时和标准库的能力。​仓颉运行时作为轻量高效的基础引擎，负责程序运行时的内存、线程等核心资源管理；仓颉语言标准库提供功能丰富的内置库，涉及数据结构、常用算法、数学计算、正则匹配、系统交互、文件操作、网络通信等功能，能够满足大部分开发需求。
+
+![](runtime/figures/runtime_std_zh.png)
+
+> 三方库的使用方式
+> - `libboundscheck` 的使用主体是仓颉运行时和仓颉编程语言标准库，使用方式是源码依赖，会编译集成到二进制发布包中。
+> - `OpenSSL` 的使用主体是仓颉运行时，使用方式是动态链接系统中动态库，不依赖源码。
+> - `libboundscheck` 的使用主体是标准库 `core`、`collection`、`convert`、`env`、`fs`、`net`、`posix`、`process` 和 `time`，使用方式是源码依赖，会编译集成到二进制发布包中。
+> - `PCRE2` 的使用主体是标准库 `regex`，使用方式是源码依赖，会编译集成到二进制发布包中。
+> - `flatbuffers` 的使用主体是标准库 `ast`，使用方式是源码依赖，会编译集成到二进制发布包中。
+
+下面对仓颉运行时和仓颉编程语言标准库进行详细介绍。
 
 ## 仓颉运行时
 
@@ -31,35 +42,37 @@
 
 - **仓颉对象模型**包含仓颉对象元数据、成员信息、方法信息和方法表。为仓颉对象的创建、管理、调用和释放提供支持。
 
-- **跨语言调用**通过外部函数接口实现仓颉语言和 `C`、`ArkTs` 之间的函数调用和数据交互。
+- **跨语言调用**通过外部函数接口实现仓颉语言和 `C` 语言、`ArkTs` 语言之间的函数调用和数据交互。
 
 - **DFX**提供日志打印、`CPU` 采集、堆快照导出等调试调优功能，支持运行时状态检测和故障排查。
 
 ### 目录
 
-``` text
-/runtime
-├─ src                  # 仓颉运行时，包括内存管理模块、异常处理模块等
-|   ├─ arch_os          # 硬件平台适配代码
-|   ├─ Base             # 日志等基础能力模块
-|   ├─ CJThread         # 仓颉线程管理模块
-|   ├─ Common           # 通用模块
-|   ├─ Concurrency      # 并发管理模块
-|   ├─ CpuProfiler      # CPU 采集工具
-|   ├─ Demangler        # 符号去混淆工具
-|   ├─ Exception        # 异常处理模块
-|   ├─ Heap             # 内存管理模块
-|   ├─ Inspector        # DFX 工具
-|   ├─ Loader           # 加载器
-|   ├─ Mutator          # GC 与业务线程状态同步模块
-|   ├─ ObjectModel      # 对象模型
-|   ├─ os               # 软件平台适配代码
-|   ├─ Signal           # 信号管理模块
-|   ├─ StackMap         # 回栈元数据分析模块
-|   ├─ Sync             # 同步原语实现模块
-|   ├─ UnwindStack      # 回栈模块
-|   ├─ Utils            # 工具类
-└─ build                # 编译构建工具、脚本等
+```
+.
+├── runtime
+│   ├── build
+│   └── src
+│       ├── Base         # 日志等基础能力模块
+│       ├── CJThread     # 仓颉线程管理模块
+│       ├── Common       # 通用模块
+│       ├── Concurrency  # 并发管理模块
+│       ├── CpuProfiler  # CPU 采集工具
+│       ├── Demangler    # 符号去混淆工具
+│       ├── Exception    # 异常处理模块
+│       ├── Heap         # 内存管理模块
+│       ├── Inspector    # DFX 工具
+│       ├── Loader       # 加载器 
+│       ├── Mutator      # GC 与业务线程状态同步模块
+│       ├── ObjectModel  # 对象模型
+│       ├── Signal       # 信号管理模块
+│       ├── StackMap     # 回栈元数据分析模块
+│       ├── Sync         # 同步原语实现模块
+│       ├── UnwindStack  # 回栈模块
+│       ├── Utils        # 工具类
+│       ├── arch_os      # 硬件平台适配代码
+│       └── os           # 软件平台适配代码
+└── std
 ```
 
 ### 约束
@@ -134,7 +147,7 @@ $ python3 build.py clean
 
 ### 使用说明
 
-运行时独立构建产物需要配合cjc编译器及标准库等使用，具体集成方式请查看[仓颉SDK集成构建指导书](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md)。
+运行时独立构建产物需要配合cjc编译器及标准库等使用，整体可在 Linux、macOS、Windows 与 OpenHarmony 系统上直接运行。具体集成方式请查看[仓颉SDK集成构建指导书](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md)。
 
 ##### 下载源码：
 
@@ -142,11 +155,11 @@ $ python3 build.py clean
 $ git clone https://gitcode.com/Cangjie/cangjie_runtime.git;
 ```
 
-## 仓颉编程语言标准库
+## 仓颉编程语言 - 标准库（std）
 
 ### 简介
 
-仓颉编程语言标准库（std）是安装仓颉 SDK 时默认自带的库。标准库预先定义了一组函数、类、结构体等，旨在提供常用的功能和工具，以便开发者能够更快速、更高效地编写程序。
+fjyi
 
 仓颉标准库有其三项特点和追求：
 
@@ -158,41 +171,48 @@ $ git clone https://gitcode.com/Cangjie/cangjie_runtime.git;
 
 ![](std/figures/cangjie_std_zh.png)
 
+> 三方库的使用方式
+
+
 ### 目录
 
 主要目录如下：
 
 ```
-std/libs/std
-├── argopt                  #命令行参数字符串解析
-├── ast 				    #语法解析器
-├── binary 					#提供了基础数据类型和二进制字节数组的不同端序转换接口，以及端序反转接口
-├── collection              #常见数据结构的实现、相关抽象的接口的定义以及在集合类型中常用的函数功能
-├── console  				#提供和标准输入、标准输出、标准错误进行交互的方法。
-├── convert 				#提供从字符串转到特定类型的 Convert 系列函数以及提供格式化能力
-├── core 					#标准库的核心包
-├── crypto 					#对称加解密和常用摘要算法能力
-├── database 				#仓颉访问数据库能力
-├── deriving 				#提供一组宏来自动生成接口实现
-├── env  					#提供当前进程的相关信息与功能
-├── fs 						#文件库
-├── io 						#提供程序与外部设备进行数据交换的能力
-├── math 				    #数学库
-├── net 					#网络通信
-├── objectpool 			    #对象缓存
-├── overflow 				#溢出处理
-├── posix 					#适配 POSIX 系统调用，提供跨平台的系统操作接口
-├── process 				#进程库
-├── random 					#提供生成伪随机数的能力
-├── ref 					#提供了弱引用相关的能力
-├── reflect  				#反射功能
-├── regex 					#正则库
-├── runtime 				#运行时交互
-├── sort 					#排序
-├── sync 					#并发编程
-├── time 					#时间库
-├── unicode 				#字符处理
-└── unittest 				#用于编写仓颉项目单元测试代码
+.
+├── runtime
+└── std
+    ├── libs
+    │   └── std
+    │       ├── argopt      # 命令行参数字符串解析
+    │       ├── ast         # 语法解析器
+    │       ├── binary      # 提供了基础数据类型和二进制字节数组的不同端序转换接口，以及端序反转接口
+    │       ├── collection  # 常见数据结构的实现、相关抽象的接口的定义以及在集合类型中常用的函数功能
+    │       ├── console     # 提供和标准输入、标准输出、标准错误进行交互的方法。
+    │       ├── convert     # 提供从字符串转到特定类型的 Convert 系列函数以及提供格式化能力
+    │       ├── core        # 标准库的核心包
+    │       ├── crypto      # 对称加解密和常用摘要算法能力
+    │       ├── database    # 仓颉访问数据库能力
+    │       ├── deriving    # 提供一组宏来自动生成接口实现
+    │       ├── env         # 提供当前进程的相关信息与功能
+    │       ├── fs          # 文件库
+    │       ├── io          # 提供程序与外部设备进行数据交换的能力
+    │       ├── math        # 数学库
+    │       ├── net         # 网络通信
+    │       ├── objectpool  # 对象缓存
+    │       ├── overflow    # 溢出处理
+    │       ├── posix       # 适配 POSIX 系统调用，提供跨平台的系统操作接口
+    │       ├── process     # 进程库
+    │       ├── random      # 提供生成伪随机数的能力
+    │       ├── ref         # 提供了弱引用相关的能力
+    │       ├── reflect     # 反射功能
+    │       ├── regex       # 正则库
+    │       ├── runtime     # 运行时交互
+    │       ├── sort        # 排序
+    │       ├── sync        # 并发编程
+    │       ├── time        # 时间库
+    │       ├── unicode     # 字符处理
+    │       └── unittest    # 用于编写仓颉项目单元测试代码
 ```
 
 ### 约束
@@ -256,7 +276,7 @@ output
 
 #### 使用说明
 
-标准库构建产物需要配合 cjc 编译器及运行时等使用，具体集成方式请查看[仓颉SDK集成构建指导书](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md)。
+标准库构建产物需要配合 cjc 编译器及运行时等使用，整体可在 Linux、macOS、Windows 与 OpenHarmony 系统上直接运行。具体集成方式请查看[仓颉SDK集成构建指导书](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md)。
 
 #### 更多构建选项
 
@@ -292,13 +312,11 @@ python3 build.py install --help
 
 ## 相关仓
 
-[cangjie_compiler](https://gitcode.com/Cangjie/cangjie_compiler)
+[cangjie_compiler](https://gitcode.com/openharmony-sig/third_party_cangjie_compiler)
 
-[cangjie_runtime](https://gitcode.com/Cangjie/cangjie_runtime)
+[cangjie_tools](https://gitcode.com/openharmony-sig/third_party_cangjie_tools)
 
-[cangjie_tools](https://gitcode.com/Cangjie/cangjie_tools)
-
-[cangjie_stdx](https://gitcode.com/Cangjie/cangjie_stdx)
+[cangjie_stdx](https://gitcode.com/openharmony-sig/third_party_cangjie_stdx)
 
 [cangjie_docs](https://gitcode.com/Cangjie/cangjie_docs)
 
