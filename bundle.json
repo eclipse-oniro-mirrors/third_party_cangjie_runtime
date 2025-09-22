@@ -19,7 +19,7 @@
         "rom": "25MB",
         "ram": "20MB",
         "deps": {
-            "components": [],
+            "components": ["bounds_checking_function", "openssl", "pcre2", "flatbuffers"],
             "third_party": []
         },
         "build": {
