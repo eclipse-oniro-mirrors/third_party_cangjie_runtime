@@ -2,6 +2,8 @@
 
 In the Cangjie programming language, program execution depends on the capabilities of the runtime and standard library. The Cangjie Runtime, as a lightweight and efficient fundamental engine, is responsible for managing core resources such as memory and threads during program execution. The Cangjie Language Standard Library provides feature-rich built-in libraries covering data structures, common algorithms, mathematical computations, regular expressions, system interactions, file operations, network communications, and other functionalities, which can meet most development needs.
 
+This repository provides the source code for the Cangjie Runtime and Cangjie Programming Language Standard Library. The overall structure diagram is shown below:
+
 ![](runtime/figures/runtime_std.png)
 
 > Usage of Third-Party Libraries
@@ -10,6 +12,8 @@ In the Cangjie programming language, program execution depends on the capabiliti
 > - `libboundscheck` is used by the standard libraries `core`, `collection`, `convert`, `env`, `fs`, `net`, `posix`, `process`, and `time`. It is source code dependent and will be compiled and integrated into binary release packages.
 > - `PCRE2` is used by the standard library `regex`. It is source code dependent and will be compiled and integrated into binary release packages.
 > - `flatbuffers` is used by the standard library `ast`. It is source code dependent and will be compiled and integrated into binary release packages.
+
+Below is a detailed introduction to the Cangjie Runtime and the Cangjie Programming Language Standard Library.
 
 ## Cangjie Runtime
 
@@ -78,7 +82,7 @@ The Cangjie standard library (std) is built on a lower layer based on compiler f
 
 ### Constraints
 
-Building the Cangjie runtime is supported on Ubuntu/MacOS (x86_64, aarch64) environments. For more details on environment and tool dependencies, please refer to the [Build Dependency Tools](https://gitcode.com/Cangjie/cangjie_build/blob/dev/docs/env_zh.md).
+Currently, building the Cangjie Runtime within the Windows environment is not supported. To generate Cangjie Runtime build artifacts that can run on the Windows platform, cross-compilation in a Linux environment is required. For detailed information, please refer to [Cangjie SDK Integration and Build Guide](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md). For specific future support plans, please see [Platform Support Plan](#platform-support-plan).
 
 ### Compilation & Build
 
@@ -152,6 +156,8 @@ The main directories are as follows:
 
 Building the Cangjie runtime is supported on Ubuntu/MacOS (x86_64, aarch64) environments. For more details on environment and tool dependencies, please refer to the [Build Dependency Tools](https://gitcode.com/Cangjie/cangjie_build/blob/dev/docs/env_zh.md).
 
+Currently, building the Cangjie Programming Language Standard Library within the Windows environment is not supported. To generate Standard Library artifacts that can run on the Windows platform, cross-compilation in a Linux environment is required. For detailed information, please refer to  [Cangjie SDK Integration and Build Guide](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md). For specific future support plans, please see [Platform Support Plan](#platform-support-plan).
+
 ### Compilation and Building
 
 To build the Cangjie Programming Language Standard Library, please refer to [Build Cangjie Standard Library](./std/build_std.md) for details.
@@ -159,6 +165,10 @@ To build the Cangjie Programming Language Standard Library, please refer to [Bui
 ### Usage Instructions
 
 The standard library build artifacts need to be used with the cjc compiler and runtime, etc. For specific integration methods, please see the [Cangjie Programming Language Standard Library API](./std/doc/libs/summary_cjnative_EN.md).
+
+### Platform Support Plan
+- Build Platform Evolution: Plans to support building Cangjie Runtime and Standard Library artifacts on Windows by the end of 2025.
+- Cangjie Application Runtime Platform Evolution: Plans to support core functionalities for ohos-arm32 by September 30, 2025, excluding reflection and some optimization features temporarily.
 
 ## Repositories Involved
 

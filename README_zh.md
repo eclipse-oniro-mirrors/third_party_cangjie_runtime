@@ -2,12 +2,13 @@
 
 在仓颉编程语言中，程序执行依赖于运行时和标准库的能力。​仓颉运行时作为轻量高效的基础引擎，负责程序运行时的内存、线程等核心资源管理；仓颉语言标准库提供功能丰富的内置库，涉及数据结构、常用算法、数学计算、正则匹配、系统交互、文件操作、网络通信等功能，能够满足大部分开发需求。
 
+本仓提供了仓颉运行时和仓颉编程语言标准库的源码，整体的架构图如下图所示：
+
 ![](runtime/figures/runtime_std_zh.png)
 
 > 三方库的使用方式
 > - `libboundscheck` 的使用主体是仓颉运行时和仓颉编程语言标准库，使用方式是源码依赖，会编译集成到二进制发布包中。
 > - `OpenSSL` 的使用主体是仓颉运行时，使用方式是动态链接系统中动态库，不依赖源码。
-> - `libboundscheck` 的使用主体是标准库 `core`、`collection`、`convert`、`env`、`fs`、`net`、`posix`、`process` 和 `time`，使用方式是源码依赖，会编译集成到二进制发布包中。
 > - `PCRE2` 的使用主体是标准库 `regex`，使用方式是源码依赖，会编译集成到二进制发布包中。
 > - `flatbuffers` 的使用主体是标准库 `ast`，使用方式是源码依赖，会编译集成到二进制发布包中。
 
@@ -77,7 +78,7 @@
 
 ### 约束
 
-支持在 Ubuntu/MacOS(x86_64,aarch64) 环境中对仓颉运行时进行构建。更详细的环境及工具依赖请参阅[构建依赖工具](https://gitcode.com/Cangjie/cangjie_build/blob/dev/docs/env_zh.md)。
+当前暂不支持 Windows 环境内对仓颉运行时进行构建，需要在 Linux 环境内通过交叉编译方式生成可在 Windows 平台运行的仓颉运行时产物，详见[仓颉SDK集成构建指导书](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md)。未来支持计划具体见[平台支持计划](#平台支持计划)。
 
 ### 编译构建
 
@@ -147,7 +148,7 @@
 
 ### 约束
 
-支持在 Ubuntu/MacOS(x86_64, aarch64) 环境中对仓颉编译语言标准库进行构建。更详细的环境及工具依赖请参阅[构建依赖工具](https://gitcode.com/Cangjie/cangjie_build/blob/dev/docs/env_zh.md)。
+当前暂不支持 Windows 环境内对仓颉编程语言标准库进行构建，需要在 Linux 环境内通过交叉编译方式生成可在 Windows 平台运行的标准库产物，详见[仓颉SDK集成构建指导书](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md)。未来支持计划具体见[平台支持计划](#平台支持计划)。
 
 ### 编译构建
 
@@ -156,6 +157,10 @@
 ### 使用说明
 
 标准库构建产物需要配合 cjc 编译器及运行时等使用，整体可在 Linux、macOS、Windows 与 OpenHarmony 系统上直接运行。具体集成方式请查看[仓颉SDK集成构建指导书](https://gitcode.com/Cangjie/cangjie_build/blob/dev/README_zh.md)。
+
+## 平台支持计划
+- 构建平台演进：计划于2025年底支持 Windows 构建出仓颉运行时和标准库产物。
+- 仓颉应用运行平台演进：计划于2025.9.30支持 ohos-arm32 核心功能，但暂时不包括反射、部分优化功能。
 
 ## 相关仓
 
