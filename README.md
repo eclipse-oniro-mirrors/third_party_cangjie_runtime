@@ -24,7 +24,6 @@ The Cangjie standard library (std) is built on a lower layer based on compiler f
 
 ![](runtime/figures/cangjie_runtime.png)
 
-
 **Cangjie Runtime Architecture**
 
 - **Garbage Collection** uses a low-latency, fully concurrent memory compact algorithm, with the core goal of achieving lower latency and lower memory overhead, helping developers focus better on the programming itself.
@@ -50,12 +49,14 @@ The Cangjie standard library (std) is built on a lower layer based on compiler f
 
 - **DFX** provides debugging and tuning capabilities such as log, `CPU` profiling, heap snapshot, and supports runtime state inspection and fault diagnosis.
 
+For details on third-party dependencies, see the [Third-Party Library Documentation](./runtime/third_party/README.md).
+
 ### Directory Structure
 
 ```
-.
+/cangjie_runtime
 ├── runtime
-│   ├── build
+│   ├── build            # Build scripts
 │   └── src
 │       ├── Base         # Basic function module
 │       ├── CJThread     # Cangjie thread management module
@@ -109,13 +110,14 @@ For a detailed introduction and usage of the standard library, please refer to t
 
 ![](std/figures/cangjie_std.png)
 
+For details on third-party dependencies, see the [Third-Party Library Documentation](./std/third_party/README.md).
 
 ### Directory
 
 The main directories are as follows:
 
 ```
-.
+/cangjie_runtime
 ├── runtime
 └── std
     └── libs
@@ -167,7 +169,7 @@ The standard library build artifacts need to be used with the cjc compiler and r
 
 ### Platform Support Plan
 - Build Platform Evolution: Plans to support building Cangjie Runtime and Standard Library artifacts on Windows by the end of 2025.
-- Cangjie Application Runtime Platform Evolution: Plans to support core functionalities for ohos-arm32 by September 30, 2025, excluding reflection and some optimization features temporarily.
+- Cangjie Application Runtime Platform Evolution: Planned support for OHOS-ARM32 core features on 2025 Q3, but reflection and dynamic loading, some compiler Optimization, such as LTO（Link-Time Optimization） features will not be included for the time being.
 
 ## Repositories Involved
 
