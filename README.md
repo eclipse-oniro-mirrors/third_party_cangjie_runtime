@@ -9,7 +9,6 @@ This repository provides the source code for the Cangjie Runtime and Cangjie Pro
 > Usage of Third-Party Libraries
 > - `libboundscheck` is used by the Cangjie Runtime and Cangjie Programming Language Standard Library. It is source code dependent and will be compiled and integrated into binary release packages.
 > - `OpenSSL` is used by the Cangjie Runtime. It dynamically links to the system's dynamic libraries without source code dependency.
-> - `libboundscheck` is used by the standard libraries `core`, `collection`, `convert`, `env`, `fs`, `net`, `posix`, `process`, and `time`. It is source code dependent and will be compiled and integrated into binary release packages.
 > - `PCRE2` is used by the standard library `regex`. It is source code dependent and will be compiled and integrated into binary release packages.
 > - `flatbuffers` is used by the standard library `ast`. It is source code dependent and will be compiled and integrated into binary release packages.
 
