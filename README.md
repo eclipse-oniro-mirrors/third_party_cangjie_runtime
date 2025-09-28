@@ -12,7 +12,7 @@ This repository provides the source code for the Cangjie Runtime and Cangjie Pro
 > - `PCRE2` is used by the standard library `regex`. It is source code dependent and will be compiled and integrated into binary release packages.
 > - `flatbuffers` is used by the standard library `ast`. It is source code dependent and will be compiled and integrated into binary release packages.
 
-For details on third-party dependencies, see the [Third-Party Library Documentation](./std/third_party/README.md).
+For details on third-party dependencies, see the [Third-Party Library Documentation](./stdlib/third_party/README.md).
 
 Below is a detailed introduction to the Cangjie Runtime and the Cangjie Programming Language Standard Library.
 
@@ -79,7 +79,7 @@ The architecture diagram of Cangjie Runtime is shown below:
 │       ├── Utils        # General Utility Classes
 │       ├── arch      # Hardware platform adaptation code
 │       └── os           # Software platform adaptation code
-└── std
+└── stdlib
 ```
 
 ### Constraints
@@ -114,7 +114,7 @@ For a detailed introduction and usage of the standard library, please refer to t
 
 The architecture diagram of the Cangjie standard library is shown below:
 
-![](std/figures/cangjie_std.png)
+![](./stdlib/figures/cangjie_std.png)
 
 ### Directory
 
@@ -123,7 +123,7 @@ The main directories are as follows:
 ```
 /cangjie_runtime
 ├── runtime
-└── std
+└── stdlib
     └── libs
         └── std
             ├── argopt      # Command line argument string parsing
@@ -165,11 +165,11 @@ Currently, building the Cangjie Programming Language Standard Library within the
 
 ### Compilation and Building
 
-To build the Cangjie Programming Language Standard Library, please refer to [Build Cangjie Standard Library](./std/build_std.md) for details.
+To build the Cangjie Programming Language Standard Library, please refer to [Build Cangjie Standard Library](./stdlib/build_std.md) for details.
 
 ### Usage Instructions
 
-The standard library build artifacts need to be used with the cjc compiler and runtime, etc. For specific integration methods, please see the [Cangjie Programming Language Standard Library API](./std/doc/libs/summary_cjnative_EN.md).
+The standard library build artifacts need to be used with the cjc compiler and runtime, etc. For specific integration methods, please see the [Cangjie Programming Language Standard Library API](./stdlib/doc/libs/summary_cjnative_EN.md).
 
 ### Platform Support Plan
 - Build Platform Evolution: Plans to support building Cangjie Runtime and Standard Library artifacts on Windows by the end of 2025.
