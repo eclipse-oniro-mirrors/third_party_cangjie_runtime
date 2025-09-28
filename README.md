@@ -77,7 +77,7 @@ The architecture diagram of Cangjie Runtime is shown below:
 │       ├── Sync         # Synchronization primitive implementation module
 │       ├── UnwindStack  # Stack unwinding module
 │       ├── Utils        # General Utility Classes
-│       ├── arch_os      # Hardware platform adaptation code
+│       ├── arch      # Hardware platform adaptation code
 │       └── os           # Software platform adaptation code
 └── std
 ```
