@@ -12,6 +12,8 @@ This repository provides the source code for the Cangjie Runtime and Cangjie Pro
 > - `PCRE2` is used by the standard library `regex`. It is source code dependent and will be compiled and integrated into binary release packages.
 > - `flatbuffers` is used by the standard library `ast`. It is source code dependent and will be compiled and integrated into binary release packages.
 
+For details on third-party dependencies, see the [Third-Party Library Documentation](./std/third_party/README.md).
+
 Below is a detailed introduction to the Cangjie Runtime and the Cangjie Programming Language Standard Library.
 
 ## Cangjie Runtime
@@ -20,7 +22,9 @@ Below is a detailed introduction to the Cangjie Runtime and the Cangjie Programm
 
 The Cangjie runtime is one of the core components of the Cangjie Native backend (CJNative), designed with high performance and lightweight as its goals, and provides strong support for the high performance of the Cangjie language in all scenarios. As the fundamental engine for running Cangjie programs, the Cangjie runtime provides basic driving functions such as garbage collection (GC), CJThread, and loader.
 
-The Cangjie standard library (std) is built on a lower layer based on compiler frontend, middle-end, backend, and runtime, as shown in the figure.
+### System Architecture
+
+The architecture diagram of Cangjie Runtime is shown below:
 
 ![](runtime/figures/cangjie_runtime.png)
 
@@ -48,8 +52,6 @@ The Cangjie standard library (std) is built on a lower layer based on compiler f
 - **FFI** enables function calls and data exchange between the Cangjie and `C/ArkTS`.
 
 - **DFX** provides debugging and tuning capabilities such as log, `CPU` profiling, heap snapshot, and supports runtime state inspection and fault diagnosis.
-
-For details on third-party dependencies, see the [Third-Party Library Documentation](./runtime/third_party/README.md).
 
 ### Directory Structure
 
@@ -108,9 +110,11 @@ The Cangjie Standard Library has three key characteristics and goals:
 
 For a detailed introduction and usage of the standard library, please refer to the [official standard library documentation](https://cangjie-lang.cn/docs?url=%2F1.0.0%2Flibs%2Fstd%2Fstd_module_overview.html).
 
-![](std/figures/cangjie_std.png)
+### System Architecture
 
-For details on third-party dependencies, see the [Third-Party Library Documentation](./std/third_party/README.md).
+The architecture diagram of the Cangjie standard library is shown below:
+
+![](std/figures/cangjie_std.png)
 
 ### Directory
 
