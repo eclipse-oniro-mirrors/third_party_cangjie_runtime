@@ -12,7 +12,7 @@
 > - `PCRE2` 的使用主体是标准库 `regex`，使用方式是源码依赖，会编译集成到二进制发布包中。
 > - `flatbuffers` 的使用主体是标准库 `ast`，使用方式是源码依赖，会编译集成到二进制发布包中。
 
-开源组件依赖可参考[第三方库说明](./std/third_party/README.md)。
+开源组件依赖可参考[第三方库说明](./stdlib/third_party/README.md)。
 
 下面对仓颉运行时和仓颉编程语言标准库进行详细介绍。
 
@@ -79,7 +79,7 @@
 │       ├── Utils        # 工具类
 │       ├── arch      # 硬件平台适配代码
 │       └── os           # 软件平台适配代码
-└── std
+└── stdlib
 ```
 
 ### 约束
@@ -107,13 +107,13 @@
 - 质量标杆：标准库追求在性能、代码风格等方面为其他仓颉库树立范例和标杆。
 
 
-标准库的详细介绍和使用可以参见[仓颉编程语言标准库 API](./std/doc/libs/summary_cjnative.md)。
+标准库的详细介绍和使用可以参见[仓颉编程语言标准库 API](./stdlib/doc/libs/summary_cjnative.md)。
 
 ### 系统架构
 
 仓颉标准库的架构图如下所示：
 
-![](std/figures/cangjie_std_zh.png)
+![](./stdlib/figures/cangjie_std_zh.png)
 
 ### 目录
 
@@ -122,7 +122,7 @@
 ```
 /cangjie_runtime
 ├── runtime
-└── std
+└── stdlib
     └── libs
         └── std
             ├── argopt      # 命令行参数字符串解析
@@ -162,7 +162,7 @@
 
 ### 编译构建
 
-仓颉标准库可通过源码进行构建，详细请参阅[构建仓颉标准库](./std/build_std_zh.md)。
+仓颉标准库可通过源码进行构建，详细请参阅[构建仓颉标准库](./stdlib/build_std_zh.md)。
 
 ### 使用说明
 
