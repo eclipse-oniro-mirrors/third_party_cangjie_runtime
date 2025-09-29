@@ -172,8 +172,7 @@ To build the Cangjie Programming Language Standard Library, please refer to [Bui
 The standard library build artifacts need to be used with the cjc compiler and runtime, etc. For specific integration methods, please see the [Cangjie Programming Language Standard Library API](./stdlib/doc/libs/summary_cjnative_EN.md).
 
 ### Platform Support Plan
-- Build Platform Evolution: Plans to support building Cangjie Runtime and Standard Library artifacts on Windows by the end of 2025.
-- Cangjie Application Runtime Platform Evolution: Plan to support Cangjie applications running on the OHOS-ARM32 platform in Q3 2025, and plan to support reflection and dynamic loading features on the OHOS-ARM32 platform in Q4 2025. Some compiler optimizations such as LTO (Link-Time Optimization) are not yet supported.
+- Build Platform Evolution: Plan to support Cangjie applications running on the OHOS-ARM32 platform in Q3 2025, with advanced features such as reflection, dynamic loading, and some compiler optimizations planned for support in Q4 2025.
 
 ## Repositories Involved
 
