@@ -77,7 +77,7 @@ The architecture diagram of Cangjie Runtime is shown below:
 │       ├── Sync         # Synchronization primitive implementation module
 │       ├── UnwindStack  # Stack unwinding module
 │       ├── Utils        # General Utility Classes
-│       ├── arch      # Hardware platform adaptation code
+│       ├── arch         # Hardware platform adaptation code
 │       └── os           # Software platform adaptation code
 └── stdlib
 ```
@@ -173,7 +173,7 @@ The standard library build artifacts need to be used with the cjc compiler and r
 
 ### Platform Support Plan
 - Build Platform Evolution: Plans to support building Cangjie Runtime and Standard Library artifacts on Windows by the end of 2025.
-- Cangjie Application Runtime Platform Evolution: Planned support for OHOS-ARM32 core features on 2025 Q3, but reflection and dynamic loading, some compiler Optimization, such as LTO（Link-Time Optimization） features will not be included for the time being.
+- Cangjie Application Runtime Platform Evolution: Plan to support Cangjie applications running on the OHOS-ARM32 platform in Q3 2025, and plan to support reflection and dynamic loading features on the OHOS-ARM32 platform in Q4 2025. Some compiler optimizations such as LTO (Link-Time Optimization) are not yet supported.
 
 ## Repositories Involved
 
