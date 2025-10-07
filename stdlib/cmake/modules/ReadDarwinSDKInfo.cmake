@@ -5,6 +5,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 # Use `xcrun` to get MacOS SDK path and version. They are used for compiling Cangjie standard libraries.
 
 execute_process(

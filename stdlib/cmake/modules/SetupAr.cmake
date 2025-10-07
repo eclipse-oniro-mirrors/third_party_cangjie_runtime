@@ -5,6 +5,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 # GNU ar and ranlib operates in non-deterministic mode by default on some systems.
 # To keep build consistency, we set -D option to force deterministic mode if it's
 # possible. Note that some tools do not support -D option, for example BSD `ar` and

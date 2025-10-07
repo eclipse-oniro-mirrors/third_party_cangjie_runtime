@@ -4,6 +4,8 @@
 //
 // See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+// The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 #define C2NStubFrameSize           (8 * 42)
 
 // On execution of "bl MCC_C2NStub", the frame layout of stack(growing downwards) looks like:

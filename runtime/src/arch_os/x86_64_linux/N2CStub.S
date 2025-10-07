@@ -4,6 +4,8 @@
 //
 // See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+// The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 
 // stub need to be 16-byte aligned, so we should use (8 * even numbers)
 #define N2CStubFrameSize           (8 * 38)

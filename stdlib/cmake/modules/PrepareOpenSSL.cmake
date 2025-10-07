@@ -5,6 +5,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 # Find OpenSSL package and prepare OpenSSL link options if target platform supports. Cangjie project
 # requires OpenSSL 1.1 or later version. This file will find OpenSSL package and check its satisifies
 # our version requirement. The only exception here is OHOS. For OHOS, OpenSSL library has special

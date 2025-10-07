@@ -6,6 +6,8 @@
  * See https://cangjie-lang.cn/pages/LICENSE for license information.
  */
 
+// The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 package std.core
 
 func composition<T1, T2, T3>(f: (T1) -> T2, g: (T2) -> T3): (T1) -> T3 {

@@ -4,6 +4,8 @@
 //
 // See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+// The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 #define SafepointStubFrameSize           (8 * 46)
 
 // This signal handler stub relies on MRT_PrepareToHandleSignal to put continuation pc in x17.

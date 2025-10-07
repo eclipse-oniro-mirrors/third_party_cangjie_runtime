@@ -3,6 +3,8 @@
 # with Runtime Library Exception.
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
+
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 if (WINDOWS_FLAG MATCHES 1)
     set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
     set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
