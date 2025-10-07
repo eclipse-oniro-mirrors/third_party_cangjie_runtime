@@ -4,6 +4,8 @@
 //
 // See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+// The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 
 SANITIZER_SYMBOL_DECL(void, __asan_poison_memory_region, 2, volatile const void*, addr, uintptr_t, size);
 SANITIZER_SYMBOL_DECL(void, __asan_unpoison_memory_region, 2, volatile const void*, addr, uintptr_t, size);

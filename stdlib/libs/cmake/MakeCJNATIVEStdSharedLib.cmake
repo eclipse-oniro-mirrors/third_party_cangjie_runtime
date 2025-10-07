@@ -5,6 +5,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 macro(to_link_library_option lib_name)
     if(DARWIN)
         set(${lib_name} -l${${lib_name}})

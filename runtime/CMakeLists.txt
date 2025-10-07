@@ -4,6 +4,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 cmake_minimum_required(VERSION 3.16.3)
 if (OHOS_FLAG MATCHES 1 OR OHOS_FLAG MATCHES 2)
     # Target OHOS is Linux-like system.

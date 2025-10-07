@@ -5,6 +5,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 # This script can merge multiple .a and .o files into a single .a file.
 # At least one output file name and one input file is required.
 # Usage: cmake -P MergeArchives.cmake [ARCHIVER <path to ar>] OUTPUT_FILENAME <output filename> INPUTS <input filenames>...

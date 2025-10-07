@@ -4,6 +4,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 # This script needs to be placed in the output directory of Cangjie compiler.
 # ** NOTE: Please use `source' command to execute this script. **
 
