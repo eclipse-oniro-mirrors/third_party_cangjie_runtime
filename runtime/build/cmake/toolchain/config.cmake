@@ -4,6 +4,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 # compile flags for debug version only
 set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -gdwarf-4")

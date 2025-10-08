@@ -4,6 +4,8 @@
 //
 // See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+// The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 #define cfi_rel_offset(reg, off)	.cfi_rel_offset reg, off
 #define cfi_restore(reg)		.cfi_restore reg
 #define cfi_def_cfa_register(reg)	.cfi_def_cfa_register reg

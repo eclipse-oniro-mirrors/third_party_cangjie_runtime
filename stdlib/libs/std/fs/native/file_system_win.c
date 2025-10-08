@@ -6,6 +6,8 @@
  * See https://cangjie-lang.cn/pages/LICENSE for license information.
  */
 
+// The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 #include "file_system.h"
 
 enum FILE_TIME_TYPE { CREATION, LAST_ACCESS, LAST_WRITE };

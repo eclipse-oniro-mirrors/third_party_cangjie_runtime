@@ -4,6 +4,8 @@
 //
 // See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+// The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 // context include all callee saved register x19 x20 x21 x22 x23 x24 x25 x26 x27
 // x28 and d8 d9 d10 d11 d12 d13 d14 d15 fa sp.
 // stack need to be 16-byte aligned, so we should use (8 * even numbers)

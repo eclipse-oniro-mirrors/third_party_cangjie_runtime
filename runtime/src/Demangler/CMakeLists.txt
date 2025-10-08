@@ -4,6 +4,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 if (COV MATCHES 0)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/third_party_bounds_checking_function/include)
     set(DEMANGLER_SRC

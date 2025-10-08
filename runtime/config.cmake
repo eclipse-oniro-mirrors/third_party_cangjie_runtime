@@ -4,6 +4,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 #Introduction to Compilation Macros
 #	__OHOS__ : Using Open Harmony Operating System tool chain.
 #	__AARCH64_LINUX_GNU__ : Using Aarch64 Linux GNU tool chain.

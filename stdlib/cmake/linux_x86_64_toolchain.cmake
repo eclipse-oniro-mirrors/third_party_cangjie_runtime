@@ -5,6 +5,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 get_filename_component(CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include("${CMAKE_DIR}/linux_toolchain.cmake")
 set(CMAKE_SYSTEM_PROCESSOR "x86_64")

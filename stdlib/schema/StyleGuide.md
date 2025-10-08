@@ -4,6 +4,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 # Style guide
 
 Identifiers in a schema are meant to translate to many different programming languages, so using the style of your "main" language is generally a bad idea.

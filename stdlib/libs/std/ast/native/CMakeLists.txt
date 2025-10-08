@@ -4,6 +4,8 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 # Generate cpp code for ast using flatc with cpp backend.
 set(SCHEMA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../../../schema/NodeFormat.fbs)
 get_filename_component(FILENAME ${SCHEMA_SRC} NAME_WE)
