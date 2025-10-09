@@ -1,7 +1,7 @@
 {
     "name": "@ohos/cangjie_runtime",
     "description": "In the Cangjie programming language, program execution relies on the capabilities of both the runtime and the standard library.",
-    "version": "6.0",
+    "version": "6.1",
     "license": "Apache-2.0 with Runtime Library Exceptions",
     "publishAs": "code-segment",
     "segment": {
