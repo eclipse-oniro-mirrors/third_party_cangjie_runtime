@@ -1,0 +1,76 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/python.gni")
+import("//build/templates/cangjie/cjc_toolchain.gni")
+import("//third_party/cangjie/cangjie_runtime/stdlib/libs/ohos_cangjie_std.gni")
+
+# TODO:
+# 1. Remove template-objs sanitizer configs to avoid instrumentation
+ohos_cangjie_std_cffi_source_set("template-objs") {
+  sources = [ "typetemplate.c" ]
+
+  include_dirs = [ "//prebuilts/cangjie_sdk/${cjc_host_arch}/cangjie/include" ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}
+
+# Action to modify symbol names in typetemplate object file
+action("modify_typetemplate_symbols") {
+  # script = "/usr/bin/env"
+  script = "/home/zhoujing/code/ohos-sig/build/lite/run_shell_cmd.py"
+
+  deps = [ ":template-objs" ]
+
+  t_out = get_label_info(":template-objs", "target_out_dir")
+  t_name = get_label_info(":template-objs", "name")
+  objcopy = rebase_path(
+          "//prebuilts/cangjie_sdk/linux-x64/cangjie/third_party/llvm/bin/llvm-objcopy")
+
+  typetemplate_obj = "${t_out}/${t_name}/typetemplate.o"
+  typetemplate_obj_abs = rebase_path(typetemplate_obj)
+  inputs = [ typetemplate_obj ]
+
+  outputs = [ "${root_out_dir}/gen/thirdparty/cangjie_runtime/typetemplate_modified.stamp" ]
+  args = [
+    "${objcopy} --redefine-sym Int64_ti=Int64.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Nothing_ti=Nothing.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Bool_ti=Bool.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Rune_ti=Rune.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym UInt8_ti=UInt8.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym UInt16_ti=UInt16.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym UInt32_ti=UInt32.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym UInt64_ti=UInt64.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym UIntNative_ti=UIntNative.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Int8_ti=Int8.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Int16_ti=Int16.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Int32_ti=Int32.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym IntNative_ti=IntNative.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Float16_ti=Float16.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Float32_ti=Float32.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Float64_ti=Float64.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Unit_ti=Unit.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Tuple_tt=Tuple.tt ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Box_tt=Box.tt ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym VArray_tt=VArray.tt ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym RawArray_tt=RawArray.tt ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym CPointer_tt=CPointer.tt ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym CString_ti=CString.ti ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym CFunc_tt=CFunc.tt ${typetemplate_obj_abs} && " + "${objcopy} --redefine-sym Closure_tt=Closure.tt ${typetemplate_obj_abs} && " + "touch",
+    rebase_path(
+        "${root_out_dir}/gen/thirdparty/cangjie_runtime/typetemplate_modified.stamp"),
+  ]
+}
+
+ohos_cangjie_std_cffi_source_set("cangjie-std-coreFFI") {
+  sources = [
+    "SIMD_support.c",
+    "atexit.c",
+    "console_read.c",
+    "endian.c",
+    "math.c",
+    "print.c",
+    "string.c",
+    "string_SIMD.c",
+    "string_strstr.c",
+    "string_utf8.c",
+  ]
+
+  external_deps = [ "bounds_checking_function:libsec_shared" ]
+
+  deps = [
+    ":modify_typetemplate_symbols",
+    ":template-objs",
+  ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}

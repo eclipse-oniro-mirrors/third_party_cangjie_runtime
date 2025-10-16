@@ -1,0 +1,42 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/templates/cangjie/cjc.gni")
+
+ohos_cangjie_shared_library("std.sync") {
+  output_name = "cangjie-std-sync"
+  sources = [
+    "atomic.cj",
+    "barrier.cj",
+    "ireentrant_mutex.cj",
+    "lock_interface.cj",
+    "monitor.cj",
+    "mutex_cjnative.cj",
+    "native.cj",
+    "read_write_lock.cj",
+    "reentrant_mutex.cj",
+    "reentrant_read_write_mutex.cj",
+    "semaphore.cj",
+    "sync_counter.cj",
+    "sync_list.cj",
+    "timer.cj",
+  ]
+
+  cj_deps = [
+    "../core:std.core",
+    "../time:std.time",
+  ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}

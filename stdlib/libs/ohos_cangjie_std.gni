@@ -1,0 +1,71 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+template("ohos_cangjie_std_cffi_source_set") {
+  ohos_source_set(target_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "cflags",
+                             "cflags_c",
+                             "cflags_cc",
+                           ])
+    cflags_c = [ "-fno-lto" ]
+    cflags_cc = [ "-fno-lto" ]
+
+    # cflags = [
+    #     "-fvisibility=hidden",
+    # ]
+    if (defined(invoker.cflags_c)) {
+      cflags_c += invoker.cflags_c
+    }
+
+    if (defined(invoker.cflags_cc)) {
+      cflags_cc += invoker.cflags_cc
+    }
+
+    if (defined(invoker.cflags)) {
+      cflags += invoker.cflags
+    }
+
+    _outputs = []
+    foreach(src, invoker.sources) {
+      _ss_list = []
+      _ss_list = string_split(src, ".")
+      _outputs += [ "${_ss_list[0]}.o" ]
+    }
+
+    _cangjie_config_info = {
+      outputs = _outputs
+      out_dir = rebase_path(target_out_dir) + "/${target_name}"
+      type = "source_set"
+    }
+
+    metadata = {
+      cangjie_deps = [ _cangjie_config_info ]
+    }
+  }
+}
+
+if (is_ohos) {
+  if (current_cpu == "arm64") {
+    target_arch = "linux_ohos_aarch64_cjnative"
+  } else if (current_cpu == "x86_64") {
+    target_arch = "linux_ohos_x86_64_cjnative"
+  } else {
+    print("unsupported ohos platform ${current_cpu}")
+    assert(false)
+  }
+}

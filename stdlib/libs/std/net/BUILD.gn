@@ -1,0 +1,79 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/templates/cangjie/cjc.gni")
+
+ohos_cangjie_shared_library("std.net") {
+  output_name = "cangjie-std-net"
+  sources = [
+    "address_family.cj",
+    "dns.cj",
+    "ip_addess.cj",
+    "ip_address_ffi.cj",
+    "ip_prefix.cj",
+    "ip_socket_address.cj",
+    "ipv4_address.cj",
+    "ipv6_address.cj",
+    "linger.cj",
+    "mutex.cj",
+    "result.cj",
+    "rune_ext.cj",
+    "socket_address.cj",
+    "socket_api.cj",
+    "socket_buffer.cj",
+    "socket_enum.cj",
+    "socket_exception.cj",
+    "socket_ffi.cj",
+    "socket_ffi_cjnative.cj",
+    "socket_ffi_cjnative_impl.cj",
+    "socket_ffi_sockaddr.cj",
+    "socket_holder.cj",
+    "socket_impl_common.cj",
+    "socket_keep_alive.cj",
+    "socket_options.cj",
+    "socket_raw_cjnative.cj",
+    "socket_raw_enum.cj",
+    "socket_state.cj",
+    "socket_util.cj",
+    "tcp.cj",
+    "tcp_server.cj",
+    "udp.cj",
+    "uint128.cj",
+    "unix.cj",
+    "unix_datagram.cj",
+    "unix_socket_address.cj",
+  ]
+
+  deps = [ "native:cangjie-std-netFFI" ]
+
+  cjc_args = [
+    "-l:libcangjie-aio.a",
+    "-l:libcangjie-runtime.so",
+  ]
+
+  cj_deps = [
+    "../binary:std.binary",
+    "../collection:std.collection",
+    "../convert:std.convert",
+    "../core:std.core",
+    "../io:std.io",
+    "../math:std.math",
+    "../overflow:std.overflow",
+    "../sort:std.sort",
+    "../sync:std.sync",
+    "../time:std.time",
+  ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}

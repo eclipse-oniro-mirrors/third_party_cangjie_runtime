@@ -1,0 +1,50 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+group("cangjie_std_package") {
+  deps = [
+    "dynamicLoader:cangjie-dynamicLoader-opensslFFI",
+    "std:std",
+    "std/argopt:std.argopt",
+    "std/ast:std.ast",
+    "std/binary:std.binary",
+    "std/collection:std.collection",
+    "std/collection/concurrent:std.collection.concurrent",
+    "std/console:std.console",
+    "std/convert:std.convert",
+    "std/core:std.core",
+    "std/crypto:std.crypto",
+    "std/crypto/cipher:std.crypto.cipher",
+    "std/crypto/digest:std.crypto.digest",
+    "std/database:std.database",
+    "std/database/sql:std.database.sql",
+    "std/env:std.env",
+    "std/fs:std.fs",
+    "std/io:std.io",
+    "std/math:std.math",
+    "std/math/numeric:std.math.numeric",
+    "std/net:std.net",
+    "std/objectpool:std.objectpool",
+    "std/overflow:std.overflow",
+    "std/posix:std.posix",
+    "std/process:std.process",
+    "std/random:std.random",
+    "std/ref:std.ref",
+    "std/reflect:std.reflect",
+    "std/regex:std.regex",
+    "std/sort:std.sort",
+    "std/sync:std.sync",
+    "std/time:std.time",
+    "std/unicode:std.unicode",
+  ]
+}

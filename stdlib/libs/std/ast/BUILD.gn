@@ -1,0 +1,94 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/templates/cangjie/cjc.gni")
+import("//build/templates/cangjie/cjc_toolchain.gni")
+
+# Action to modify symbol names in typetemplate object file
+action("generate_cj_file") {
+  # script = "/usr/bin/env"
+  script = "/home/zhoujing/code/ohos-sig/build/lite/run_shell_cmd.py"
+
+  _nodeformat_abs = rebase_path("../../../schema/NodeFormat.fbs")
+  _flatc_path = rebase_path(
+          "//prebuilts/cangjie_sdk/build-tools/flatc/${build_tools_arch}/flatc")
+  inputs = [ _nodeformat_abs ]
+
+  outputs = [ "${target_out_dir}/generate_cj_file/NodeFormat_generated.cj" ]
+  args = [
+    "${_flatc_path}",
+    "--no-warnings",
+    "--cangjie",
+    "-o",
+    rebase_path("${target_out_dir}/generate_cj_file"),
+    _nodeformat_abs,
+  ]
+}
+
+ohos_cangjie_shared_library("std.ast") {
+  output_name = "cangjie-std-ast"
+  sources = [
+    "${target_out_dir}/generate_cj_file/NodeFormat_generated.cj",
+    "common.cj",
+    "decls.cj",
+    "diag_report.cj",
+    "exception.cj",
+    "exprs.cj",
+    "ffi.cj",
+    "nodes.cj",
+    "parse_decl.cj",
+    "parse_expr.cj",
+    "parse_node.cj",
+    "parse_pattern.cj",
+    "parse_type.cj",
+    "patterns.cj",
+    "position.cj",
+    "to_bytes.cj",
+    "token.cj",
+    "token_kind.cj",
+    "tokens.cj",
+    "totokens.cj",
+    "types.cj",
+    "visit.cj",
+  ]
+
+  deps = [
+    ":generate_cj_file",
+    "native:cangjie-std-astFFI",
+  ]
+
+  cj_deps = [ "../core:std.core" ]
+
+  # TODO: cangjie-ast-support need gn deps
+  cjc_args = [
+    "-lpthread",
+    "-lcangjie-ast-support",
+    "-l:libc++.a",
+  ]
+
+  external_deps = [
+    "flatbuffers:flatbuffers_for_cangjie",
+  ]
+
+  ast_deps_source_out_path =
+      get_label_info("flatbuffers:flatbuffers_for_cangjie", "target_out_dir") + "/cangjie"
+
+  sources += [
+    "${ast_deps_source_out_path}/decode.cj",
+    "${ast_deps_source_out_path}/flatbuffer_object.cj",
+    "${ast_deps_source_out_path}/table.cj",
+  ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}

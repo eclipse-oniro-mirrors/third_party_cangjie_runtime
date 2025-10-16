@@ -194,7 +194,7 @@ extern int64_t CJ_TIME_ReadAllBytesFromFile(const char* path, int64_t pathLen, c
 }
 
 #include <time.h>
-extern const int64_t CJ_TIME_GetLocalTimeOffset()
+extern int64_t CJ_TIME_GetLocalTimeOffset()
 {
     time_t now;
     (void)time(&now);

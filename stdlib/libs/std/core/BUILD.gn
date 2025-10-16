@@ -1,0 +1,86 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/templates/cangjie/cjc.gni")
+
+ohos_cangjie_shared_library("std.core") {
+  output_name = "cangjie-std-core"
+  sources = [
+    "annotation.cj",
+    "arithmetic_exception.cj",
+    "array.cj",
+    "array_common.cj",
+    "array_intrinsic.cj",
+    "atexit.cj",
+    "atomic.cj",
+    "box.cj",
+    "byte_extension.cj",
+    "c_pointer_resource.cj",
+    "c_string_resource.cj",
+    "c_type.cj",
+    "char_extension.cj",
+    "collection.cj",
+    "comparable.cj",
+    "countable.cj",
+    "duration.cj",
+    "endian.cj",
+    "equatable.cj",
+    "error.cj",
+    "exception.cj",
+    "float.cj",
+    "flow.cj",
+    "future.cj",
+    "hashable.cj",
+    "illegal_argument_exception.cj",
+    "illegal_format_exception.cj",
+    "illegal_memory_exception.cj",
+    "illegal_state_exception.cj",
+    "incompatible_package_exception.cj",
+    "index_out_of_bounds_exception.cj",
+    "iterator.cj",
+    "libc.cj",
+    "main_args.cj",
+    "native.cj",
+    "negative_array_size_exception.cj",
+    "none_value_exception.cj",
+    "object.cj",
+    "option.cj",
+    "out_of_memory_error.cj",
+    "overflow_exception.cj",
+    "print.cj",
+    "range.cj",
+    "resource.cj",
+    "runtime_call_throw_exception.cj",
+    "sleep.cj",
+    "spawn_exception.cj",
+    "stack_overflow_error.cj",
+    "stack_trace_element.cj",
+    "string.cj",
+    "string_builder.cj",
+    "string_common.cj",
+    "thread.cj",
+    "thread_common.cj",
+    "thread_local.cj",
+    "timeout_exception.cj",
+    "to_string.cj",
+    "type_alias.cj",
+    "unsupported_exception.cj",
+  ]
+
+  deps = [ "native:cangjie-std-coreFFI" ]
+
+  cjc_args = [ "--no-prelude" ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}
