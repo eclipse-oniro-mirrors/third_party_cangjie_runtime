@@ -1,0 +1,43 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/templates/cangjie/cjc.gni")
+
+ohos_cangjie_shared_library("std.collection") {
+  output_name = "cangjie-std-collection"
+  sources = [
+    "array_deque.cj",
+    "array_list.cj",
+    "array_queue.cj",
+    "array_stack.cj",
+    "concurrent_modification_exception.cj",
+    "end_operation.cj",
+    "hash_map.cj",
+    "hash_set.cj",
+    "linked_list.cj",
+    "list_interface.cj",
+    "map_interface.cj",
+    "middle_operation.cj",
+    "queue.cj",
+    "set_interface.cj",
+    "stack.cj",
+    "transform_operation.cj",
+    "tree_map.cj",
+    "tree_set.cj",
+  ]
+
+  cj_deps = [ "../core:std.core" ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}

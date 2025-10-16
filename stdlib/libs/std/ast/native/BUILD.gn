@@ -1,0 +1,66 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/templates/cangjie/cjc_toolchain.gni")
+import("//third_party/cangjie/cangjie_runtime/stdlib/libs/ohos_cangjie_std.gni")
+
+action("generate_c_header_file") {
+  script = "/home/zhoujing/code/ohos-sig/build/lite/run_shell_cmd.py"
+
+  _nodeformat_abs = rebase_path("../../../../schema/NodeFormat.fbs")
+  _flatc_path = rebase_path(
+          "//prebuilts/cangjie_sdk/build-tools/flatc/${build_tools_arch}/flatc")
+  inputs = [ _nodeformat_abs ]
+
+  outputs = [ "${target_out_dir}/generate_c_header_file/include/flatbuffers/NodeFormat_generated.h" ]
+  args = [
+    "${_flatc_path}",
+    "--no-warnings",
+    "-c",
+    "-o",
+    rebase_path("${target_out_dir}/generate_c_header_file/include/flatbuffers"),
+    _nodeformat_abs,
+  ]
+}
+
+ohos_cangjie_std_cffi_source_set("cangjie-std-astFFI") {
+  sources = [ "ast_api.cpp" ]
+  use_exceptions = true
+  use_rtti = true
+
+  deps = [ ":generate_c_header_file" ]
+
+  defines = [ "CANGJIE_CODEGEN_CJNATIVE_BACKEND" ]
+
+  if (is_ohos) {
+    defines += [ "__OHOS__" ]
+  }
+
+  ldflags = [
+    "-L //prebuilts/cangjie_sdk/${cjc_host_arch}/cangjie/${target_arch}",
+    "-lcangjie-ast-support",
+    "-lpthread",
+  ]
+
+  include_dirs = [
+    "//prebuilts/cangjie_sdk/${cjc_host_arch}/cangjie/include",
+    "${target_out_dir}/generate_c_header_file/include",
+  ]
+
+  external_deps = [
+    "flatbuffers:libflatbuffers_static",
+  ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}
