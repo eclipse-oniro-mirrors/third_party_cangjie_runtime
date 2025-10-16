@@ -1,0 +1,12 @@
+./src/runtime/schedule/include/schedule.h
+./src/runtime/schedule/include/inner/gas/${CPU_FAMILY}/${CPU_CORE}/cjthread_context.h
+./src/base/log/include/log.h
+./src/runtime/timer/include/timer.h
+./src/syscall/include/mrt_syscall_common.h
+./src/syscall/include/linux/mrt_syscall.h
+./src/runtime/waitqueue/include/waitqueue.h
+./src/sync/sema/include/sema.h
+./src/aio/sock/include/sock.h
+./src/base/mid/include/schedule_rename.h
+./src/base/mid/include/schedule_rename_part2.h
+./src/base/mid/include/mid.h

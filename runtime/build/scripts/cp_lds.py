@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
 # This source file is part of the Cangjie project, licensed under Apache-2.0
 # with Runtime Library Exception.
@@ -10,25 +12,18 @@ import sys
 import shutil
 import os
 
-def copy_files_from_directory(target_dir, arch):
-    # 从环境变量 CHART_ROOT 中读取路径
-    chart_root = os.environ.get('CHART_ROOT')
-
-    if not chart_root:
-        print("Error: CHART_ROOT environment variable is not set.")
-        sys.exit(1)
-
+def copy_files_from_directory(root_path, target_dir, arch):
     # 根据架构类型选择要拷贝的目录
-    if arch.lower() == 'x86_64':
-        source_dir = chart_root + '/build/lds/x86_64_linux'
-    elif arch.lower() == 'aarch64':
-        source_dir = chart_root + '/build/lds/aarch64_linux'
+    if arch.lower() == 'x64':
+        source_dir = root_path + '/build/lds/x86_64_linux'
+    elif arch.lower() == 'arm64':
+        source_dir = root_path + '/build/lds/aarch64_linux'
     else:
         print(f"Error: Unsupported architecture: {arch}")
         sys.exit(1)
 
     print(source_dir)
-    print(chart_root)
+    print(root_path)
     # 检查源目录是否存在
     if not os.path.isdir(source_dir):
         print(f"Error: Source directory {source_dir} does not exist.")
@@ -45,11 +40,12 @@ def copy_files_from_directory(target_dir, arch):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print("Usage: python script.py <target_directory> <architecture>")
         sys.exit(1)
 
-    target_dir = sys.argv[1]
-    arch = sys.argv[2]
+    root_path = sys.argv[1]
+    target_dir = sys.argv[2]
+    arch = sys.argv[3]
 
-    copy_files_from_directory(target_dir, arch)
+    copy_files_from_directory(root_path, target_dir, arch)

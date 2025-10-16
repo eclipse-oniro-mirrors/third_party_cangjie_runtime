@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
 # This source file is part of the Cangjie project, licensed under Apache-2.0
 # with Runtime Library Exception.
@@ -15,12 +17,14 @@ def copy_files(txt_file, target_dir):
     print(target_dir)
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
-
+    
+    base_path = os.path.dirname(txt_file)
     with open(txt_file, 'r') as file_list:
         for line in file_list:
             source_file = line.strip()  # 移除行尾的换行符
             path_expanded = os.path.expandvars(source_file)
-            absolute_path = os.path.abspath(path_expanded)
+            relative_path = os.path.join(base_path, path_expanded)
+            absolute_path = os.path.abspath(relative_path)
             if os.path.isfile(absolute_path):  # 检查文件是否存在
                 command = f"rsync -ua {absolute_path} {target_dir}"
                 os.system(command)

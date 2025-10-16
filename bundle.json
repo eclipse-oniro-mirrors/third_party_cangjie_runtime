@@ -29,7 +29,8 @@
         },
         "build": {
             "sub_component": [
-                "//third_party/cangjie/cangjie_runtime:cangjie_prebuilts_package"
+                "//third_party/cangjie/cangjie_runtime:cangjie_prebuilts_package",
+                "//third_party/cangjie/cangjie_runtime/runtime:runtime"
             ],
             "inner_kits": [],
             "test": []

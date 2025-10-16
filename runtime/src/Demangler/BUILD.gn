@@ -1,0 +1,116 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("../../runtime_config.gni")
+
+ohos_static_library("demangler") {
+  cflags += []
+  cflags_c += []
+  cflags_cc += []
+  asmflags += []
+  ldflags += []
+  defines += []
+  include_dirs += []
+
+  external_deps = [
+    "bounds_checking_function:libsec_static"
+  ]
+
+  sources = [
+    "Demangler.cpp",
+    "DeCompression.cpp",
+    "../Base/CString.cpp",
+    "../Base/FixedCString.cpp",
+  ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}
+
+ohos_static_library("libcangjie-demangle-static") {
+  cflags += []
+  cflags_c += ["-DBUILD_LIB_CANGJIE_DEMANGLE"]
+  cflags_cc += ["-DBUILD_LIB_CANGJIE_DEMANGLE"]
+  asmflags += []
+  ldflags += []
+  defines += []
+  include_dirs += []
+
+  external_deps = [
+    "bounds_checking_function:libsec_static"
+  ]
+
+  sources = [
+    "Demangler.cpp",
+    "DeCompression.cpp",
+    "CangjieDemangle.cpp",
+  ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}
+
+ohos_shared_library("libcangjie-demangle") {
+  cflags += []
+  cflags_c += ["-DBUILD_LIB_CANGJIE_DEMANGLE"]
+  cflags_cc += ["-DBUILD_LIB_CANGJIE_DEMANGLE"]
+  asmflags += []
+  ldflags += []
+  defines += []
+  include_dirs += []
+
+  external_deps = [
+    "bounds_checking_function:libsec_shared"
+  ]
+
+  sources = [
+    "Demangler.cpp",
+    "DeCompression.cpp",
+    "CangjieDemangle.cpp",
+  ]
+
+  output_extension = "so"
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}
+
+ohos_executable("cjfilt") {
+  cflags += []
+  cflags_c += ["-DBUILD_LIB_CANGJIE_DEMANGLE"]
+  cflags_cc += ["-DBUILD_LIB_CANGJIE_DEMANGLE"]
+  asmflags += []
+  defines += []
+  include_dirs += []
+
+  sources = [
+    "DeCompression.cpp",
+    "Demangler.cpp",
+    "Cjfilt.cpp",
+  ]
+  deps = [
+    ":demangler"
+  ]
+
+  ldflags += [
+    "-fPIE",
+    "-pie",
+  ]
+
+  external_deps = [
+    "bounds_checking_function:libsec_shared"
+  ]
+
+  subsystem_name = "thirdparty"
+  part_name = "cangjie_runtime"
+}
