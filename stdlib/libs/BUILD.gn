@@ -13,7 +13,6 @@
 
 group("cangjie_std_package") {
   deps = [
-    "dynamicLoader:cangjie-dynamicLoader-opensslFFI",
     "std:std",
     "std/argopt:std.argopt",
     "std/ast:std.ast",

@@ -85,7 +85,6 @@ template("cangjie_prebuilts") {
 cangjie_prebuilts("cangjie_prebuilts_package") {
   prebuilt_libs_path = "${prebults_cangjie_sdk_linux_x86_64_path}/runtime/lib/${cj_config.platform_target}"
   prebuilt_libs = [
-    "cangjie-dynamicLoader-opensslFFI",
     "cangjie-std-argopt",
     "cangjie-std-ast",
     "cangjie-std-binary",
@@ -99,10 +98,6 @@ cangjie_prebuilts("cangjie_prebuilts_package") {
     "cangjie-std-crypto",
     "cangjie-std-database",
     "cangjie-std-database.sql",
-    "cangjie-std-deriving.api",
-    "cangjie-std-deriving.builtins",
-    "cangjie-std-deriving.impl",
-    "cangjie-std-deriving.resolve",
     "cangjie-std-env",
     "cangjie-std-fs",
     "cangjie-std-io",
