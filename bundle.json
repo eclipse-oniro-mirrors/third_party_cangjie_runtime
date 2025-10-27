@@ -5,15 +5,15 @@
     "license": "Apache-2.0 with Runtime Library Exceptions",
     "publishAs": "code-segment",
     "segment": {
-        "destPath": "third_party/cangjie_runtime"
+        "destPath": "third_party/cangjie/cangjie_runtime"
     },
     "dirs": {},
     "scripts": {},
     "licensePath": "./LICENSE",
     "component": {
         "name": "cangjie_runtime",
-        "subsystem": "arkcompiler",
-        "syscap": [ "SystemCapability.Utils.Cangjie" ],
+        "subsystem": "thirdparty",
+        "syscap": [],
         "features": [],
         "adapted_system_type": [ "standard" ],
         "rom": "25MB",
@@ -29,7 +29,7 @@
         },
         "build": {
             "sub_component": [
-                "//third_party/cangjie_runtime:cangjie_prebuilts_package"
+                "//third_party/cangjie/cangjie_runtime:cangjie_prebuilts_package"
             ],
             "inner_kits": [],
             "test": []

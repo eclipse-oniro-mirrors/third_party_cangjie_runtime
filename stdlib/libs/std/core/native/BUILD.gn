@@ -13,7 +13,7 @@
 
 import("//build/config/python.gni")
 import("//build/templates/cangjie/cjc_toolchain.gni")
-import("//third_party/cangjie_runtime/stdlib/libs/ohos_cangjie_std.gni")
+import("//third_party/cangjie/cangjie_runtime/stdlib/libs/ohos_cangjie_std.gni")
 
 # TODO:
 # 1. Remove template-objs sanitizer configs to avoid instrumentation
