@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 
 # List all the input args
 declare_args() {
-  CANGJIE_RUNTIME_PATH = "//third_party/cangjie_runtime/runtime"
+  CANGJIE_RUNTIME_PATH = "//third_party/cangjie/cangjie_runtime/runtime"
   BUILD_TYPE = "Release"
   OHOS_PRODUCT_NAME = "rk3568"
   ASAN_SUPPORT_FLAG = 0

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//third_party/cangjie_runtime/stdlib/libs/ohos_cangjie_std.gni")
+import("//third_party/cangjie/cangjie_runtime/stdlib/libs/ohos_cangjie_std.gni")
 
 ohos_cangjie_std_cffi_source_set("cangjie-std-objectpoolFFI") {
   sources = [ "objectpool_ffi.c" ]
