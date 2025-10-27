@@ -138,10 +138,10 @@ void CjHeapDataForIDE::SerializeAllStructClass()
     writer->WriteChar(',');
 }
 
-void CjHeapDataForIDE::SerializeClassLoad(TypeInfo* klass, CjHeapDataStringId klassId, const u1 tag)
+void CjHeapDataForIDE::SerializeClassLoad(TypeInfo* ti, CjHeapDataStringId klassId, const u1 tag)
 {
     writer->WriteChar('[');
-    writer->WriteNumber(GetId(reinterpret_cast<CjHeapDataStringId>(klass)));
+    writer->WriteNumber(GetId(reinterpret_cast<CjHeapDataStringId>(ti)));
     writer->WriteChar(',');
     writer->WriteNumber(GetId(reinterpret_cast<CjHeapDataStringId>(klassId)));
     writer->WriteChar(']');
@@ -315,6 +315,8 @@ void CjHeapDataForIDE::SerializeGlobalRoot(BaseObject*& obj, const u1 tag)
     writer->WriteChar('[');
     writer->WriteNumber(tag);
     writer->WriteChar(',');
+    writer->WriteNumber(GetObjType(obj));
+    writer->WriteChar(',');
     CjHeapDataID objAddr = (reinterpret_cast<CjHeapDataID>(obj));
     u4 id = GetId(objAddr);
     CString name = obj->GetTypeInfo()->GetName();
@@ -331,6 +333,8 @@ void CjHeapDataForIDE::SerializeUnknownRoot(BaseObject*& obj, const u1 tag)
 {
     writer->WriteChar('[');
     writer->WriteNumber(tag);
+    writer->WriteChar(',');
+    writer->WriteNumber(GetObjType(obj));
     writer->WriteChar(',');
     CjHeapDataID objAddr = (reinterpret_cast<CjHeapDataID>(obj));
     u4 id = GetId(objAddr);
@@ -349,6 +353,8 @@ void CjHeapDataForIDE::SerializeLocalRoot(BaseObject*& obj, const u1 tag, const 
 {
     writer->WriteChar('[');
     writer->WriteNumber(tag);
+    writer->WriteChar(',');
+    writer->WriteNumber(GetObjType(obj));
     writer->WriteChar(',');
     CjHeapDataID objAddr = (reinterpret_cast<CjHeapDataID>(obj));
     u4 id = GetId(objAddr);
@@ -373,6 +379,8 @@ void CjHeapDataForIDE::SerializeThreadObjectRoot(BaseObject*& obj, const u1 tag,
     writer->WriteChar('[');
     writer->WriteNumber(tag);
     writer->WriteChar(',');
+    writer->WriteNumber(GetObjType(obj));
+    writer->WriteChar(',');
     CjHeapDataID objAddr = (reinterpret_cast<CjHeapDataID>(obj));
     u4 id = GetId(objAddr);
     writer->WriteNumber(id);
@@ -389,20 +397,20 @@ void CjHeapDataForIDE::SerializeThreadObjectRoot(BaseObject*& obj, const u1 tag,
  *     ID classObjId;   // class object ID
  *     u4 size;         // instance size (in bytes)
  */
-void CjHeapDataForIDE::SerializeClass(TypeInfo* klass, CjHeapDataStringId klassId, const u1 tag)
+void CjHeapDataForIDE::SerializeClass(TypeInfo* ti, CjHeapDataStringId klassId, const u1 tag)
 {
     writer->WriteChar('[');
     writer->WriteNumber(tag);
     writer->WriteChar(',');
-    writer->WriteNumber(GetId(reinterpret_cast<CjHeapDataStringId>(klass)));
+    writer->WriteNumber(GetId(reinterpret_cast<CjHeapDataStringId>(ti)));
     writer->WriteChar(',');
     // 8-byte alignment
-    if (!klass->IsObjectType()) {
+    if (!ti->IsObjectType()) {
         writer->WriteNumber(0);
         writer->WriteChar(']');
         return;
     }
-    u4 size = AlignUp<u4>((klass->GetInstanceSize() + sizeof(TypeInfo*)), alignment);
+    u4 size = AlignUp<u4>((ti->GetInstanceSize() + TYPEINFO_PTR_SIZE), alignment);
     // 8 bytes for each field
     writer->WriteNumber(size);
     writer->WriteChar(']');
@@ -421,6 +429,8 @@ void CjHeapDataForIDE::SerializeObjectArray(BaseObject*& obj, const u1 tag)
 {
     writer->WriteChar('[');
     writer->WriteNumber(tag);
+    writer->WriteChar(',');
+    writer->WriteNumber(GetObjType(obj));
     writer->WriteChar(',');
     CjHeapDataID objAddr = (reinterpret_cast<CjHeapDataID>(obj));
     u4 id = GetId(objAddr);
@@ -475,6 +485,8 @@ void CjHeapDataForIDE::SerializeStructArray(BaseObject*& obj, const u1 tag)
 {
     writer->WriteChar('[');
     writer->WriteNumber(tag);
+    writer->WriteChar(',');
+    writer->WriteNumber(GetObjType(obj));
     writer->WriteChar(',');
     CjHeapDataID objAddr = (reinterpret_cast<CjHeapDataID>(obj));
     u4 id = GetId(objAddr);
@@ -534,6 +546,8 @@ void CjHeapDataForIDE::SerializePrimitiveArray(BaseObject*& obj, const u1 tag)
     writer->WriteChar('[');
     writer->WriteNumber(tag);
     writer->WriteChar(',');
+    writer->WriteNumber(GetObjType(obj));
+    writer->WriteChar(',');
     CjHeapDataID objAddr = (reinterpret_cast<CjHeapDataID>(obj));
     u4 id = GetId(objAddr);
     writer->WriteNumber(id);
@@ -571,13 +585,13 @@ void CjHeapDataForIDE::SerializePrimitiveArray(BaseObject*& obj, const u1 tag)
  *     ID classObjId;   // class object ID
  *     u4 size;         // instance size (in bytes)
  */
-void CjHeapDataForIDE::SerializeStructClass(TypeInfo* klass, CjHeapDataStringId klassId, const u1 tag)
+void CjHeapDataForIDE::SerializeStructClass(TypeInfo* ti, CjHeapDataStringId klassId, const u1 tag)
 {
     writer->WriteChar('[');
     writer->WriteNumber(tag);
     writer->WriteChar(',');
-    writer->WriteNumber(GetId(reinterpret_cast<CjHeapDataStringId>(klass)));
-    TypeInfo* componentKlass = klass->GetComponentTypeInfo();
+    writer->WriteNumber(GetId(reinterpret_cast<CjHeapDataStringId>(ti)));
+    TypeInfo* componentKlass = ti->GetComponentTypeInfo();
     // No alignment required
     u4 size = componentKlass->GetInstanceSize();
     writer->WriteChar(',');
@@ -598,6 +612,8 @@ void CjHeapDataForIDE::SerializeInstance(BaseObject*& obj, const u1 tag)
     writer->WriteChar('[');
     writer->WriteNumber(tag);
     writer->WriteChar(',');
+    writer->WriteNumber(GetObjType(obj));
+    writer->WriteChar(',');
     u4 id = GetId(reinterpret_cast<CjHeapDataID>(obj));
     writer->WriteNumber(id);
     writer->WriteChar(',');
@@ -612,7 +628,7 @@ void CjHeapDataForIDE::SerializeInstance(BaseObject*& obj, const u1 tag)
     TypeInfo* currentClass = obj->GetTypeInfo();
     if (obj->HasRefField()) {
         GCTib gcTib = currentClass->GetGCTib();
-        MAddress objAddr = reinterpret_cast<MAddress>(obj) + sizeof(TypeInfo*);
+        MAddress objAddr = reinterpret_cast<MAddress>(obj) + TYPEINFO_PTR_SIZE;
         gcTib.ForEachBitmapWord(objAddr, visitor);
     }
     writer->WriteNumber(num);
@@ -641,4 +657,15 @@ CjHeapData::u4 CjHeapDataForIDE::GetId(CjHeapDataStringId klassId)
     return stringIdxMap[klassId];
 }
 
+I8 CjHeapDataForIDE::GetObjType(BaseObject* obj)
+{
+    I8 objType = TypeKind::TYPE_KIND_NOTHING;
+    if (obj != nullptr) {
+        TypeInfo* typeInfo = obj->GetTypeInfo();
+        if (typeInfo != nullptr) {
+            objType = typeInfo->GetType();
+        }
+    }
+    return objType;
+}
 }

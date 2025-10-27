@@ -118,17 +118,16 @@ static bool CheckInitConfig(const struct RuntimeParam& param)
         LOG(RTLOG_ERROR, "RuntimeParam.heapParam.heapUtilization must be in range (0, 1].\n");
         return false;
     }
-    // Garbage ration must be in range [0.1, 1].
-    const double minGarbageRation = 0.1;
+    // Garbage ration must be in range [0.0, 1.0], which should be consistent with the documentation.
+    const double minGarbageRation = 0.0;
     const double maxGarbageRation = 1;
-    if ((param.gcParam.garbageThreshold - 0.0 < -ERRORESTIMATE ||
-        param.gcParam.garbageThreshold - 0.0 > ERRORESTIMATE) &&
-        (param.gcParam.garbageThreshold - minGarbageRation < ERRORESTIMATE
-            || param.gcParam.garbageThreshold - maxGarbageRation > ERRORESTIMATE)) {
-        LOG(RTLOG_ERROR, "RuntimeParam.gcParam.garbageThreshold must be in range [0.1, 1].\n");
-        return false;
+    if (param.gcParam.garbageThreshold - minGarbageRation >= 0 &&
+        maxGarbageRation - param.gcParam.garbageThreshold >= 0) {
+        return true;
+    } else {
+        LOG(RTLOG_ERROR, "param.gcParam.garbageThreshold must be in range [0.0, 1.0].\n");
     }
-    return true;
+    return false;
 }
 
 RTErrorCode SetRuntimeInitFlag()
@@ -194,7 +193,7 @@ RTErrorCode InitCJRuntime(const struct RuntimeParam* param)
     }
 #ifdef _WIN64
     size_t defaultStackSize = 128; // default 128KB in windows, measured in KB
-#elif defined(__OHOS__) || defined(__HOS__)
+#elif defined(__OHOS__) || defined(__ANDROID__)
     size_t defaultStackSize = 1024; // default 1MB in OHOS, measured in KB
 #else
     size_t defaultStackSize = 128; // default 128KB, measured in KB
@@ -325,21 +324,20 @@ RTErrorCode FiniCJRuntime()
         LOG(RTLOG_ERROR, "Cangjie runtime has not been initialized when executing finish.");
         return E_FAILED;
     }
-    if (g_runtimeFinished.load()) {
-        LOG(RTLOG_ERROR, "Cangjie runtime has been finished and don't support finish again.");
+    if (!g_runtimeFinished.exchange(true)) {
+        // Ensure that sampling thread is stopped before finishing runtime.
+        MapleRuntime::CpuProfiler::GetInstance().TryStopSampling();
+
+        MapleRuntime::Mutator* mutator = MapleRuntime::Mutator::GetMutator();
+        if (mutator != nullptr) {
+            MapleRuntime::MutatorManager::Instance().TransitMutatorToExit();
+        }
+        ScheduleHandle scheduler = MapleRuntime::Runtime::Current().GetConcurrencyModel().GetThreadScheduler();
+        ScheduleStopOutside(scheduler);
+        MapleRuntime::CangjieRuntime::FiniAndDelete();
         return E_OK;
     }
-    g_runtimeFinished.store(true);
-    // Ensure that sampling thread is stopped before finishing runtime.
-    MapleRuntime::CpuProfiler::GetInstance().TryStopSampling();
-
-    MapleRuntime::Mutator* mutator = MapleRuntime::Mutator::GetMutator();
-    if (mutator != nullptr) {
-        MapleRuntime::MutatorManager::Instance().TransitMutatorToExit();
-    }
-    ScheduleHandle scheduler = MapleRuntime::Runtime::Current().GetConcurrencyModel().GetThreadScheduler();
-    ScheduleStopOutside(scheduler);
-    MapleRuntime::CangjieRuntime::FiniAndDelete();
+    LOG(RTLOG_ERROR, "Cangjie runtime has been finished and don't support finish again.");
     return E_OK;
 }
 
@@ -432,7 +430,7 @@ ScheduleHandle GetScheduler()
 CJThreadHandle RunCJTaskImpl(const CJTaskFunc func, void* args, int num = 0, CJThreadSpecificDataInner* data = nullptr,
                              ScheduleHandle schedule = nullptr, bool isSignal = false)
 {
-    MapleRuntime::ScopedEntryHiTrace hiTrace("CJRT_INVOKE_CJTASK_ASYNC");
+    MapleRuntime::ScopedEntryTrace trace("CJRT_INVOKE_CJTASK_ASYNC");
     if (!CheckRuntimeValid(func)) {
         return nullptr;
     }

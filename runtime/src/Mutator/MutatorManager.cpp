@@ -52,6 +52,21 @@ extern "C" void HandleSafepoint(ThreadLocalData* tlData)
     DLOG(SIGNAL, "HandleSafepoint, thread restarted.");
 }
 
+#if defined (__arm__)
+extern "C" void HandleSafepointForArm(ThreadLocalData* tlData)
+{
+    if (tlData->safepointState == 0) {
+        return;
+    }
+    Mutator* mutator = tlData->mutator;
+    // Current mutator enter saferegion
+    mutator->DoEnterSaferegion();
+    // Current mutator block before leaving saferegion
+    mutator->DoLeaveSaferegion();
+    DLOG(SIGNAL, "HandleSafepoint, thread restarted.");
+}
+#endif
+
 void MutatorManager::BindMutator(Mutator& mutator) const
 {
     ThreadLocalData* tlData = ThreadLocal::GetThreadLocalData();
@@ -98,7 +113,6 @@ void MutatorManager::TransitMutatorToExit()
 {
     Mutator* mutator = Mutator::GetMutator();
     CHECK_DETAIL(mutator != nullptr, "Mutator has not initialized or has been fini: %p", mutator);
-    MRT_ASSERT(!mutator->InSaferegion(), "Mutator to be fini should not be in saferegion");
     // Enter saferegion to avoid blocking gc stw
     mutator->MutatorLock();
     mutator->ResetMutator();

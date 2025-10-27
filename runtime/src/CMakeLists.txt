@@ -59,7 +59,7 @@ if (BUILD_RUNTIME)
         "os/Linux/Loader.cpp"
         "os/Linux/Path.cpp"
     )
-elseif ((CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64") AND (WINDOWS_FLAG MATCHES 0))
+elseif ((CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64") AND (WINDOWS_FLAG MATCHES 0) AND (IOS_FLAG MATCHES 0) AND (IOS_SIMULATOR_FLAG MATCHES 0))
     set(SRC_LIST
         "CompilerCalls.cpp"
         "ExceptionManager.cpp"
@@ -103,6 +103,28 @@ elseif ((CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64") AND (MACOS_FLAG MATCHES 1))
         "os/Linux/Loader.cpp"
         "os/Linux/Path.cpp"
     )
+elseif (IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1)
+    set(SRC_LIST
+        "CompilerCalls.cpp"
+        "ExceptionManager.cpp"
+        "StackManager.cpp"
+        "HeapManager.cpp"
+        "LoaderManager.cpp"
+        "SignalManager.cpp"
+        "TypeInfoManager.cpp"
+        "LogManager.cpp"
+        "CangjieRuntime.cpp"
+        "CjScheduler.cpp"
+        "CjTimer.cpp"
+        "CangjieRuntimeApi.cpp"
+        "arch/ios/N2CStub.S"
+        "arch/ios/C2NStub.S"
+        "arch/ios/CalleeSavedStub.S"
+        "arch/ios/StackGrowStub.S"
+        "arch/ios/HandleSafepointStub.S"
+        "Os/Linux/Loader.cpp"
+        "Os/Linux/Path.cpp"
+    )
 elseif ((CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64") AND (WINDOWS_FLAG MATCHES 0))
     set(SRC_LIST
         "CompilerCalls.cpp"
@@ -122,6 +144,28 @@ elseif ((CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64") AND (WINDOWS_FLAG MATCHES 0))
         "arch/aarch64_linux/CalleeSavedStub.S"
         "arch/aarch64_linux/StackGrowStub.S"
         "arch/aarch64_linux/HandleSafepointStub.S"
+        "os/Linux/Loader.cpp"
+        "os/Linux/Path.cpp"
+    )
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+    set(SRC_LIST
+        "CompilerCalls.cpp"
+        "ExceptionManager.cpp"
+        "StackManager.cpp"
+        "HeapManager.cpp"
+        "LoaderManager.cpp"
+        "SignalManager.cpp"
+        "TypeInfoManager.cpp"
+        "LogManager.cpp"
+        "CangjieRuntime.cpp"
+        "CjScheduler.cpp"
+        "CjTimer.cpp"
+        "CangjieRuntimeApi.cpp"
+        "arch/arm_linux/N2CStub.S"
+        "arch/arm_linux/C2NStub.S"
+        "arch/arm_linux/CalleeSavedStub.S"
+        "arch/arm_linux/StackGrowStub.S"
+        "arch/arm_linux/HandleSafepointStub.S"
         "os/Linux/Loader.cpp"
         "os/Linux/Path.cpp"
     )

@@ -258,6 +258,9 @@ public:
 
     // print this frame symbol
     virtual void PrintFrameInfo(uint32_t frameIdx = 0) const;
+#if defined(__IOS__) || defined(MRT_IOS)
+    CString GetFrameInfo(uint32_t frameIdx = 0) const;
+#endif
 
     const CString GetFuncName() const;
     const CString GetFileName() const;
@@ -287,6 +290,9 @@ public:
     {
 #if defined(_WIN64)
         return startProc;
+#elif defined(__arm__)
+        return reinterpret_cast<const uint32_t*>(*(reinterpret_cast<uint32_t*>(mFrame.fa) - 1) -
+                                                 START_PC_OFFSET_IN_STACK);
 #else
         return reinterpret_cast<const uint32_t*>(*(reinterpret_cast<uint64_t*>(mFrame.fa) - 1) -
                                                  START_PC_OFFSET_IN_STACK);
@@ -303,6 +309,8 @@ protected:
 
 #if defined(__x86_64__)
     static constexpr uint32_t START_PC_OFFSET_IN_STACK = 9;
+#elif defined(__arm__)
+    static constexpr uint32_t START_PC_OFFSET_IN_STACK = 12;
 #else
     static constexpr uint32_t START_PC_OFFSET_IN_STACK = 0;
 #endif
@@ -353,7 +361,7 @@ public:
 
     static N2CSlotData* GetSlotData(FrameAddress* fa)
     {
-#if defined __aarch64__
+#if defined __aarch64__ || defined (__arm__)  // todo
         return reinterpret_cast<N2CSlotData*>(fa + OFFSET_FOR_UNWIND_DATA);
 #else
         return reinterpret_cast<N2CSlotData*>(reinterpret_cast<N2CSlotData*>(fa) + OFFSET_FOR_UNWIND_DATA);
@@ -363,7 +371,7 @@ public:
     N2CSlotData* GetSlotData() const { return GetSlotData(this->fa); }
 
 private:
-#if defined __aarch64__
+#if defined __aarch64__ || defined (__arm__)  // todo
     static constexpr int64_t OFFSET_FOR_UNWIND_DATA = 1;
 #else
     static constexpr int64_t OFFSET_FOR_UNWIND_DATA = -1;

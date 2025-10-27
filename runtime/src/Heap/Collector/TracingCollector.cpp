@@ -56,67 +56,13 @@ void StaticRootTable::VisitRoots(const RefFieldVisitor& visitor)
     }
 }
 
-class MarkingWork : public HeapWork {
-public:
-    MarkingWork(TracingCollector& tc, GCThreadPool* pool, TracingCollector::WorkStack&& stack)
-        : workStack(std::move(stack)), collector(tc), threadPool(pool)
-    {}
-
-    // single work task without thread pool
-    MarkingWork(TracingCollector& tc, TracingCollector::WorkStack&& stack)
-        : workStack(std::move(stack)), collector(tc), threadPool(nullptr)
-    {}
-
-    ~MarkingWork() override { threadPool = nullptr; }
-
-    void Execute(size_t workerID __attribute__((unused))) override
-    {
-        size_t nNewlyMarked = 0;
-        const size_t prefetchDistance = MARK_PREFETCH_DISTANCE;
-        PrefetchQueue pq(prefetchDistance);
-        for (;;) {
-            // Prefetch as much as possible.
-            while (!pq.Full() && !workStack.empty()) {
-                BaseObject* obj = workStack.back();
-                pq.Add(obj);
-                workStack.pop_back();
-            }
-
-            // End if pq is empty.  This implies that workStack is also empty.
-            if (pq.Empty()) {
-                break;
-            }
-
-            BaseObject* obj = pq.Remove();
-            bool wasMarked = collector.MarkObject(obj);
-            if (!wasMarked) {
-                ++nNewlyMarked;
-                // If we mark before enqueuing, we should have checked if it has children.
-                if (!obj->HasRefField()) {
-                    continue;
-                }
-
-                collector.TraceObjectRefFields(obj, workStack);
-
-                if (threadPool != nullptr && UNLIKELY(workStack.size() > TracingCollector::MAX_MARKING_WORK_SIZE)) {
-                    // Mark stack overflow, give 1/2 the stack to the thread pool as a new work task.
-                    size_t newSize = workStack.size() >> 1;
-                    TracingCollector::WorkStackBuf* hSplit = workStack.split(newSize);
-                    threadPool->AddWork(new MarkingWork(collector, threadPool, TracingCollector::WorkStack(hSplit)));
-                }
-            }
-        } // for loop
-
-        // newly marked statistics.
-        (void)collector.markedObjectCount.fetch_add(nNewlyMarked, std::memory_order_relaxed);
+void ExportRootTable::VisitGCRoots(const RootVisitor& visitor)
+{
+    std::lock_guard<std::mutex> lock(tableMutex);
+    for (auto &rootInfo : exportRoots) {
+        visitor(reinterpret_cast<ObjectRef&>(rootInfo.exportObj));
     }
-
-private:
-    TracingCollector::WorkStack workStack;
-    TracingCollector& collector;
-    GCThreadPool* threadPool;
-};
-
+}
 class ConcurrentMarkingWork : public HeapWork {
 public:
     ConcurrentMarkingWork(TracingCollector& tc, GCThreadPool* pool, TracingCollector::WorkStack&& stack)
@@ -178,7 +124,7 @@ public:
                 }
                 // Skip marking the weakRef itself, but trace its children node
                 if (UNLIKELY(obj->IsWeakRef())) {
-                    RefField<>* referentField = reinterpret_cast<RefField<>*>((uintptr_t)obj + sizeof(TypeInfo*));
+                    RefField<>* referentField = reinterpret_cast<RefField<>*>((uintptr_t)obj + TYPEINFO_PTR_SIZE);
                     BaseObject* referent = collector.GetAndTryTagObj(obj, *referentField);
                     if (referent != nullptr) {
                         DLOG(TRACE, "trace weakref obj %p ref@%p: 0x%zx", obj, &referent, referent);
@@ -204,6 +150,38 @@ private:
     TracingCollector::WorkStack workStack;
 };
 
+class ExportRootsTracingWork : public HeapWork {
+public:
+    ExportRootsTracingWork(TracingCollector& tc, TracingCollector::WorkStack&& stack)
+        : collector(tc),  workStack(std::move(stack)) {}
+    void Execute(size_t) override
+    {
+        size_t nNewlyMarked = 0;
+        // loop until work stack empty.
+        for (;;) {
+            if (workStack.empty()) {
+                break;
+            }
+            // get next object from work stack.
+            BaseObject* obj = workStack.back();
+            workStack.pop_back();
+
+            // skip dangling object (such as: object already released).
+            DCHECK(obj->IsValidObject());
+
+            bool wasMarked = collector.MarkObject(obj);
+            if (!wasMarked) {
+                collector.DFSTraceExportObject(obj);
+            }
+            // try to fork new task if needed.
+        } // end of mark loop.
+        // newly marked statistics.
+        (void)collector.markedObjectCount.fetch_add(nNewlyMarked, std::memory_order_relaxed);
+    }
+private:
+    TracingCollector& collector;
+    TracingCollector::WorkStack workStack;
+};
 void TracingCollector::VisitStackRoots(const RootVisitor& visitor, RegSlotsMap& regSlotsMap, const FrameInfo& frame,
                                        Mutator& mutator)
 {
@@ -332,13 +310,29 @@ void TracingCollector::MergeMutatorRoots(WorkStack& workStack)
     mutatorManager.MutatorManagementWUnlock();
 }
 
-void TracingCollector::DoEnumeration(WorkStack& workStack)
+void TracingCollector::EnumAllExportRoots(RootSet &foreignRootsSet)
 {
-    ScopedEntryHiTrace hiTrace("CJRT_GC_ENUM");
-    EnumAllRoots(GetThreadPool(), workStack);
+    Heap::GetHeap().VisitAllExportRoots([&foreignRootsSet, this](ObjectRef& root) {
+        EnumAndTagRawRoot(root, foreignRootsSet);
+    });
+}
+void TracingCollector::DoEnumeration(WorkStack& workStack, WorkStack& foreignRootsSet)
+{
+    ScopedEntryTrace trace("CJRT_GC_ENUM");
+    EnumAllCommonRoots(GetThreadPool(), workStack);
+    EnumAllExportRoots(foreignRootsSet);
 }
 
-void TracingCollector::TracingImpl(WorkStack& workStack, bool parallel)
+void TracingCollector::AddExportObjectsTracingWork(RootSet &exportRoots)
+{
+    if (exportRoots.empty()) {
+        return;
+    }
+    GCThreadPool* threadPool = GetThreadPool();
+    threadPool->AddWork(new (std::nothrow) ExportRootsTracingWork(*this, std::move(exportRoots)));
+}
+
+void TracingCollector::TracingImpl(WorkStack& workStack, WorkStack& foreignRootsSet, bool parallel)
 {
     if (workStack.empty()) {
         return;
@@ -361,6 +355,8 @@ void TracingCollector::TracingImpl(WorkStack& workStack, bool parallel)
         markTask.Execute(0);
         threadPool->DrainWorkQueue(); // drain stack roots task
     }
+    AddExportObjectsTracingWork(foreignRootsSet);
+    threadPool->WaitFinish();
 }
 
 bool TracingCollector::AddConcurrentTracingWork(RootSet& rs)
@@ -379,9 +375,27 @@ bool TracingCollector::AddConcurrentTracingWork(RootSet& rs)
     return true;
 }
 
-void TracingCollector::DoTracing(WorkStack& workStack)
+void TracingCollector::FindUselessExternObjects()
 {
-    ScopedEntryHiTrace hiTrace("CJRT_GC_TRACE");
+    auto it = discoveredExternObjects.begin();
+    while (it != discoveredExternObjects.end()) {
+        auto& ls = it->second;
+        auto listIt = ls.begin();
+        auto listEnd = ls.end();
+        while (listIt != listEnd) {
+            if (IsMarkedObject(*listIt)) {
+                listIt = ls.erase(listIt);
+            } else {
+                MarkObject(*listIt);
+                listIt++;
+            }
+        }
+        it++;
+    }
+}
+void TracingCollector::DoTracing(WorkStack& workStack, WorkStack& foreignRootsSet)
+{
+    ScopedEntryTrace trace("CJRT_GC_TRACE");
     MRT_PHASE_TIMER("DoTracing");
     VLOG(REPORT, "roots size: %zu", workStack.size());
 
@@ -404,12 +418,17 @@ void TracingCollector::DoTracing(WorkStack& workStack)
 
     {
         MRT_PHASE_TIMER("Concurrent marking");
-        TracingImpl(workStack, maxWorkers > 0);
+        TracingImpl(workStack, foreignRootsSet, maxWorkers > 0);
     }
 
     {
         MRT_PHASE_TIMER("Concurrent re-marking");
         ConcurrentReMark(workStack, maxWorkers > 0);
+    }
+
+    {
+        MRT_PHASE_TIMER("identify useless extern ref");
+        FindUselessExternObjects();
     }
 
     {
@@ -436,7 +455,11 @@ bool TracingCollector::MarkSatbBuffer(WorkStack& workStack)
     if (!workStack.empty()) {
         workStack.clear();
     }
+#ifdef __arm__
+    uint64_t maxIterationTime = 120ULL * 1000 * 1000 * 1000; // 2 mins.
+#else
     constexpr size_t maxIterationTime = 120ULL * 1000 * 1000 * 1000; // 2 mins.
+#endif
     constexpr size_t maxIterationLoopNum = 1000;
     auto visitSatbObj = [this, &workStack]() {
         WorkStack remarkStack;
@@ -467,12 +490,14 @@ bool TracingCollector::MarkSatbBuffer(WorkStack& workStack)
             ScopedStopTheWorld stw("MarkSatbBuffer timeout", true, GCPhase::GC_PHASE_CLEAR_SATB_BUFFER);
             VLOG(REPORT, "MarkSatbBuffer is done for timeout");
             GCThreadPool* threadPool = GetThreadPool();
-            TracingImpl(workStack, (workStack.size() > MAX_MARKING_WORK_SIZE) || (threadPool->GetWorkCount() > 0));
+            WorkStack tmp;
+            TracingImpl(workStack, tmp, (workStack.size() > MAX_MARKING_WORK_SIZE) || (threadPool->GetWorkCount() > 0));
             return workStack.empty();
         }
         if (LIKELY(!workStack.empty())) {
             GCThreadPool* threadPool = GetThreadPool();
-            TracingImpl(workStack, (workStack.size() > MAX_MARKING_WORK_SIZE) || (threadPool->GetWorkCount() > 0));
+            WorkStack tmp;
+            TracingImpl(workStack, tmp, (workStack.size() > MAX_MARKING_WORK_SIZE) || (threadPool->GetWorkCount() > 0));
         }
         visitSatbObj();
         if (workStack.empty()) {
@@ -513,12 +538,14 @@ void TracingCollector::DoResurrection(WorkStack& workStack)
         workStack.pop_back();
 
         // skip if the object already marked.
-        if (IsSurvivedObject(obj)) {
+        RegionInfo* regionInfo = RegionInfo::GetRegionInfoAt(reinterpret_cast<MAddress>(obj));
+        size_t offset = regionInfo->GetAddressOffset(reinterpret_cast<MAddress>(obj));
+        if (regionInfo->IsSurvivedObject(offset)) {
             continue;
         }
 
         ++resurrectdObjects;
-        ResurrectObject(obj);
+        ResurrectObject(obj, offset, regionInfo);
 
         // try to copy object child refs into work stack.
         if (obj->HasRefField()) {
@@ -537,6 +564,26 @@ void TracingCollector::EnumFinalizerProcessorRoots(RootSet& rootSet) const
 {
     RootVisitor visitor = [this, &rootSet](ObjectRef& root) { EnumAndTagRawRoot(root, rootSet); };
     collectorResources.GetFinalizerProcessor().VisitGCRoots(visitor);
+}
+
+void TracingCollector::EnumAllSurrectedExportRoots(RootSet &rootSet)
+{
+    {
+        std::lock_guard<std::mutex> lg(resurrectExportMtx);
+        for (auto* obj : resurrectedExportObjectes) {
+            rootSet.push_back(obj);
+        }
+    }
+    std::lock_guard<std::mutex> lg(cycleWorkStackMtx);
+    auto it = cycleRefWorkStack.begin();
+    while (it != cycleRefWorkStack.end()) {
+        BaseObject* exportObj = it->first;
+        rootSet.push_back(exportObj);
+        for (auto &externObj : it->second) {
+            rootSet.push_back(externObj);
+        }
+        it++;
+    }
 }
 
 #if defined(MRT_DEBUG) && (MRT_DEBUG == 1)
@@ -629,7 +676,7 @@ void TracingCollector::PreGarbageCollection(bool isConcurrent)
 #if defined(MRT_DEBUG) && (MRT_DEBUG == 1)
     DumpBeforeGC();
 #endif
-    OHOS_HITRACE_COUNT("CJRT_pre_GC_HeapSize", Heap::GetHeap().GetAllocatedSize());
+    TRACE_COUNT("CJRT_pre_GC_HeapSize", Heap::GetHeap().GetAllocatedSize());
 }
 
 void TracingCollector::PostGarbageCollection(uint64_t gcIndex)
@@ -645,7 +692,71 @@ void TracingCollector::PostGarbageCollection(uint64_t gcIndex)
 #endif
 }
 
-void TracingCollector::EnumAllRoots(GCThreadPool* threadPool, RootSet& rootSet)
+void TracingCollector::DFSTraceExportObject(BaseObject *exportObj)
+{
+    WorkStack workStack;
+    workStack.push_back(exportObj);
+    std::list<BaseObject*> externObjs;
+    while (!workStack.empty()) {
+        BaseObject* obj = workStack.back();
+        workStack.pop_back();
+        obj->ForEachRefField([&workStack, obj, this, &externObjs](RefField<>& field) {
+            (void)obj;
+            RefField<> oldField(field);
+            if (IsCurrentPointer(oldField)) {
+                BaseObject* targetObj = oldField.GetTargetObject();
+                if (IsMarkedObject(targetObj)) {
+                    return;
+                }
+                if (targetObj->GetTypeInfo()->IsForeignType()) {
+                    workStack.push_back(targetObj);
+                    externObjs.push_back(targetObj);
+                } else if (!MarkObject(targetObj)) {
+                    workStack.push_back(targetObj);
+                }
+                return;
+            }
+
+            BaseObject* latest = nullptr;
+            if (IsOldPointer(oldField)) {
+                BaseObject* targetObj = oldField.GetTargetObject();
+                latest = FindLatestVersion(targetObj);
+            } else {
+                latest = field.GetTargetObject();
+            }
+
+            // target object could be null or non-heap for some static variable.
+            if (!Heap::IsHeapAddress(latest)) {
+                return;
+            }
+            CHECK(latest->IsValidObject());
+
+            RefField<> newField = GetAndTryTagRefField(latest);
+            if (oldField.GetFieldValue() == newField.GetFieldValue()) {
+                DLOG(TRACE, "trace obj %p ref@%p: %p<%p>(%zu)", obj, &field, latest, latest->GetTypeInfo(),
+                     latest->GetSize());
+            } else if (field.CompareExchange(oldField.GetFieldValue(), newField.GetFieldValue())) {
+                DLOG(TRACE, "trace obj %p ref@%p: %#zx => %#zx->%p<%p>(%zu)", obj, &field, oldField.GetFieldValue(),
+                     newField.GetFieldValue(), latest, latest->GetTypeInfo(), latest->GetSize());
+            }
+
+            if (IsMarkedObject(latest)) {
+                return;
+            }
+            if (latest->GetTypeInfo()->IsForeignType()) {
+                workStack.push_back(latest);
+                externObjs.push_back(latest);
+            } else {
+                if (!MarkObject(latest)) {
+                    workStack.push_back(latest);
+                }
+            }
+        });
+    }
+    std::lock_guard<std::mutex> lg(externMtx);
+    discoveredExternObjects[exportObj] = externObjs;
+}
+void TracingCollector::EnumAllCommonRoots(GCThreadPool* threadPool, RootSet& rootSet)
 {
     MRT_ASSERT(threadPool != nullptr, "thread pool is null");
 
@@ -665,6 +776,8 @@ void TracingCollector::EnumAllRoots(GCThreadPool* threadPool, RootSet& rootSet)
     threadPool->AddWork(new (std::nothrow) LambdaWork(
         [this, rootSets](size_t workerID) { EnumFinalizerProcessorRoots(rootSets[workerID]); }));
 
+    threadPool->AddWork(new (std::nothrow) LambdaWork(
+        [this, rootSets](size_t workerID) { EnumAllSurrectedExportRoots(rootSets[workerID]); }));
     threadPool->Start();
     threadPool->WaitFinish();
 
@@ -694,29 +807,58 @@ void TracingCollector::UpdateGCStats()
 
     size_t oldThreshold = gcStats.heapThreshold;
     size_t liveBytes = space.AllocatedBytes();
+    size_t heapSize = space.GetMaxCapacity();
     size_t recentBytes = space.GetRecentAllocatedSize();
-    size_t survivedBytes = space.GetSurvivedSize();
 
     // 2 / 3: when live bytes is over 2/3 heap size, the async allocation need to be closed.
-    if (liveBytes > space.GetMaxCapacity() * 2 / 3) {
+    if (liveBytes > heapSize * 2 / 3) {
         space.EnableAsyncAllocation(false);
     } else {
         space.EnableAsyncAllocation(true);
     }
     // 4 ways to estimate heap next threshold.
+#if defined (__OHOS__)
+    constexpr double lowUtilGrowth = 1.8;
+    constexpr double lowUtilRatio = 0.25;
+    double heapGrowth = liveBytes < heapSize * lowUtilRatio ?
+        lowUtilGrowth : 1 + (CangjieRuntime::GetHeapParam().heapGrowth);
+#else
     double heapGrowth = 1 + (CangjieRuntime::GetHeapParam().heapGrowth);
-    size_t threshold1 = survivedBytes * heapGrowth;
+#endif
+    size_t threshold1 = liveBytes * heapGrowth;
     size_t threshold2 = oldThreshold * heapGrowth;
-    size_t threshold3 = survivedBytes * 1.2 / (1.0 + gcStats.garbageRatio);
+    size_t threshold3 = liveBytes * 1.2 / (1.0 + gcStats.garbageRatio);
     size_t threshold4 = space.GetTargetSize();
-    size_t newThreshold = (threshold1 + threshold2 + threshold3 + threshold4) / 4;
-
+    size_t newThreshold = 0;
+    uint64_t gcInterval = CangjieRuntime::GetGCParam().gcInterval;
+    // 2 : We regard the half of heap size as a limit because of copying algorithm.
+    if (liveBytes < oldThreshold && oldThreshold < (heapSize / 2)) {
+#if defined (__OHOS__)
+        // When the ulitization is low, we can give the old threshold a larger weight to compute average value.
+        // 1, 4, 2, 1: These are the weights of the different parameters.
+        // 8: It is the total weight.
+        newThreshold = (threshold1 * 1 + threshold2 * 4 + threshold3 * 2 + threshold4 * 1) / 8;
+        // 2s: We set the max waiting time to 2s to avoid memory increasing too fast.
+        auto maxAdaptiveInterval = static_cast<uint64_t>(2) * MapleRuntime::SECOND_TO_NANO_SECOND;
+        uint64_t gcAdaptiveInterval = static_cast<uint64_t>((newThreshold - liveBytes) / gcStats.collectionRate / MB);
+        gcAdaptiveInterval = std::min(gcAdaptiveInterval, maxAdaptiveInterval);
+        gcInterval = std::max(gcInterval, gcAdaptiveInterval);
+#else
+        // 4: Computing arithmetic mean
+        newThreshold = (threshold1 + threshold2 + threshold3 + threshold4) / 4;
+#endif
+    } else {
+        // When the ulitization is high, we try to avoid threshold increasing and give it a small weight.
+        // 2, 1, 2, 3: These are the weights of the different parameters.
+        // 8: It is the total weight.
+        newThreshold = (threshold1 * 2 + threshold2 * 1 + threshold3 * 2 + threshold4 * 3) / 8;
+    }
     // 0.98: make sure new threshold does not exceed reasonable limit.
-    gcStats.heapThreshold = std::min(newThreshold, static_cast<size_t>(space.GetMaxCapacity() * 0.98));
-    gcStats.heapThreshold = std::min(gcStats.heapThreshold, CangjieRuntime::GetGCParam().gcThreshold);
-    g_gcRequests[GC_REASON_HEU].SetMinInterval(CangjieRuntime::GetGCParam().gcInterval);
+    newThreshold = std::min(newThreshold, static_cast<size_t>(space.GetMaxCapacity() * 0.98));
+    gcStats.heapThreshold = std::min(newThreshold, CangjieRuntime::GetGCParam().gcThreshold);
+    g_gcRequests[GC_REASON_HEU].SetMinInterval(gcInterval);
     VLOG(REPORT, "live bytes %zu (survived %zu, recent-allocated %zu), update gc threshold %zu -> %zu", liveBytes,
-         survivedBytes, recentBytes, oldThreshold, gcStats.heapThreshold);
-    OHOS_HITRACE_COUNT("CJRT_post_GC_HeapSize", Heap::GetHeap().GetAllocatedSize());
+         liveBytes - recentBytes, recentBytes, oldThreshold, gcStats.heapThreshold);
+    TRACE_COUNT("CJRT_post_GC_HeapSize", Heap::GetHeap().GetAllocatedSize());
 }
 } // namespace MapleRuntime

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
 # This source file is part of the Cangjie project, licensed under Apache-2.0
 # with Runtime Library Exception.
@@ -6,7 +8,6 @@
 
 # The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
-#!/bin/bash
 # CI shell script for calling build.py
 set -e
 
@@ -23,7 +24,7 @@ export PROJECT_PATH="$(dirname $script_abs)/../"
 export CJTHREAD_PATH="${PROJECT_PATH}/src/CJThread"
 export BUILD_PATH="${PROJECT_PATH}/build/cjthread_build"
 
-# example
+# Example
 # 1. make static lib
 # sh build/build_cjthread.sh -p linux_x86_64 Debug SHARED
 # sh build/build_cjthread.sh -p linux_x86_64 Debug SHARED asan
@@ -58,7 +59,11 @@ elif [ "$1" = "-p" ];then
 
     cd "${BUILD_PATH}"
     echo "CJTHREAD BUILDING: target:$2, build type: $3, libtype: $4, building stage: $5, other definitions: $6, path: ${CJTHREAD_PATH}"
-    cmake -DTARGET="$2" -DCMAKE_BUILD_TYPE="$3" -DLIBTYPE="$4" -DBUILDING_STAGE="$5" $6 -DCMAKE_INSTALL_PREFIX="$7" -DTARGET_ARCH="$8" ${CJTHREAD_PATH}
+    if [ -n "$9" ]; then
+      cmake -DTARGET="$2" -DCMAKE_BUILD_TYPE="$3" -DLIBTYPE="$4" -DBUILDING_STAGE="$5" $6 -DCMAKE_INSTALL_PREFIX="$7" -DTARGET_ARCH="$8" -DBUILD_APPLE_STATIC="$9" ${CJTHREAD_PATH}
+    else
+      cmake -DTARGET="$2" -DCMAKE_BUILD_TYPE="$3" -DLIBTYPE="$4" -DBUILDING_STAGE="$5" $6 -DCMAKE_INSTALL_PREFIX="$7" -DTARGET_ARCH="$8" ${CJTHREAD_PATH}
+    fi
     make -j32 && make install
 fi
 

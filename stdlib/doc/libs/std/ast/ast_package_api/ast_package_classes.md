@@ -1028,6 +1028,82 @@ public func traverse(v: Visitor): Unit
 
 - v: [Visitor](ast_package_classes.md#class-visitor) - [Visitor](ast_package_classes.md#class-visitor) 类型的实例。
 
+## class CommandTypePattern
+
+```cangjie
+public class CommandTypePattern <: Pattern {
+    public init()
+    public init(inputs: Tokens)
+}
+```
+
+功能：表示一个带有类型注解的命令模式，例如：`pattern: Type1 | Type2 | ...`。
+
+一个 [CommandTypePattern](ast_package_classes.md#class-commandtypepattern) 节点的示例：
+`someCommand: Effect`
+
+父类型：
+
+- [Pattern](ast_package_classes.md#class-pattern)
+
+### prop pattern
+
+```cangjie
+public mut prop pattern: Pattern
+```
+
+功能：获取或设置冒号（`:`）之前的命令模式。
+
+类型：[Pattern](ast_package_classes.md#class-pattern)
+
+### prop colon
+
+```cangjie
+public mut prop colon: Token
+```
+
+功能：获取或设置用于分隔模式与类型的冒号（`:`）标记。
+
+类型：[Token](ast_package_structs.md#struct-token)
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 如果提供的标记不是冒号，则抛出异常。
+
+### prop types
+
+```cangjie
+public mut prop types: ArrayList<TypeNode>
+```
+
+功能：获取或设置冒号后面的类型节点列表，例如：`String | Int | Float`。
+
+类型：[ArrayList](../../collection/collection_package_api/collection_package_class.md#class-arraylistt)\<[TypeNode](ast_package_classes.md#class-typenode)>
+
+### init()
+
+```cangjie
+public init()
+```
+
+功能：构建一个默认的 [CommandTypePattern](ast_package_classes.md#class-commandtypepattern) 对象。
+
+### init(Tokens)
+
+```cangjie
+public init(inputs: Tokens)
+```
+
+功能：从标记流中构建一个 [CommandTypePattern](ast_package_classes.md#class-commandtypepattern) 对象。
+
+参数：
+
+- inputs: [Tokens](ast_package_classes.md#class-tokens) — 要解析为 `CommandTypePattern` 节点的标记集合。
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 如果输入的标记无法解析为有效的 `CommandTypePattern` 节点，则抛出异常。
+
 ## class ConstPattern
 
 ```cangjie
@@ -1228,6 +1304,16 @@ public open class Decl <: Node
 父类型：
 
 - [Node](#class-node)
+
+### var annotations_
+
+```cangjie
+protected var annotations_: ArrayList<Annotation>
+```
+
+功能：获取或设置作用于 [Decl](ast_package_classes.md#class-decl) 节点的注解列表。
+
+类型：[ArrayList](../../collection/collection_package_api/collection_package_class.md#class-arraylistt)\<[Annotation](ast_package_classes.md#class-annotation)>
 
 ### var identifier_
 
@@ -3033,6 +3119,18 @@ public func traverse(v: Visitor): Unit
 
 - v: [Visitor](ast_package_classes.md#class-visitor) - [Visitor](ast_package_classes.md#class-visitor) 类型的实例。
 
+## class Handler
+
+```cangjie
+public class Handler {
+}
+```
+
+功能：表示一个 `handle` 子句，其中包含一个命令模式和要执行的代码块。
+
+一个 [Handler](ast_package_classes.md#class-handler) 节点的示例：
+`handle (e: Command<Unit>) { ... }`
+
 ## class IfExpr
 
 ```cangjie
@@ -3196,8 +3294,6 @@ public class ImportContent <: Node {
 }
 ```
 
-功能：表示包导入节点。
-
 父类型：
 
 - [Node](#class-node)
@@ -3254,7 +3350,7 @@ public mut prop items: ArrayList<ImportContent>
 
 功能：获取或设置 [ImportContent](ast_package_classes.md#class-importcontent) 节点中被导入的所有项，只有 `importKind` 为 `ImportKind.Multi` 时非空。
 
-类型：ArrayList\<[ImportContent](ast_package_classes.md#class-importcontent)>
+类型：[ArrayList](../../collection/collection_package_api/collection_package_class.md#class-arraylistt)\<[ImportContent](ast_package_classes.md#class-importcontent)>
 
 ### prop lBrace
 
@@ -4346,7 +4442,17 @@ public class MacroExpandDecl <: Decl {
 public mut prop fullIdentifier: Token
 ```
 
-功能：获取或设置宏调用节点的完整标识符。
+功能：获取或设置宏调用节点的完整标识符，如 `@pkg.m class a{}` 中的 `pkg.m`。
+
+类型：[Token](ast_package_structs.md#struct-token)
+
+### prop identifier
+
+```cangjie
+public override mut prop identifier: Token
+```
+
+功能：该属性继承自 [Decl](ast_package_classes.md#class-decl) 节点，表示宏调用节点的标识符，如 `@pkg.m class a{}` 中的 `m`。
 
 类型：[Token](ast_package_structs.md#struct-token)
 
@@ -4663,7 +4769,7 @@ public class MacroExpandParam <: FuncParam {
 
 功能：表示宏调用节点。
 
-一个 [MacroExpandDecl](ast_package_classes.md#class-macroexpanddecl) 节点： `func foo (@M a: Int64)` 中的 `@M a: Int64`。
+一个 [MacroExpandParam](ast_package_classes.md#class-macroexpandparam) 节点： `func foo (@M a: Int64)` 中的 `@M a: Int64`。
 
 父类型：
 
@@ -4675,7 +4781,17 @@ public class MacroExpandParam <: FuncParam {
 public mut prop fullIdentifier: Token
 ```
 
-功能：获取或设置宏调用节点的完整标识符。
+功能：获取或设置宏调用节点的完整标识符，如 `func bar (@pkg.m a: Int64)` 中的 `pkg.m`。
+
+类型：[Token](ast_package_structs.md#struct-token)
+
+### prop identifier
+
+```cangjie
+public override mut prop identifier: Token
+```
+
+功能：该属性继承自 [Decl](ast_package_classes.md#class-decl) 节点，表示宏调用节点的标识符，如 `func bar (@pkg.m a: Int64)` 中的 `m`。
 
 类型：[Token](ast_package_structs.md#struct-token)
 
@@ -5530,7 +5646,7 @@ public class Modifier <: Node {
 
 - [Node](#class-node)
 
-### prop keyword(Token)
+### prop keyword
 
 ```cangjie
 public mut prop keyword: Token
@@ -6145,6 +6261,71 @@ public func traverse(v: Visitor): Unit
 参数：
 
 - v: [Visitor](ast_package_classes.md#class-visitor) - [Visitor](ast_package_classes.md#class-visitor) 类型的实例。
+
+## class PerformExpr
+
+```cangjie
+public class PerformExpr <: Expr {
+    public init()
+    public init(inputs: Tokens)
+}
+```
+
+功能：表示一个 `perform` 表达式节点。
+
+一个 [PerformExpr](ast_package_classes.md#class-performexpr) 节点示例：`perform Eff()`。
+
+父类型：
+
+- [Expr](ast_package_classes.md#class-expr)
+
+### prop expr
+
+```cangjie
+public mut prop expr: Expr
+```
+
+功能：获取或设置 [PerformExpr](ast_package_classes.md#class-performexpr) 节点中的表达式部分。
+
+类型：[Expr](ast_package_classes.md#class-expr)
+
+### prop keyword
+
+```cangjie
+public mut prop keyword: Token
+```
+
+功能：获取或设置 [PerformExpr](ast_package_classes.md#class-performexpr) 节点中的 `perform` 关键字。
+
+类型：[Token](ast_package_structs.md#struct-token)
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当给定的 [Token](ast_package_structs.md#struct-token) 不是 `perform` 关键字时抛出。
+
+### init()
+
+```cangjie
+public init()
+```
+
+功能：构造一个默认的 [PerformExpr](ast_package_classes.md#class-performexpr) 对象。
+
+### init(Tokens)
+
+```cangjie
+public init(inputs: Tokens)
+```
+
+功能：从提供的词法单元构造一个 [PerformExpr](ast_package_classes.md#class-performexpr) 对象。
+
+参数：
+
+- inputs: [Tokens](ast_package_classes.md#class-tokens) — 要解析为 [PerformExpr](ast_package_classes.md#class-performexpr) 节点的词法单元集合。
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当输入的 [Tokens](ast_package_classes.md#class-tokens) 无法解析为 [PerformExpr](ast_package_classes.md#class-performexpr) 节点时抛出。
 
 ## class PrefixType
 
@@ -7449,6 +7630,195 @@ public func traverse(v: Visitor): Unit
 
 - v: [Visitor](ast_package_classes.md#class-visitor) - [Visitor](ast_package_classes.md#class-visitor) 类型的实例。
 
+## class ResumeExpr
+
+```cangjie
+public class ResumeExpr <: Expr {
+    public init()
+    public init(inputs: Tokens)
+}
+```
+
+功能：表示一个 `resume` 表达式节点，可选包含 `with` 和 `throwing` 子句。
+
+一个 [ResumeExpr](ast_package_classes.md#class-resumeexpr) 节点示例：
+`resume r with 42`。
+
+父类型：
+
+- [Expr](ast_package_classes.md#class-expr)
+
+### prop expr
+
+```cangjie
+public mut prop expr: Option<Expr>
+```
+
+功能：获取或设置 `resume` 关键字之后的表达式。
+
+类型：[Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<[Expr](ast_package_classes.md#class-expr)>
+
+### prop keywordR
+
+```cangjie
+public mut prop keywordR: Token
+```
+
+功能：获取或设置 `resume` 关键字的词法单元。
+
+类型：[Token](ast_package_structs.md#struct-token)
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当提供的 [Token](ast_package_structs.md#struct-token) 不是 `resume` 关键字时抛出。
+
+### prop keywordW
+
+```cangjie
+public mut prop keywordW: Option<Token>
+```
+
+功能：获取或设置 `with` 关键字的词法单元（如果存在）。
+
+类型：[Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<[Token](ast_package_structs.md#struct-token)>
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当提供的 [Token](ast_package_structs.md#struct-token) 不是 `with` 关键字时抛出。
+
+### prop withExpr
+
+```cangjie
+public mut prop withExpr: Option<Expr>
+```
+
+功能：获取或设置 `with` 关键字之后的表达式。
+
+类型：[Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<[Expr](ast_package_classes.md#class-expr)>
+
+### prop keywordT
+
+```cangjie
+public mut prop keywordT: Option<Token>
+```
+
+功能：获取或设置 `throwing` 关键字的词法单元（如果存在）。
+
+类型：[Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<[Token](ast_package_structs.md#struct-token)>
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当提供的 [Token](ast_package_structs.md#struct-token) 不是 `throwing` 关键字时抛出。
+
+### prop throwingExpr
+
+```cangjie
+public mut prop throwingExpr: Option<Expr>
+```
+
+功能：获取或设置 `throwing` 关键字之后的表达式。
+
+类型：[Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<[Expr](ast_package_classes.md#class-expr)>
+
+### init()
+
+```cangjie
+public init()
+```
+
+功能：构造一个默认的 [ResumeExpr](ast_package_classes.md#class-resumeexpr) 对象。
+
+### init(Tokens)
+
+```cangjie
+public init(inputs: Tokens)
+```
+
+功能：从词法单元流构造一个 [ResumeExpr](ast_package_classes.md#class-resumeexpr) 对象。
+
+参数：
+
+- inputs: [Tokens](ast_package_classes.md#class-tokens) — 要解析为 [ResumeExpr](ast_package_classes.md#class-resumeexpr) 节点的词法单元集合。
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当输入的 [Tokens](ast_package_classes.md#class-tokens) 无法解析为 [ResumeExpr](ast_package_classes.md#class-resumeexpr) 节点时抛出。
+
+## class ResumptionTypePattern
+
+```cangjie
+public class ResumptionTypePattern <: Pattern {
+    public init()
+    public init(inputs: Tokens)
+}
+```
+
+功能：表示带有类型注解的恢复模式（resumption pattern），通常出现在处理器（handler）声明中，例如：`pattern: Resumption<Unit, Unit>`。
+
+一个 `ResumptionTypePattern` 的例子可能出现在 `try` 表达式中的 handler 的恢复子句中。
+
+父类型：
+
+- [Pattern](ast_package_classes.md#class-pattern)
+
+### prop pattern
+
+```cangjie
+public mut prop pattern: Pattern
+```
+
+功能：获取或设置冒号（`:`）之前的基础模式。
+
+类型： [Pattern](ast_package_classes.md#class-pattern)
+
+### prop colon
+
+```cangjie
+public mut prop colon: Token
+```
+
+功能：获取或设置用于分隔模式与类型的冒号（`:`）符号。
+
+类型： [Token](ast_package_structs.md#struct-token)
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当提供的 token 不是冒号时抛出。
+
+### prop types
+
+```cangjie
+public mut prop types: ArrayList<TypeNode>
+```
+
+功能：获取或设置紧跟在冒号后的类型节点列表，例如 `EffectA | EffectB`。
+
+类型：[ArrayList](../../collection/collection_package_api/collection_package_class.md#class-arraylistt)\<[TypeNode](ast_package_classes.md#class-typenode)>
+
+### init()
+
+```cangjie
+public init()
+```
+
+功能：构造一个默认的 `ResumptionTypePattern` 对象。
+
+### init(Tokens)
+
+```cangjie
+public init(inputs: Tokens)
+```
+
+功能：从一组 token 构造一个 `ResumptionTypePattern` 对象。
+
+参数：
+
+- inputs: [Tokens](ast_package_classes.md#class-tokens) — 表示一个恢复类型模式的 token 集合。
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当无法从提供的 token 构造出有效的 `ResumptionTypePattern` 时抛出。
+
 ## class ReturnExpr
 
 ```cangjie
@@ -8312,7 +8682,7 @@ public open func append(tokens: Tokens): Tokens
 public func concat(tokens: Tokens): Tokens
 ```
 
-功能：将当前的 [Tokens](ast_package_classes.md#class-tokens) 与传入的 [Tokens](ast_package_classes.md#class-tokens) 进行拼接。
+功能：将当前的 [Tokens](ast_package_classes.md#class-tokens) 与传入的 [Tokens](ast_package_classes.md#class-tokens) 进行拼接，返回新的 [Tokens](ast_package_classes.md#class-tokens) 实例。
 
 参数：
 
@@ -8408,7 +8778,7 @@ public func toString(): String
 public operator func +(r: Token): Tokens
 ```
 
-功能：使用当前 [Tokens](ast_package_classes.md#class-tokens) 与另一个 [Token](ast_package_structs.md#struct-token) 相加以获取新的 [Tokens](ast_package_classes.md#class-tokens)。
+功能：使用当前 [Tokens](ast_package_classes.md#class-tokens) 与另一个 [Token](ast_package_structs.md#struct-token) 相加以获取新的 [Tokens](ast_package_classes.md#class-tokens) 实例。
 
 参数：
 
@@ -8424,7 +8794,7 @@ public operator func +(r: Token): Tokens
 public operator func +(r: Tokens): Tokens
 ```
 
-功能：使用当前 [Tokens](ast_package_classes.md#class-tokens) 与 [Tokens](ast_package_classes.md#class-tokens) 相加以获取新的 [Tokens](ast_package_classes.md#class-tokens) 类型。
+功能：使用当前 [Tokens](ast_package_classes.md#class-tokens) 与 [Tokens](ast_package_classes.md#class-tokens) 相加以获取新的 [Tokens](ast_package_classes.md#class-tokens) 实例。
 
 参数：
 
@@ -8676,6 +9046,16 @@ public mut prop finallyBlock: Block
 异常：
 
 - [ASTException](ast_package_exceptions.md#class-astexception) - 当 [TryExpr](ast_package_classes.md#class-tryexpr) 节点无 `Finally` 块节点时，抛出异常。
+
+### prop handlers
+
+```cangjie
+public mut prop handlers: ArrayList<Handler>
+```
+
+功能：获取或设置 `Handler` 节点列表。
+
+类型： [ArrayList](../../collection/collection_package_api/collection_package_class.md#class-arraylistt)\<[Handler](ast_package_classes.md#class-handler)>
 
 ### prop keywordF
 

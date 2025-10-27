@@ -84,3 +84,4 @@ func isLambda(element: StackTraceElement): Bool {
 func methodName(element: StackTraceElement): String {
     element.methodName.replace("::", ".")
 }
+

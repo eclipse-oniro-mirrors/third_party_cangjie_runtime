@@ -58,6 +58,8 @@ public:
     }
 
 private:
+    void PrepareSigStack();
+    void FreeSigStack();
     // Block some ignored signals
     void BlockSignals();
     // install sigsegv signal handlers
@@ -70,10 +72,9 @@ private:
     static bool HandleUnexpectedSignal(int sig, siginfo_t* info, void* context);
     DISABLE_CLASS_COPY_AND_ASSIGN(SignalManager);
 
-    // a list of sigsegv signal handlers
-    std::vector<SignalHandler*> segvHandlers;
     void* extraStack{ nullptr };
     uint32_t extraStackSize{ 0 };
+    stack_t signalStack;
 };
 } // namespace MapleRuntime
 #endif // MRT_SIGNAL_MANAGER_H

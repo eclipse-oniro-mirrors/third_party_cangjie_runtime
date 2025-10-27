@@ -124,6 +124,9 @@ void CjAllocData::SerializeEachFrame(TraceNodeField* node)
     writer->WriteNumber(node->selfSize);
     writer->WriteString(",\\\"id\\\":");
     writer->WriteNumber(node->id);
+    writer->WriteString(",\\\"nodeType\\\":");
+    writer->WriteNumber(node->type);
+
     writer->WriteString(",\\\"children\\\":[");
     if (node->children.size() != 0) {
         for (size_t i = 0; i < node->children.size(); i++) {
@@ -200,7 +203,7 @@ void CjAllocData::SerializeStats()
     writer->End();
 }
 
-void CjAllocData::RecordAllocNodes(const TypeInfo* klass, MSize size)
+void CjAllocData::RecordAllocNodes(const TypeInfo* ti, MSize size)
 {
     std::unique_lock<std::mutex> lock(sharedMtx);
     if (!IsRecording()) { // avoid delete func was called at this time
@@ -211,7 +214,7 @@ void CjAllocData::RecordAllocNodes(const TypeInfo* klass, MSize size)
         return;
     } else {
         AllocStackInfo* allocStackInfo  = new AllocStackInfo();
-        allocStackInfo->ProcessStackTrace(size);
+        allocStackInfo->ProcessStackTrace(ti, size);
         delete allocStackInfo;
         allocSize = 0;
         SerializeStats();
@@ -240,7 +243,7 @@ int32_t AllocStackInfo::ProcessTraceInfo(FrameInfo &frame)
     return functionInfoIndex;
 }
 
-void AllocStackInfo::ProcessTraceNode(TraceNodeField* head, MSize allocSize)
+void AllocStackInfo::ProcessTraceNode(TraceNodeField* head, const TypeInfo* ti, MSize allocSize)
 {
     // Initialize nodes and fill nodes in head in sequence.
     if (frames.empty()) {
@@ -254,6 +257,7 @@ void AllocStackInfo::ProcessTraceNode(TraceNodeField* head, MSize allocSize)
         TraceNodeField* traceNode = new TraceNodeField();
         traceNode->id = CjAllocData::GetCjAllocData()->SetNodeID();
         traceNode->functionInfoIndex = ProcessTraceInfo(*f);
+        traceNode->type = ti->GetType();
         if (traceNode->functionInfoIndex == -1) {
             delete traceNode;
             continue;
@@ -272,7 +276,7 @@ void AllocStackInfo::ProcessTraceNode(TraceNodeField* head, MSize allocSize)
     }
     head->selfSize += allocSize;
 }
-void AllocStackInfo::ProcessStackTrace(MSize size)
+void AllocStackInfo::ProcessStackTrace(const TypeInfo* ti, MSize size)
 {
     UnwindContext uwContext;
     // Top unwind context can only be runtime or Cangjie context.
@@ -285,7 +289,7 @@ void AllocStackInfo::ProcessStackTrace(MSize size)
         TraceNodeField* node = CjAllocData::GetCjAllocData()->FindNode(FA, f->GetFuncName().Str());
         if (node != nullptr) {
             delete f;
-            ProcessTraceNode(node, size);
+            ProcessTraceNode(node, ti, size);
             return;
         }
         frames.push(f);
@@ -301,7 +305,7 @@ void AllocStackInfo::ProcessStackTrace(MSize size)
         uwContext = caller;
     }
     // 2. If the stack back is not recorded, the call chain is a new call chain and the root node is the root node.
-    ProcessTraceNode(CjAllocData::GetCjAllocData()->traceNodeHead, size);
+    ProcessTraceNode(CjAllocData::GetCjAllocData()->traceNodeHead, ti, size);
 
     // 3. Record the samples at this time.
     Sample* sample = new Sample();

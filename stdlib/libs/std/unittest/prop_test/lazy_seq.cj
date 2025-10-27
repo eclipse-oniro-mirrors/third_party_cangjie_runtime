@@ -179,7 +179,7 @@ public class LazySeq<T> <: Iterable<T> {
      * Construct a sequence from an iterable.
      * If the iterable is already a LazySeq, do not do anything to avoid producing unnesessary wrappers.
      */
-    public static func of(iterable: Iterable<T>): LazySeq<T> {
+    public static func of(iterable: Iterable<T>) {
         match (iterable) {
             case self: LazySeq<T> => self
             case _ => LazySeq(iterable)
@@ -189,7 +189,7 @@ public class LazySeq<T> <: Iterable<T> {
      * Construct a sequence from an array.
      * A little bit optimized compared to the generic Iterable version.
      */
-    public static func of(array: Array<T>): LazySeq<T> {
+    public static func of(array: Array<T>) {
         var self = LazySeq<T>()
         var index = array.size - 1
         while (index >= 0) {
@@ -264,7 +264,7 @@ public class LazySeq<T> <: Iterable<T> {
      * Mix two sequences.
      * Example: mix({1,2,3,4}, {5,6,7}) -> {1,5,2,6,3,7,4}
      */
-    public static func mix(l1: LazySeq<T>, l2: LazySeq<T>): LazySeq<T> {
+    public static func mix(l1: LazySeq<T>, l2: LazySeq<T>) {
         let newRoot = Lazy<LazyNode<T>>.flat {
             LazyNode<T>.mix(l1.root.get(), l2.root.get())
         }
@@ -274,7 +274,7 @@ public class LazySeq<T> <: Iterable<T> {
     /*
      * Mix three sequences.
      */
-    public static func mix(l1: LazySeq<T>, l2: LazySeq<T>, l3: LazySeq<T>): LazySeq<T> {
+    public static func mix(l1: LazySeq<T>, l2: LazySeq<T>, l3: LazySeq<T>) {
         let newRoot = Lazy<LazyNode<T>>.flat {
             LazyNode<T>.mix(l1.root.get(), l2.root.get(), l3.root.get())
         }
@@ -284,7 +284,7 @@ public class LazySeq<T> <: Iterable<T> {
     /*
      * Mix four sequences.
      */
-    public static func mix(l1: LazySeq<T>, l2: LazySeq<T>, l3: LazySeq<T>, l4: LazySeq<T>): LazySeq<T> {
+    public static func mix(l1: LazySeq<T>, l2: LazySeq<T>, l3: LazySeq<T>, l4: LazySeq<T>) {
         let newRoot = Lazy<LazyNode<T>>.flat {
             LazyNode<T>.mix(l1.root.get(), l2.root.get(), l3.root.get(), l4.root.get())
         }
@@ -294,7 +294,7 @@ public class LazySeq<T> <: Iterable<T> {
     /*
      * Mix five sequences.
      */
-    public static func mix(l1: LazySeq<T>, l2: LazySeq<T>, l3: LazySeq<T>, l4: LazySeq<T>, l5: LazySeq<T>): LazySeq<T> {
+    public static func mix(l1: LazySeq<T>, l2: LazySeq<T>, l3: LazySeq<T>, l4: LazySeq<T>, l5: LazySeq<T>) {
         let newRoot = Lazy<LazyNode<T>>.flat {
             LazyNode<T>.mix(l1.root.get(), l2.root.get(), l3.root.get(), l4.root.get(), l5.root.get())
         }

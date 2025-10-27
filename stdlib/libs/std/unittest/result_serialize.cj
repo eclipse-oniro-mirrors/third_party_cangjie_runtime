@@ -133,6 +133,7 @@ extend TestCaseResult {
     func doSerialize(): DataModelStruct {
         return serializeSubResults()
             .add(field<TestCaseId>("id", caseId))
+            .add(field<TestCaseReportInfo>("info", caseInfo))
             .add(field<RenderOptions>("renderOptions", renderOptions))
             .add(field<Bool>("finished", isFinished))
     }
@@ -141,6 +142,7 @@ extend TestCaseResult {
         let dms = dm.asStruct()
         let result = TestCaseResult(
             TestCaseId.deserialize(dms.get("id")),
+            TestCaseReportInfo.deserialize(dms.get("info")),
             RenderOptions.deserialize(dms.get("renderOptions"))
         )
         for (subResult in ArrayList<Result>.deserialize(dms.get("subResults"))) {
@@ -153,10 +155,21 @@ extend TestCaseResult {
     }
 }
 
+extend TestCaseReportInfo <: Serializable<TestCaseReportInfo> {
+    public func serializeInternal(): DataModel {
+        this.tags.serializeInternal()
+    }
+
+    public static func deserialize(dm: DataModel): TestCaseReportInfo {
+        TestCaseReportInfo(tags: Array<String>.deserialize(dm))
+    }
+}
+
 extend TestSuiteResult {
     func doSerialize(): DataModelStruct {
         return serializeSubResults()
             .add(field<TestSuiteId>("id", suiteId))
+            .add(field<TestSuiteReportInfo>("info", suiteInfo))
             .add(field<Bool>("finished", isFinished))
     }
 
@@ -164,6 +177,7 @@ extend TestSuiteResult {
         let dms = dm.asStruct()
         let result = TestSuiteResult(
             TestSuiteId.deserialize(dms.get("id")),
+            TestSuiteReportInfo.deserialize(dms.get("info")),
         )
         for (subResult in ArrayList<Result>.deserialize(dms.get("subResults"))) {
             result.add((subResult as TestCaseResult).getOrThrow())
@@ -172,6 +186,16 @@ extend TestSuiteResult {
             result.finish()
         }
         result
+    }
+}
+
+extend TestSuiteReportInfo <: Serializable<TestSuiteReportInfo> {
+    public func serializeInternal(): DataModel {
+        this.tags.serializeInternal()
+    }
+
+    public static func deserialize(dm: DataModel): TestSuiteReportInfo {
+        TestSuiteReportInfo(tags: Array<String>.deserialize(dm))
     }
 }
 

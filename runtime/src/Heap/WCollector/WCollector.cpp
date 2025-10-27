@@ -31,28 +31,27 @@ bool WCollector::IsUnmovableFromObject(BaseObject* obj) const
 
 bool WCollector::MarkObject(BaseObject* obj) const
 {
-    bool marked = RegionSpace::MarkObject(obj);
+    RegionInfo* region = RegionInfo::GetRegionInfoAt(reinterpret_cast<MAddress>(obj));
+    size_t objectSize = obj->GetSize();
+    bool marked = region->MarkObject(obj, objectSize);
     if (!marked) {
-        reinterpret_cast<RegionSpace&>(theAllocator).CountLiveObject(obj);
-        RegionInfo* region = RegionInfo::GetRegionInfoAt(reinterpret_cast<MAddress>(obj));
+        region->AddLiveByteCount(objectSize);
         (void)region;
-        DLOG(TRACE, "mark obj %p<%p>(%zu) in region %p(%u)@%#zx, live %u", obj, obj->GetTypeInfo(), obj->GetSize(),
+        DLOG(TRACE, "mark obj %p<%p>(%zu) in region %p(%u)@%#zx, live %u", obj, obj->GetTypeInfo(), objectSize,
              region, region->GetRegionType(), region->GetRegionStart(), region->GetLiveByteCount());
     }
     return marked;
 }
 
-bool WCollector::ResurrectObject(BaseObject* obj)
+bool WCollector::ResurrectObject(BaseObject* obj, size_t offset, RegionInfo* region)
 {
-    bool resurrected = RegionSpace::ResurrentObject(obj);
-    if (!resurrected) {
-        reinterpret_cast<RegionSpace&>(theAllocator).CountLiveObject(obj);
-        RegionInfo* region = RegionInfo::GetRegionInfoAt(reinterpret_cast<MAddress>(obj));
-        (void)region;
-        DLOG(TRACE, "resurrect region %p@%#zx obj %p<%p>(%zu), live bytes %u", region, region->GetRegionStart(), obj,
-             obj->GetTypeInfo(), obj->GetSize(), region->GetLiveByteCount());
-    }
-    return resurrected;
+    bool resurrected = region->ResurrectObject(obj, offset);
+        if (!resurrected) {
+            region->AddLiveByteCount(obj->GetSize());
+            DLOG(TRACE, "resurrect region %p@%#zx obj %p<%p>(%zu), live bytes %u", region, region->GetRegionStart(),
+                 obj, obj->GetTypeInfo(), obj->GetSize(), region->GetLiveByteCount());
+        }
+        return resurrected;
 }
 
 // this api updates current pointer as well as old pointer, caller should take care of this.
@@ -221,7 +220,6 @@ void WCollector::TraceRefField(BaseObject* obj, RefField<>& field, WorkStack& wo
         return;
     }
     CHECK(latest->IsValidObject());
-
     RefField<> newField = GetAndTryTagRefField(latest);
     if (oldField.GetFieldValue() == newField.GetFieldValue()) {
         DLOG(TRACE, "trace obj %p ref@%p: %p<%p>(%zu)", obj, &field, latest, latest->GetTypeInfo(), latest->GetSize());
@@ -301,7 +299,11 @@ BaseObject* WCollector::ForwardUpdateRawRef(ObjectRef& root)
 
     return oldObj;
 }
-
+void WCollector::PreforwardAllExportFromRoots()
+{
+    RootVisitor visitor = [this](ObjectRef& root) { ForwardUpdateRawRef(root); };
+    Heap::GetHeap().VisitAllExportRoots(visitor);
+}
 void WCollector::PreforwardFinalizerProcessorRoots()
 {
     RootVisitor visitor = [this](ObjectRef& root) { ForwardUpdateRawRef(root); };
@@ -314,16 +316,69 @@ void WCollector::PreforwardConcurrencyModelRoots()
     Runtime::Current().GetConcurrencyModel().VisitGCRoots(&visitor);
 }
 
+void WCollector::PreforwardDiscoveredExternObjects()
+{
+    std::lock_guard<std::mutex> lg(cycleWorkStackMtx);
+    CHECK(discoveredExternObjects.empty());
+    auto it = cycleRefWorkStack.begin();
+    std::unordered_map<BaseObject*, std::list<BaseObject*>> tmp;
+    while (it != cycleRefWorkStack.end()) {
+        BaseObject* exportObj = it->first;
+        BaseObject* latest = exportObj;
+        if (IsGhostFromObject(exportObj) && !IsUnmovableFromObject(exportObj)) {
+            latest = ForwardObject(exportObj);
+        }
+        for (auto &externObj : it->second) {
+            if (IsGhostFromObject(externObj) && !IsUnmovableFromObject(externObj)) {
+                BaseObject* toObj = ForwardObject(externObj);
+                externObj = toObj;
+            }
+        }
+        if (latest != exportObj) {
+            tmp[latest] = it->second;
+            it = cycleRefWorkStack.erase(it);
+        } else {
+            it++;
+        }
+    }
+    if (!tmp.empty()) {
+        cycleRefWorkStack.insert(tmp.begin(), tmp.end());
+    }
+}
+
+void WCollector::PreforwardAllResurrectExportFromObjects()
+{
+    std::unordered_set<BaseObject*> tmp;
+    std::lock_guard<std::mutex> lg(resurrectExportMtx);
+    auto it = resurrectedExportObjectes.begin();
+    while (it != resurrectedExportObjectes.end()) {
+        BaseObject* exportObj = *it;
+        BaseObject* latest = exportObj;
+        if (IsGhostFromObject(exportObj) && !IsUnmovableFromObject(exportObj)) {
+            latest = ForwardObject(exportObj);
+        }
+        if (latest != exportObj) {
+            tmp.insert(latest);
+            it = resurrectedExportObjectes.erase(it);
+        } else {
+            it++;
+        }
+    }
+    if (!tmp.empty()) {
+        resurrectedExportObjectes.insert(tmp.begin(), tmp.end());
+    }
+}
 void WCollector::TraceHeap()
 {
     WorkStack workStack = NewWorkStack();
+    WorkStack foreignStack = NewWorkStack();
     // assemble garbage candidates for tracing.
     reinterpret_cast<RegionSpace&>(theAllocator).AssembleGarbageCandidates();
 
     {
         MRT_PHASE_TIMER("enum roots & update old pointers within");
         TransitionToGCPhase(GCPhase::GC_PHASE_ENUM, true);
-        DoEnumeration(workStack);
+        DoEnumeration(workStack, foreignStack);
     }
 
     {
@@ -331,7 +386,7 @@ void WCollector::TraceHeap()
         markedObjectCount.store(0, std::memory_order_relaxed);
         TransitionToGCPhase(GCPhase::GC_PHASE_TRACE, true);
         reinterpret_cast<RegionSpace&>(theAllocator).PrepareTrace();
-        DoTracing(workStack);
+        DoTracing(workStack, foreignStack);
 
         ProcessFinalizers();
     }
@@ -348,6 +403,7 @@ void WCollector::PostTrace()
     // clear satb buffer when gc finish tracing.
     SatbBuffer::Instance().ClearBuffer();
     // reclaim large objects immediately after tracing is done.
+    PrepareCycleRef();
     CollectLargeGarbage();
     CollectPinnedGarbage();
     RefineFromSpace();
@@ -356,7 +412,7 @@ void WCollector::PostTrace()
 
 void WCollector::Preforward()
 {
-    ScopedEntryHiTrace hiTrace("CJRT_GC_PREFORWARD");
+    ScopedEntryTrace trace("CJRT_GC_PREFORWARD");
     MRT_PHASE_TIMER("Preforward");
     {
         ScopedLightSync scopedLightSync("Preforward", true, GCPhase::GC_PHASE_PREFORWARD);
@@ -369,11 +425,106 @@ void WCollector::Preforward()
 
     // forward and fix finalizer roots.
     threadPool->AddWork(new (std::nothrow) LambdaWork([this](size_t) { PreforwardFinalizerProcessorRoots(); }));
-
+    threadPool->AddWork(new (std::nothrow) LambdaWork([this](size_t) { PreforwardAllExportFromRoots(); }));
+    threadPool->AddWork(new (std::nothrow) LambdaWork([this](size_t) { PreforwardDiscoveredExternObjects(); }));
+    threadPool->AddWork(new (std::nothrow) LambdaWork([this](size_t) { PreforwardAllResurrectExportFromObjects(); }));
     threadPool->Start();
     threadPool->WaitFinish();
 }
 
+
+extern "C" void CJ_MRT_RolveCycleRef();
+extern "C" void ResolveCycleRefStub(CrossRefHandler, BaseObject*, BaseObject*, void**);
+
+class CJFunc : public BaseObject {
+public:
+    CrossRefHandler GetHandler()
+    {
+        return handler;
+    }
+private:
+    CrossRefHandler handler = nullptr;
+};
+
+class CJInteropContext : public BaseObject {
+public:
+    CJFunc* GetCJFunc()
+    {
+        return static_cast<CJFunc*>(Heap::GetBarrier().ReadReference(this,
+            *reinterpret_cast<RefField<false>*>(&cjFunc)));
+    }
+private:
+    CJFunc* cjFunc = nullptr;
+};
+
+class CJForeignProxy : public BaseObject {
+public:
+    CJInteropContext* GetCJInteropContext()
+    {
+        return static_cast<CJInteropContext*>(Heap::GetBarrier().ReadReference(this,
+            *reinterpret_cast<RefField<false>*>(&interopContext)));
+    }
+private:
+    CJInteropContext* interopContext = nullptr;
+};
+
+CrossRefHandler WCollector::GetCrossRefHandler(BaseObject *foreignProxy)
+{
+    return static_cast<CJForeignProxy*>(foreignProxy)->GetCJInteropContext()->GetCJFunc()->GetHandler();
+}
+
+void WCollector::ResolveCycleRef()
+{
+#if defined (__OHOS__)
+    size_t i = 0;
+    if (!cycleWorkStackMtx.try_lock()) {
+        CJ_MRT_RolveCycleRef();
+        return;
+    }
+    for (auto it = cycleRefWorkStack.begin(); it != cycleRefWorkStack.end(); i++) {
+        ScopedObjectAccess soa;
+        auto phase = GetGCPhase();
+        static constexpr size_t taskNum = 100;
+        if (phase == GC_PHASE_PREFORWARD || i >= taskNum) {
+            cycleWorkStackMtx.unlock();
+            CJ_MRT_RolveCycleRef();
+            return;
+        }
+        BaseObject* exportObj = it->first;
+        auto& heap = Heap::GetHeap();
+        auto id = static_cast<ExportObject*>(exportObj)->GetId();
+        if (!heap.CheckExportObjState(id, exportObj)) {
+            it = cycleRefWorkStack.erase(it);
+            continue;
+        }
+        if (resurrectedExportObjectes.find(exportObj) != resurrectedExportObjectes.end() ||
+            resurrectedExportObjectesForwardPhase.find(exportObj) != resurrectedExportObjectesForwardPhase.end()) {
+            it = cycleRefWorkStack.erase(it);
+            continue;
+        }
+        auto externObjs = it->second;
+        void* returnUnit = nullptr;
+        for (auto externObj : externObjs) {
+            auto resolveHook = GetCrossRefHandler(externObj);
+            ResolveCycleRefStub(resolveHook, exportObj, externObj, &returnUnit);
+        }
+        heap.SetExportObjActiveState(id, false);
+        it++;
+    }
+    cycleWorkStackMtx.unlock();
+    resurrectedExportObjectes.clear();
+    resurrectedExportObjectesForwardPhase.clear();
+#endif
+}
+void WCollector::PostResolveCycleTask()
+{
+#if defined (__OHOS__)
+    if (cycleRefWorkStack.empty()) {
+        return;
+    }
+    CJ_MRT_RolveCycleRef();
+#endif
+}
 void WCollector::DoGarbageCollection()
 {
     TraceHeap();
@@ -384,6 +535,8 @@ void WCollector::DoGarbageCollection()
     ForwardFromSpace();
 
     TransitionToGCPhase(GCPhase::GC_PHASE_IDLE, true);
+    MergeResurrectExportObjects();
+    PostResolveCycleTask();
     FlipTagID();
     ForwardDataManager::GetForwardDataManager().SetTagID(currentTagID);
 
@@ -425,8 +578,7 @@ BaseObject* WCollector::TryForwardObject(BaseObject* obj)
 
     if (fwdTable.RouteRegion(region)) {
         if (region->TryLockReadFromRegion()) {
-            // maintain from-region to help forwarding its objects
-            BaseObject* toVersion = ForwardObjectImpl(obj);
+            BaseObject* toVersion = ForwardObjectImpl(obj, region);
             region->UnlockReadFromRegion();
             return toVersion;
         } else {
@@ -438,16 +590,15 @@ BaseObject* WCollector::TryForwardObject(BaseObject* obj)
     return nullptr;
 }
 
-BaseObject* WCollector::ForwardObjectImpl(BaseObject* obj)
+BaseObject* WCollector::ForwardObjectImpl(BaseObject* obj, RegionInfo* ghostFromRegion)
 {
     CHECK(GetGCPhase() == GCPhase::GC_PHASE_PREFORWARD || GetGCPhase() == GCPhase::GC_PHASE_FORWARD);
-    MRT_ASSERT(IsGhostFromObject(obj), "expect from-objecct");
     do {
         StateWord oldWord = obj->GetStateWord();
 
         // 1. object has already been forwarded
         if (obj->IsForwarded()) {
-            auto toObj = GetForwardPointer(obj);
+            auto toObj = GetForwardPointer(obj, ghostFromRegion);
             DLOG(FORWARD, "skip forwarded obj %p -> %p<%p>(%zu)", obj, toObj, toObj->GetTypeInfo(), toObj->GetSize());
             return toObj;
         }
@@ -502,6 +653,9 @@ void WCollector::CollectSmallSpace()
          stats.garbageRatio * 100); // The base of the percentage is 100
 
     VLOG(REPORT, "start to release heap garbage memory");
+#if defined(__EULER__)
+    Heap::GetHeap().GetAllocator().TryReclaimGarbageMemory();
+#endif
     collectorResources.GetFinalizerProcessor().NotifyToReclaimGarbage();
 }
 

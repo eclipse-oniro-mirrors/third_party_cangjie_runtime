@@ -420,7 +420,7 @@ protected class JsonArray <: JsonValue {
         if (depth < 0) {
             throw IllegalArgumentException("Depth cannot be negative.")
         }
-        if (!indent.IsContainOnlySpaceAndTab()) {
+        if (!indent.isContainOnlySpaceAndTab()) {
             throw IllegalArgumentException("Indent must be an empty string or any combination of spaces and tabs.")
         }
         let buff = WriteBuffer(asumecapacity(this))
@@ -578,7 +578,7 @@ protected class JsonObject <: JsonValue {
         if (depth < 0) {
             throw IllegalArgumentException("Depth cannot be negative.")
         }
-        if (!indent.IsContainOnlySpaceAndTab()) {
+        if (!indent.isContainOnlySpaceAndTab()) {
             throw IllegalArgumentException("Indent must be an empty string or any combination of spaces and tabs.")
         }
         let buff = WriteBuffer(asumecapacity(this))
@@ -678,7 +678,7 @@ protected class JsonObject <: JsonValue {
 }
 
 extend String {
-    func IsContainOnlySpaceAndTab() {
+    func isContainOnlySpaceAndTab() {
         for (i in this) {
             if (i != b' ' && i != b'\t') {
                 return false

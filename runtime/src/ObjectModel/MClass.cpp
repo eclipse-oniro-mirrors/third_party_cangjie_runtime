@@ -28,6 +28,12 @@
 namespace MapleRuntime {
 typedef void *(*GenericiFn)(U32 size, TypeInfo* args[]);
 
+#ifdef __arm__
+const size_t TYPEINFO_PTR_SIZE = sizeof(TypeInfo*) + 4;
+#else
+const size_t TYPEINFO_PTR_SIZE = sizeof(TypeInfo*);
+#endif
+
 CString TypeTemplate::GetTypeInfoName(U32 argSize, TypeInfo *args[])
 {
     U32 startIter;
@@ -371,11 +377,6 @@ FuncPtr* TypeInfo::GetMTable(TypeInfo* itf)
 
 bool TypeInfo::IsSubType(TypeInfo* typeInfo)
 {
-    // All types are subtypes of the Any type.
-    TypeInfo* anyTi = TypeInfoManager::GetInstance()->GetAnyTypeInfo();
-    if (anyTi != nullptr && typeInfo == anyTi) {
-        return true;
-    }
     if (GetUUID() == typeInfo->GetUUID()) {
         return true;
     }
@@ -441,6 +442,10 @@ bool TypeInfo::IsSubType(TypeInfo* typeInfo)
     } else if (typeInfo->IsInterface()) {
         if (IsTempEnum() && GetSuperTypeInfo()) {
             return GetSuperTypeInfo()->IsSubType(typeInfo);
+        }
+        // All types are subtypes of the Any type.
+        if (typeInfo == TypeInfoManager::GetInstance()->GetAnyTypeInfo()) {
+            return true;
         }
         TryInitMTable();
         U32 targetID = typeInfo->GetUUID();
@@ -516,8 +521,8 @@ static void* GetAnnotations(Uptr annotationMethod, TypeInfo* arrayTi)
 {
     CHECK_DETAIL(arrayTi != nullptr, "arrayTi is nullptr");
     U32 size = arrayTi->GetInstanceSize();
-    MObject* obj = ObjectManager::NewObject(arrayTi, MRT_ALIGN(size + sizeof(TypeInfo*), sizeof(TypeInfo*)),
-        AllocType::RAW_POINTER_OBJECT);
+    MSize objSize = MRT_ALIGN(size + TYPEINFO_PTR_SIZE, TYPEINFO_PTR_SIZE);
+    MObject* obj = ObjectManager::NewObject(arrayTi, objSize, AllocType::RAW_POINTER_OBJECT);
     if (obj == nullptr) {
         ExceptionManager::OutOfMemory();
         return nullptr;
@@ -535,7 +540,7 @@ static void* GetAnnotations(Uptr annotationMethod, TypeInfo* arrayTi)
 #else
     ApplyCangjieMethodStub(values.GetData(), values.GetStackSize(), annotationMethod, threadData);
 #endif
-    Heap::GetBarrier().WriteStruct(obj, reinterpret_cast<Uptr>(obj) + sizeof(TypeInfo*),
+    Heap::GetBarrier().WriteStruct(obj, reinterpret_cast<Uptr>(obj) + TYPEINFO_PTR_SIZE,
         size, reinterpret_cast<Uptr>(structRet), size);
     AllocBuffer* buffer = AllocBuffer::GetAllocBuffer();
     if (buffer != nullptr) {
@@ -555,7 +560,7 @@ void* ReflectInfo::GetAnnotations(TypeInfo* arrayTi)
 
 U32 TypeInfo::GetModifier()
 {
-    if (!ReflectIsEnable()) {
+    if ((IsGenericTypeInfo() && !GetSourceGeneric()->ReflectIsEnable()) || !ReflectIsEnable()) {
         return MODIFIER_INVALID;
     }
     return GetReflectInfo()->GetModifier();

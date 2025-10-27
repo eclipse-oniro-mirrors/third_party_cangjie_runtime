@@ -73,13 +73,7 @@ public class InstanceFunctionInfo <: Equatable<InstanceFunctionInfo> & Hashable 
      */
     public prop name: String {
         get() {
-            match (_name) {
-                case Some(res) => res
-                case None =>
-                    let name = getFuncName(_info)
-                    _name = name
-                    name
-            }
+            _name.getOrThrow()
         }
     }
 
@@ -215,8 +209,16 @@ public class InstanceFunctionInfo <: Equatable<InstanceFunctionInfo> & Hashable 
     /**
      * Searches the instance function's annotation by incoming name.
      */
-    public func findAnnotation<T>(): Option<T> where T <: Annotation {
+    public func findAnnotation<T>(): ?T where T <: Annotation {
         findAnnotation<T>(annotations)
+   }
+
+    public func findAllAnnotations<T>(): Array<T> where T <: Annotation {
+        findAllAnnotations<T>(annotations)
+    }
+
+    public func getAllAnnotations(): Array<Annotation> {
+        annotations.toArray()
     }
 
     public operator func ==(that: InstanceFunctionInfo): Bool {
@@ -304,13 +306,7 @@ public class StaticFunctionInfo <: Equatable<StaticFunctionInfo> & Hashable & To
      */
     public prop name: String {
         get() {
-            match (_name) {
-                case Some(res) => res
-                case None =>
-                    let name = getFuncName(_info)
-                    _name = name
-                    name
-            }
+            _name.getOrThrow()
         }
     }
 
@@ -436,8 +432,16 @@ public class StaticFunctionInfo <: Equatable<StaticFunctionInfo> & Hashable & To
     /**
      * Searches the static function's annotation by incoming name.
      */
-    public func findAnnotation<T>(): Option<T> where T <: Annotation {
+    public func findAnnotation<T>(): ?T where T <: Annotation {
         findAnnotation<T>(annotations)
+   }
+
+    public func findAllAnnotations<T>(): Array<T> where T <: Annotation {
+        findAllAnnotations<T>(annotations)
+    }
+
+    public func getAllAnnotations(): Array<Annotation> {
+        annotations.toArray()
     }
 
     public operator func ==(that: StaticFunctionInfo): Bool {
@@ -569,10 +573,10 @@ public class InstancePropertyInfo <: Equatable<InstancePropertyInfo> & Hashable 
     }
 
     /**
-     * Returns true if instance property is 'mut' and typeInfo is not struct
+     * Returns true if instance property is 'mut'
      */
     public func isMutable(): Bool {
-        _setterInfo.isSome() && !(typeInfo is StructTypeInfo)
+        _setterInfo.isSome()
     }
 
     /**
@@ -580,12 +584,11 @@ public class InstancePropertyInfo <: Equatable<InstancePropertyInfo> & Hashable 
      */
     public func getValue(instance: Any): Any {
         if (isAbstract()) {
-            throw UnsupportedException("abstract prop cannot get value")
+            throw UnsupportedException("Abstract prop cannot get value.")
         }
         // instance type is checked in apply
-        match (_getterInfo) {
-            case Some(v) => v.apply(instance, Array<Any>())
-            case None => throw InfoNotFoundException("setter not found for prop '${name}'")
+        if (let Some(v) <- _getterInfo) { // Getter must be implemented, no need to consider `None`
+            return v.apply(instance, Array<Any>())
         }
     }
 
@@ -610,8 +613,16 @@ public class InstancePropertyInfo <: Equatable<InstancePropertyInfo> & Hashable 
     /**
      * Searches the instance property's annotation by incoming name.
      */
-    public func findAnnotation<T>(): Option<T> where T <: Annotation {
+    public func findAnnotation<T>(): ?T where T <: Annotation {
         findAnnotation<T>(annotations)
+   }
+
+    public func findAllAnnotations<T>(): Array<T> where T <: Annotation {
+        findAllAnnotations<T>(annotations)
+    }
+
+    public func getAllAnnotations(): Array<Annotation> {
+        annotations.toArray()
     }
 
     public operator func ==(that: InstancePropertyInfo): Bool {
@@ -729,24 +740,23 @@ public class StaticPropertyInfo <: Equatable<StaticPropertyInfo> & Hashable & To
     }
 
     /**
-     * Returns true if static property is 'mut' and typeInfo is not struct
+     * Returns true if static property is 'mut'
      */
     public func isMutable(): Bool {
-        _setterInfo.isSome() && !(typeInfo is StructTypeInfo)
+        _setterInfo.isSome()
     }
 
     /**
-     * Returns the instance property's value for incoming instance.
+     * Returns the static property's value for incoming instance.
      */
     public func getValue(): Any {
-        match (_getterInfo) {
-            case Some(v) => v.apply(TypeInfo.getOrCreate(_declaringTypeInfo), Array<Any>())
-            case None => throw InfoNotFoundException("setter not found for prop '${name}'")
+        if (let Some(v) <- _getterInfo) { // getter must be implemented, no need to consider `None`
+            return v.apply(TypeInfo.getOrCreate(_declaringTypeInfo), Array<Any>())
         }
     }
 
     /**
-     * Updates the instance property's value with incoming new value for incoming instance.
+     * Updates the static property's value with incoming new value for incoming instance.
      */
     public func setValue(newValue: Any): Unit {
         if (!isMutable()) {
@@ -761,10 +771,17 @@ public class StaticPropertyInfo <: Equatable<StaticPropertyInfo> & Hashable & To
     /**
      * Searches the static property's annotation by incoming name.
      */
-    public func findAnnotation<T>(): Option<T> where T <: Annotation {
+    public func findAnnotation<T>(): ?T where T <: Annotation {
         findAnnotation<T>(annotations)
+   }
+
+    public func findAllAnnotations<T>(): Array<T> where T <: Annotation {
+        findAllAnnotations<T>(annotations)
     }
 
+    public func getAllAnnotations(): Array<Annotation> {
+        annotations.toArray()
+    }
     public operator func ==(that: StaticPropertyInfo): Bool {
         this._getterInfo.getOrThrow()._info == that._getterInfo.getOrThrow()._info
     }
@@ -882,8 +899,16 @@ public class ConstructorInfo <: Equatable<ConstructorInfo> & Hashable & ToString
     /**
      * Searches the constructor's annotation by incoming name.
      */
-    public func findAnnotation<T>(): Option<T> where T <: Annotation {
+    public func findAnnotation<T>(): ?T where T <: Annotation {
         findAnnotation<T>(annotations)
+   }
+
+    public func findAllAnnotations<T>(): Array<T> where T <: Annotation {
+        findAllAnnotations<T>(annotations)
+    }
+
+    public func getAllAnnotations(): Array<Annotation> {
+        annotations.toArray()
     }
 
     public operator func ==(that: ConstructorInfo): Bool {
@@ -957,13 +982,7 @@ public class GlobalFunctionInfo <: Equatable<GlobalFunctionInfo> & Hashable & To
     // Function name, overloaded functions have the same function name
     public prop name: String {
         get() {
-            match (_name) {
-                case Some(res) => res
-                case None =>
-                    let name = getFuncName(_info)
-                    _name = name
-                    name
-            }
+            _name.getOrThrow()
         }
     }
 
@@ -1053,8 +1072,16 @@ public class GlobalFunctionInfo <: Equatable<GlobalFunctionInfo> & Hashable & To
     }
 
     // Get the annotation by name, return None if not found
-    public func findAnnotation<T>(): Option<T> where T <: Annotation {
+    public func findAnnotation<T>(): ?T where T <: Annotation {
         findAnnotation<T>(annotations)
+   }
+
+    public func findAllAnnotations<T>(): Array<T> where T <: Annotation {
+        findAllAnnotations<T>(annotations)
+    }
+
+    public func getAllAnnotations(): Array<Annotation> {
+        annotations.toArray()
     }
 
     public operator func ==(that: GlobalFunctionInfo): Bool {
@@ -1089,7 +1116,7 @@ public class GlobalFunctionInfo <: Equatable<GlobalFunctionInfo> & Hashable & To
 func getFuncName(parentPointer: CPointer<Unit>): String {
     let pointer = getMethodName(parentPointer)
     if (pointer.isNull()) {
-        throw InfoNotFoundException("get function name failed!")
+        throw InfoNotFoundException("Get function name failed!")
     }
     CString(pointer).toString()
 }

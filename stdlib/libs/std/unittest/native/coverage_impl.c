@@ -15,6 +15,12 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#ifdef __arm__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Watomic-alignment"
+#pragma GCC diagnostic ignored "-Wshift-count-overflow"
+#endif
+
 // MinGW specifically does not support attribute((weak)) properly
 #ifndef __MINGW64__
 #define ATTRIBUTE_WEAK __attribute__((weak))
@@ -565,3 +571,7 @@ SANCOV_CALLBACK int LLVMFuzzerRunDriver(__attribute__((unused)) int* argc, __att
 {
     return 0;
 }
+
+#ifdef __arm__
+#pragma GCC diagnostic pop
+#endif

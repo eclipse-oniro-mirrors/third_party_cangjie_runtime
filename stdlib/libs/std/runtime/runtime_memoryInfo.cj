@@ -14,18 +14,23 @@ package std.runtime
 import std.fs.*
 
 @Intrinsic
-func getMaxCjHeapSize(): Int64
+func getMaxCjHeapSize(): UIntNative
 
 @Intrinsic
-func getAllocatedCjHeapSize(): Int64
+func getAllocatedCjHeapSize(): UIntNative
 
 @Intrinsic
-func getRealHeapSize(): Int64
+func getRealHeapSize(): UIntNative
 
 @When[backend == "cjnative"]
 @Intrinsic
 func dumpCjHeapData(fd: Int32): Bool
 
+@When[backend == "cjnative"]
+@Frozen
+@Intrinsic
+public func blackBox<T>(input: T): T
+ 
 class MemoryInfoException <: Exception {
     init(message: String) {
         super(message)
@@ -43,7 +48,7 @@ public struct MemoryInfo {
      */
     public static prop maxHeapSize: Int64 {
         get() {
-            getMaxHeapSize()
+            Int64(getMaxHeapSize())
         }
     }
 
@@ -52,7 +57,7 @@ public struct MemoryInfo {
      */
     public static prop allocatedHeapSize: Int64 {
         get() {
-            getAllocatedHeapSize()
+            Int64(getAllocatedHeapSize())
         }
     }
 
@@ -67,15 +72,15 @@ public struct MemoryInfo {
 }
 
 public func getMaxHeapSize(): Int64 {
-    return getMaxCjHeapSize()
+    return Int64(getMaxCjHeapSize())
 }
 
 public func getAllocatedHeapSize(): Int64 {
-    return getAllocatedCjHeapSize()
+    return Int64(getAllocatedCjHeapSize())
 }
 
 public func getUsedHeapSize(): Int64 {
-    var ret = getRealHeapSize()
+    var ret = Int64(getRealHeapSize())
     match {
         case ret >= 0 => return ret
         case ret == -1 => throw MemoryInfoException("Failed to open the smaps file.")

@@ -169,6 +169,17 @@ if(NOT DARWIN)
 endif()
 
 make_cangjie_lib(
+    std-interop IS_SHARED
+    DEPENDS cangjie${BACKEND_TYPE}Interop
+    CANGJIE_STD_LIB_DEPENDS
+        std-core
+    OBJECTS ${output_cj_object_dir}/std/interop.o)
+
+    add_library(cangjie-std-interop ${output_cj_object_dir}/std/interop.o)
+    set_target_properties(cangjie-std-interop PROPERTIES LINKER_LANGUAGE C)
+    install(TARGETS cangjie-std-interop DESTINATION lib/${output_triple_name}_${CJNATIVE_BACKEND}${SANITIZER_SUBPATH})
+
+make_cangjie_lib(
     std-ref IS_SHARED
     DEPENDS cangjie${BACKEND_TYPE}Ref
     CANGJIE_STD_LIB_DEPENDS
@@ -499,7 +510,7 @@ install(TARGETS cangjie-std-runtime DESTINATION lib/${output_triple_name}_${CJNA
 if(CANGJIE_ENABLE_COMPILER_TSAN)
     set(STD_AST_ALLOW_UNDEFINED ALLOW_UNDEFINED)
 endif()
-if (NOT OHOS AND NOT MINGW AND NOT DARWIN)
+if (NOT OHOS AND NOT MINGW AND NOT DARWIN AND NOT ANDROID)
     set(GCC_S_FLAG -lgcc_s)
 endif()
 set(EXCLUDE_STD_AST_FFI_OPTION)
@@ -513,9 +524,13 @@ elseif(OHOS)
     set(STDCPP_FLAG -l:libc++.a)
 endif()
 
+set(arm32_ast_support)
+if(TRIPLE STREQUAL "arm-linux-ohos")
+    set(arm32_ast_support -L$ENV{CANGJIE_HOME}/lib/linux_ohos_arm_cjnative)
+endif()
 make_cangjie_lib(
     std-ast IS_SHARED ${STD_AST_ALLOW_UNDEFINED}
-    DEPENDS cangjie${BACKEND_TYPE}AST cangjie-std-astFFI
+    DEPENDS cangjie${BACKEND_TYPE}AST cangjie-std-astFFI-objs
     CANGJIE_STD_LIB_DEPENDS
         std-core
         std-collection
@@ -524,11 +539,12 @@ make_cangjie_lib(
         std-math
     OBJECTS ${output_cj_object_dir}/std/ast.o
     FLAGS
-        -lcangjie-std-astFFI
+        $<TARGET_OBJECTS:cangjie-std-astFFI-objs>
+        ${arm32_ast_support}
         -lcangjie-ast-support
         ${STDCPP_FLAG}
         ${GCC_S_FLAG}
-        -lpthread
+        $<$<NOT:$<BOOL:${ANDROID}>>:-lpthread>
         ${EXCLUDE_STD_AST_FFI_OPTION}
         # if(NOT WIN32) then add -ldl, because there is no libdl on Windows.
         $<$<NOT:$<BOOL:${WIN32}>>:-ldl>)
@@ -909,6 +925,17 @@ add_cangjie_library(
     SOURCES ${OBJECTPOOL_SRCS}
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/std/objectpool
     DEPENDS ${OBJECTPOOL_DEPENDENCIES})
+
+add_cangjie_library(
+    cangjie${BACKEND_TYPE}Interop
+    NO_SUB_PKG
+    IS_STDLIB
+    IS_CJNATIVE_BACKEND
+    PACKAGE_NAME "interop"
+    MODULE_NAME "std"
+    SOURCES ${INTEROP_SRCS}
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/std/interop
+    DEPENDS ${INTEROP_DEPENDENCIES})
 
 add_cangjie_library(
     cangjie${BACKEND_TYPE}Ref

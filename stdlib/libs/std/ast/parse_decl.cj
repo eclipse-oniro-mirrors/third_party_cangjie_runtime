@@ -19,22 +19,28 @@ public func parseDecl(input: Tokens, astKind!: String = ""): Decl {
             case "PrimaryCtorDecl" => unsafe {
                 parse(
                     input,
-                    {p: CPointer<UInt8> => return CJ_AST_ParsePrimaryConstructor(match (MACRO_OBJECT.get()) {
-                        case Some(ptr) => ptr
-                        case None => CPointer<Unit>()
-                    }, p)}
+                    {
+                        p: CPointer<UInt8> => return CJ_AST_ParsePrimaryConstructor(match (MACRO_OBJECT.get()) {
+                            case Some(ptr) => ptr
+                            case None => CPointer<Unit>()
+                        }, p)
+                    }
                 )
             }
-            case "PropMemberDecl" => unsafe { parse(input, {p: CPointer<UInt8> => return CJ_AST_ParsePropMemberDecl(
-                match (MACRO_OBJECT.get()) {
+            case "PropMemberDecl" => unsafe {
+                parse(input, {
+                    p: CPointer<UInt8> => return CJ_AST_ParsePropMemberDecl(match (MACRO_OBJECT.get()) {
+                        case Some(ptr) => ptr
+                        case None => CPointer<Unit>()
+                    }, p)
+                })
+            }
+            case _ => unsafe { parse(input, {
+                p: CPointer<UInt8> => return CJ_AST_ParseDecl(match (MACRO_OBJECT.get()) {
                     case Some(ptr) => ptr
                     case None => CPointer<Unit>()
-                }, p)})
-            }
-            case _ => unsafe { parse(input, {p: CPointer<UInt8> => return CJ_AST_ParseDecl(match (MACRO_OBJECT.get()) {
-                case Some(ptr) => ptr
-                case None => CPointer<Unit>()
-            }, p, CPointer<Int64>())}) }
+                }, p, CPointer<Int64>())
+            }) }
         }
     } catch (e: Exception) {
         throw ParseASTException("\n" + e.message + "parsing decl error.")
@@ -51,10 +57,13 @@ public func parseDeclFragment(input: Tokens, startFrom!: Int64 = 0): (Decl, Int6
             parseFragment(
                 input,
                 startFrom,
-                {p: CPointer<UInt8>, sizeRef: CPointer<Int64> => return CJ_AST_ParseDecl(match (MACRO_OBJECT.get()) {
-                    case Some(ptr) => ptr
-                    case None => CPointer<Unit>()
-                }, p, sizeRef)}
+                {
+                    p: CPointer<UInt8>, sizeRef: CPointer<Int64> => return CJ_AST_ParseDecl(
+                        match (MACRO_OBJECT.get()) {
+                            case Some(ptr) => ptr
+                            case None => CPointer<Unit>()
+                        }, p, sizeRef)
+                }
             )
         } catch (e: Exception) {
             throw ParseASTException("\n" + e.message + "parsing decl fragment error.")
@@ -62,6 +71,27 @@ public func parseDeclFragment(input: Tokens, startFrom!: Int64 = 0): (Decl, Int6
     }
     var astNode = generateDeclAST(node.GetRootAsDecl())
     return (astNode, count)
+}
+
+func parseFuncParam(input: Tokens): FuncParam {
+    var params = ArrayList<FuncParam>()
+    try {
+        let tokens = Tokens()
+        tokens
+            .append(Token(IDENTIFIER))
+            .append(Token(LPAREN))
+            .append(input)
+            .append(Token(RPAREN))
+            .append(Token(LCURL))
+            .append(Token(RCURL))
+        params = PrimaryCtorDecl(tokens).funcParams
+    } catch (e: ASTException) {
+        throw ASTException("Cannot construct the 'FuncParam' node.")
+    }
+    if (params.size == 0) {
+        throw ASTException("Cannot construct the 'FuncParam' node.")
+    }
+    params[0]
 }
 
 func generateDeclAST(declNode: Option<NodeFormat_Decl>): Decl {
@@ -94,6 +124,7 @@ func generateDeclAST(declNode: Option<NodeFormat_Decl>): Decl {
         case "prop_decl" => createPropDecl(decl)
         case "macro_expand_decl" => createMacroExpandDecl(decl)
         case "func_param" => createFuncParam(decl)
+        case "macro_expand_param" => createMacroExpandParam(decl)
         case _ => throw ParseASTException("Unsupported parse the decl node: ${astKind}.\n")
     }
     addPositionInfo(astNode, nodeBase)
@@ -349,12 +380,20 @@ func createFuncParam(param: Option<NodeFormat_FuncParam>, index: Int64, length: 
     }
     var astKind = pm.GetNodeBase().getOrThrow().GetAstKind()
     if (astKind == "macro_expand_param") {
+        let annos: ArrayList<Annotation> = ArrayList<Annotation>()
+ 
+        let declBase = pm.GetBase().getOrThrow().GetBase().getOrThrow()
+
+        for (anno in declBase.GetAnnotations()) {
+            annos.add(createAnnotation(anno))
+        }
         var mep = match (pm.GetMacroParamAsMacroExpandParam()) {
             case Some(v) => v
             case None => throw ParseASTException("Failed to get MacroExpandParam Node")
         }
         return match (createMacroExpand(mep.GetInvocation(), isDecl: false, isFuncParam: true) as FuncParam) {
-            case Some(v) => v
+            case Some(v) => v.annotations.add(all: annos, at: 0)
+                            v
             case None => throw ParseASTException("Failed to create MacroExpandParam Node")
         }
     }
@@ -650,12 +689,37 @@ func createTypeAliasDecl(decl: NodeFormat_Decl, declBase: NodeFormat_DeclBase) {
 }
 
 func createMacroExpandDecl(decl: NodeFormat_Decl) {
+    var annos: ArrayList<Annotation> = ArrayList<Annotation>()
+ 
+    var declBase = decl.GetBase().getOrThrow()
+    for (anno in declBase.GetAnnotations()) {
+       annos.add(createAnnotation(anno))
+    }
     var me = match (decl.GetDeclAsMacroExpandDecl()) {
         case Some(v) => v
         case None => throw ParseASTException("Failed to get MacroExpand Node")
     }
     return match (createMacroExpand(me.GetInvocation(), isDecl: true) as Decl) {
-        case Some(v) => v
+        case Some(v) => v.annotations.add(all: annos, at: 0)
+                        v
         case None => throw ParseASTException("Failed to create MacroExpandDecl Node")
+    }
+}
+
+func createMacroExpandParam(decl: NodeFormat_Decl) {
+    var annos: ArrayList<Annotation> = ArrayList<Annotation>()
+ 
+    var declBase = decl.GetBase().getOrThrow()
+    for (anno in declBase.GetAnnotations()) {
+       annos.add(createAnnotation(anno))
+    }
+    var me = match (decl.GetDeclAsMacroExpandParam()) {
+        case Some(v) => v
+        case None => throw ParseASTException("Failed to get MacroExpand Node")
+    }
+    return match (createMacroExpand(me.GetInvocation(), isDecl: false, isFuncParam: true) as Decl) {
+        case Some(v) => v.annotations.add(all: annos, at: 0)
+                        v
+        case None => throw ParseASTException("Failed to create MacroExpandParam Node")
     }
 }
