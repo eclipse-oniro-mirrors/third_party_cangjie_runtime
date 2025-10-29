@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/templates/cangjie/cjc_toolchain.gni")
-import("//third_party/cangjie/cangjie_runtime/stdlib/libs/ohos_cangjie_std.gni")
+import("//third_party/cangjie_runtime/stdlib/libs/ohos_cangjie_std.gni")
 
 action("generate_c_header_file") {
   script = "/home/zhoujing/code/ohos-sig/build/lite/run_shell_cmd.py"
