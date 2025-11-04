@@ -80,7 +80,7 @@ public:
 #elif defined(__aarch64__)
             context.x29 = *reinterpret_cast<uint64_t*>(calleeFrameAddress);
 #elif defined(__arm__)
-            context.r11 = *reinterpret_cast<uint64_t*>(calleeFrameAddress);
+            context.r11 = *reinterpret_cast<uint32_t*>(calleeFrameAddress);
 #endif
             return;
         }
@@ -126,6 +126,9 @@ public:
             uint64_t* slotAddr = reinterpret_cast<uint64_t*>(calleeFrameAddress + SLOT_SIZE_FACTOR * offset);
             context.SetValueByIdx(idx, *slotAddr);
 #endif // __APPLE__
+#elif defined(__arm__)
+            uint32_t* slotAddr = reinterpret_cast<uint32_t*>(calleeFrameAddress + SLOT_SIZE_FACTOR * offset);
+            context.SetValueByIdx(idx, *slotAddr);
 #else // not (_WIN64 || __aarch64__)
             uint64_t* slotAddr = reinterpret_cast<uint64_t*>(calleeFrameAddress + SLOT_SIZE_FACTOR * offset);
             context.SetValueByIdx(idx, *slotAddr);
@@ -139,7 +142,7 @@ public:
         calleeCount = (calleeCount % alignSize != 0) ? calleeCount + 1 : calleeCount;
         context.sp += calleeCount * sizeOfAddr;
 #elif defined(__arm__)
-        context.r11 = *reinterpret_cast<uint64_t*>(calleeFrameAddress);
+        context.r11 = *reinterpret_cast<uint32_t*>(calleeFrameAddress);
 #endif
 
 #if defined(_WIN64)
@@ -185,7 +188,11 @@ public:
             bitsLen = VarInt::BitsLen::FORTH_STEP_VAR_BITS;
         }
         bitsMask = static_cast<uint32_t>((1UL << bitsLen) - 1);
+#ifdef __arm__
+        res = *reinterpret_cast<uint32_t*>(*point) >> (tagLen * validPos) & bitsMask;
+#else
         res = *reinterpret_cast<uint64_t*>(*point) >> (tagLen * validPos) & bitsMask;
+#endif
         uint32_t byteLen = bitsLen >> 3; // 8 bits per byte
         *point = reinterpret_cast<Uptr*>(reinterpret_cast<uint8_t*>(*point) + byteLen);
         return res;
