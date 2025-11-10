@@ -13,7 +13,7 @@
     "component": {
         "name": "cangjie_runtime",
         "subsystem": "thirdparty",
-        "syscap": [],
+        "syscap": [ "SystemCapability.Utils.Cangjie" ],
         "features": [],
         "adapted_system_type": [ "standard" ],
         "rom": "25MB",
