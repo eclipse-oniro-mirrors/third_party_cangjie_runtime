@@ -86,7 +86,6 @@ cangjie_prebuilts("cangjie_prebuilts_package") {
   prebuilt_libs_path = "${prebults_cangjie_sdk_linux_x86_64_path}/runtime/lib/${cj_config.platform_target}"
   prebuilt_libs = [
     "cangjie-std-argopt",
-    "cangjie-std-ast",
     "cangjie-std-binary",
     "cangjie-std-collection.concurrent",
     "cangjie-std-collection",
@@ -100,6 +99,7 @@ cangjie_prebuilts("cangjie_prebuilts_package") {
     "cangjie-std-database.sql",
     "cangjie-std-env",
     "cangjie-std-fs",
+    "cangjie-std-interop",
     "cangjie-std-io",
     "cangjie-std-math.numeric",
     "cangjie-std-math",
