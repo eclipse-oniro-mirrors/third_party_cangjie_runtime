@@ -485,12 +485,13 @@ struct CJThread *CJThreadAlloc(struct Schedule *schedule, struct ArgAttr *argAtt
 /* CJThreadMexit */
 void *CJThreadMexit(struct CJThread *delCJThread)
 {
+    unsigned long long cjthreadId = delCJThread->id;
 #ifdef __OHOS__
-    TRACE_FINISH_ASYNC(TRACE_CJTHREAD_EXEC, delCJThread->id);
-    TRACE_START_ASYNC(TRACE_CJTHREAD_EXIT, delCJThread->id);
+    TRACE_FINISH_ASYNC(TRACE_CJTHREAD_EXEC, cjthreadId);
+    TRACE_START_ASYNC(TRACE_CJTHREAD_EXIT, cjthreadId);
 #elif defined (__ANDROID__)
     TRACE_FINISH();
-    TRACE_START(MapleRuntime::TraceInfoFormat(TRACE_CJTHREAD_EXIT, delCJThread->id));
+    TRACE_START(MapleRuntime::TraceInfoFormat(TRACE_CJTHREAD_EXIT, cjthreadId));
 #endif
     struct Schedule *schedule = delCJThread->schedule;
     struct ScheduleCJThread *scheduleCJThread = &schedule->schdCJThread;
@@ -509,9 +510,11 @@ void *CJThreadMexit(struct CJThread *delCJThread)
     }
     
 #ifdef __OHOS__
-    TRACE_FINISH_ASYNC(TRACE_CJTHREAD_EXIT, delCJThread->id);
+    TRACE_FINISH_ASYNC(TRACE_CJTHREAD_EXIT, cjthreadId);
 #elif defined (__ANDROID__)
     TRACE_FINISH();
+#else
+    (void)cjthreadId;
 #endif
     // The special stackid of the event is set through hardcode.
     if (g_scheduleManager.trace.openType && (g_scheduleManager.trace.openType & TRACE_EV_CJTHREAD_END)) {
@@ -1433,6 +1436,15 @@ char* CJThreadGetName(void* cjthreadPtr)
         return nullptr;
     }
     return cjthread->name;
+}
+
+int CJThreadGetState(void* cjthreadPtr)
+{
+    struct CJThread *cjthread = reinterpret_cast<struct CJThread *>(cjthreadPtr);
+    if (cjthread == nullptr) {
+        return -1;
+    }
+    return cjthread->state.load();
 }
 
 unsigned long long int CJThreadGetId(CJThreadHandle handle)
