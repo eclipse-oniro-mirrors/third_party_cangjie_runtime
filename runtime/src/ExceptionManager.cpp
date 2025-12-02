@@ -95,6 +95,15 @@ void ExceptionManager::RegisterUncaughtExceptionHandler(const CJUncaughtExceptio
 }
 #endif
 
+#ifdef __APPLE__
+void ExceptionManager::DefaultUncaughtTask(const char* sunmary, const CJErrorObject errorObj)
+{
+    (void)sunmary;
+    (void)errorObj;
+    abort();
+}
+#endif
+
 void ExceptionManager::DumpException()
 {
     ExceptionWrapper& eWrapper = Mutator::GetMutator()->GetExceptionWrapper();
@@ -112,8 +121,13 @@ void ExceptionManager::DumpException()
     // Otherwise, dump the exception information.
     std::lock_guard<std::mutex> lock(gUncaughtExceptionHandlerMtx);
     if (Runtime::Current().GetExceptionManager().GetUncaughtExceptionHandler().uncaughtTask) {
-#if defined(__OHOS__) && (__OHOS__ == 1)
+#if defined(__OHOS__) && (__OHOS__ == 1) || (__APPLE__)
         const char* summary = "Uncaught exception was found.";
+        CString exceptionMsg(eWrapper.GetExceptionMessage());
+#if defined(__APPLE__)
+        LOG(RTLOG_ERROR, summary);
+        LOG(RTLOG_ERROR, exceptionMsg.Str());
+#endif
         CString exceptionStack;
         const int strLen = 10;
         char* str = static_cast<char*>(NativeAllocator::NativeAlloc(strLen * sizeof(char)));
@@ -133,9 +147,12 @@ void ExceptionManager::DumpException()
             exceptionStack += +":";
             exceptionStack += str;
             exceptionStack += ")\n";
+#if defined(__APPLE__)
+            LOG(RTLOG_ERROR, exceptionStack.Str());
+            exceptionStack = "";
+#endif
         }
-        CString exeptionMsg(eWrapper.GetExceptionMessage());
-        CJErrorObject errObj = {clsName.Str(), exeptionMsg.Str(), exceptionStack.Str()};
+        CJErrorObject errObj = {clsName.Str(), exceptionMsg.Str(), exceptionStack.Str()};
         eWrapper.ClearInfo();
         Runtime::Current().GetExceptionManager().GetUncaughtExceptionHandler().uncaughtTask(summary, errObj);
 #endif
@@ -175,7 +192,7 @@ void ExceptionManager::DumpException()
         for (auto ste : stackTrace) {
 #ifdef __APPLE__
             PRINT_ERROR("\t at %s%s%s(%s:%lld)\n", ste.className.Str(), ste.className.Length() > 0 ? "." : "",
-                        ste.methodName.Str(), ste.fileName.Str(), ste.lineNumber);
+                       ste.methodName.Str(), ste.fileName.Str(), ste.lineNumber);
 #endif
             LOG(RTLOG_ERROR, "\t at %s%s%s(%s:%ld)\n", ste.className.Str(), ste.className.Length() > 0 ? "." : "",
                 ste.methodName.Str(), ste.fileName.Str(), ste.lineNumber);
