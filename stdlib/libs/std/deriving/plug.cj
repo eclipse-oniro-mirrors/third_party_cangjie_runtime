@@ -7,6 +7,7 @@
  */
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
  macro package std.deriving
 
 // this is required to trigger static init

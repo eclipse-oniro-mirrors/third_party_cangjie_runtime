@@ -7,6 +7,7 @@
  */
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 macro package std.unittest.mock.mockmacro
 
 import std.ast.*
@@ -61,6 +62,9 @@ func tokenLen(token: Token): Int32 {
     let valueSize = Int32(token.value.size)
     match (token.kind) {
         case STRING_LITERAL | SINGLE_QUOTED_STRING_LITERAL => valueSize + 2
+        // on Windows 'NL' token value is `\r\n` which makes `valueSize = 2`. 
+        // `libast` accounts for that when computing token positions, so we should as well
+        case NL => 1 
         case _ => valueSize
     }
 }

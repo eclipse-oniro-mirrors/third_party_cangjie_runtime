@@ -7,6 +7,7 @@
  */
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
+
 protected package std.deriving.impl
 
 import std.deriving.api.Identifier

@@ -57,6 +57,9 @@ void ParameterInfo::SetName(const char* paraName)
 
 void* MethodInfo::MemoryAlloc(size_t cnt, size_t size)
 {
+    if (size == 0) {
+        return nullptr;
+    }
     void* mem = calloc(cnt, size);
     PRINT_FATAL_IF(mem == nullptr, "MethodInfo::MemoryAlloc failed");
     return mem;
@@ -228,6 +231,9 @@ TypeInfo* MethodInfo::GetActualTypeFromGenericTypeImpl(GenericTypeInfo* genericT
         TypeInfo* ti = reinterpret_cast<TypeInfo*>(genericTi->GetGenericArg(idx));
         if (ti->IsGeneric()) {
             TypeInfo* argTi = GetActualTypeFromGenericType(reinterpret_cast<GenericTypeInfo*>(ti), genericArgs);
+            if (argTi == nullptr) {
+                argTi = GetActualTypeFromGenericType(reinterpret_cast<GenericTypeInfo*>(ti), nullptr);
+            }
             if (argTi == nullptr || argTi->IsGeneric()) {
                 free(tmp);
                 return nullptr;
@@ -521,7 +527,7 @@ void* MethodInfo::ApplyCJMethod(ObjRef instanceObj, void* genericArgs, void* act
         argValues.AddReference(instanceObj);
     } else {
         TypeInfo* ti = declaringTi;
-        if (IsInitializer() && ti->IsClass()) {
+        if (IsInitializer() && (ti->IsClass() || (ti->IsStruct() && ti->IsGenericTypeInfo()))) {
             U32 size = ti->GetInstanceSize();
             MSize objSize = MRT_ALIGN(size + TYPEINFO_PTR_SIZE, TYPEINFO_PTR_SIZE);
             instanceObj = ObjectManager::NewObject(declaringTi, objSize, AllocType::RAW_POINTER_OBJECT);
@@ -559,7 +565,7 @@ void* MethodInfo::ApplyCJMethod(ObjRef instanceObj, void* genericArgs, void* act
     if (HasSRetWithUnknowGenericStruct()) {
         return ret.ref;
     }
-    if (IsInitializer() && declaringTi->IsClass()) {
+    if (IsInitializer() && (declaringTi->IsClass() || (declaringTi->IsStruct() && declaringTi->IsGenericTypeInfo()))) {
         return instanceObj;
     } else if (IsInitializer() && declaringTi->IsStruct()) {
         ret.ref = instanceObj;
