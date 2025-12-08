@@ -6,6 +6,7 @@
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
+
 #ifndef RUNTIME_CJTHREAD_CONTEXT_H
 #define RUNTIME_CJTHREAD_CONTEXT_H
 
