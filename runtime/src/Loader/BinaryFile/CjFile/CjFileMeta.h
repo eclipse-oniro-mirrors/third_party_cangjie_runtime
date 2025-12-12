@@ -10,6 +10,7 @@
 #ifndef MRT_CJFILE_META_H
 #define MRT_CJFILE_META_H
 #include "ObjectModel/ExtensionData.h"
+#include "ObjectModel/TypeExt.h"
 namespace MapleRuntime {
 enum CFileTable {
     // RW Section
@@ -31,6 +32,7 @@ enum CFileTable {
     PACKINFO_TABLE,
     REFLECT_GV_TABLE,
     REFLECT_GI_TABLE,
+    TYPE_EXT_TABLE,
     C_FILE_MAX
 };
 
@@ -90,6 +92,11 @@ using CJStackMapTable = struct {
 using CJTypeInfoTable = struct {
     U32 typeInfoTotalSize;
     TypeInfo* typeInfoBasePtr;
+};
+
+using CJTypeExtTable = struct {
+    U32 typeExtTotalSize;
+    TypeExt* typeExtBasePtr;
 };
 
 using CJFuncDescTable = struct {
@@ -152,6 +159,7 @@ using CJFileMeta = struct CJFileMetadata {
     CJPackageInfoTable packageInfoTbl;
     Uptr gcRootsAddr;
     U32 gcRootSize;
+    CJTypeExtTable typeExtTbl;
 };
 } // namespace MapleRuntime
 #endif // MRT_CJFILE_META_H

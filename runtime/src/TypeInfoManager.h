@@ -18,6 +18,7 @@
 #include <sys/mman.h>
 #endif
 #include "Base/HashUtils.h"
+#include "Base/ImmortalWrapper.h"
 
 namespace MapleRuntime {
 class TypeGCInfo {
@@ -29,6 +30,7 @@ private:
 };
 class TypeInfoManager {
     friend class TypeInfo;
+    friend class CJFileLoader;
 public:
     // 1024: number of buckets for the hash map.
     explicit TypeInfoManager() : genericTypeInfoDescMap(1024) {}
@@ -38,23 +40,31 @@ public:
     void Fini();
     void NewMMap(size_t size);
     void FreeMMap(uintptr_t address, size_t size);
-    static TypeInfoManager* GetInstance();
+    static TypeInfoManager& GetTypeInfoManager();
 
     TypeInfo* GetOrCreateTypeInfo(TypeTemplate* tt, U32 argSize, TypeInfo* args[]);
     void AddTypeInfo(TypeInfo* ti);
     static U32 GetTypeSize(TypeInfo* ti);
     void ParseEnumInfo(TypeTemplate* tt, U32 argSize, TypeInfo* args[], TypeInfo* ti);
-    void RecordMTableDesc(MTableDesc* mTableDesc) { mTableList.push_back(mTableDesc); }
+    void RecordMTableDesc(U32 uuid, MTableDesc* mTableDesc) { mTableList.emplace(uuid, mTableDesc); }
+    MTableDesc* GetMTableDesc(U32 uuid)
+    {
+        auto it = mTableList.find(uuid);
+        if (it != mTableList.end()) {
+            return it->second;
+        }
+        return nullptr;
+    }
     U16 GetTypeTemplateUUID(TypeTemplate* tt);
     void FillReflectInfo(TypeTemplate* tt, TypeInfo* ti);
     void InitAnyAndObjectType();
     TypeInfo* GetAnyTypeInfo() { return anyTi; }
     TypeInfo* GetObjectTypeInfo() { return objectTi; }
+    void FillOffsets(TypeInfo* newTypeInfo, TypeTemplate* tt, U32 argSize, TypeInfo* args[]);
+    void CalculateGCTib(TypeInfo* typeInfo);
 private:
     uintptr_t Allocate(size_t size);
-    void CalculateGCTib(TypeInfo* typeInfo);
     CString GetGCTibStr(TypeInfo* typeInfo);
-    void FillOffsets(TypeInfo* newTypeInfo, TypeTemplate* tt, U32 argSize, TypeInfo* args[]);
     void AddMTable(TypeTemplate* tt, TypeInfo* newTypeInfo, U32 argSize, TypeInfo* args[]);
 
     enum TypeInfoStatus : uint8_t {
@@ -141,14 +151,13 @@ private:
     std::unordered_map<const char*, TypeInfo*, HashString, EqualString> genericTypeInfos;
     std::unordered_map<const char*, TypeTemplate*, HashString, EqualString> typeTemplates;
     GenericTiDescHashMap genericTypeInfoDescMap;
-    static TypeInfoManager typeInfoManager;
     uintptr_t startAddress;
     uintptr_t endAddress;
     std::atomic<U32> tiUUID { 1 };
     std::atomic<U16> ttUUID { 1 };
     TypeGCInfo typeGCInfo;
     std::vector<std::pair<uintptr_t, size_t>> mmapList;
-    std::vector<MTableDesc*> mTableList;
+    std::unordered_map<U32, MTableDesc*> mTableList;
     // Record two special TypeInfo, Any is the subclass of all types,
     // and Object is the superclass of all classes.
     // Because these two classes have no special tags,
