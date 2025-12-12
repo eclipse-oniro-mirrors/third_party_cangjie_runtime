@@ -88,3 +88,5 @@ __CJ_Fini_End:                        # @__CJ_Fini_End
     .quad __CJReflectGVSize
     .quad __CJReflectGI
     .quad __CJReflectGISize
+    .quad __CJTypeExt
+    .quad __CJTypeExtSize
