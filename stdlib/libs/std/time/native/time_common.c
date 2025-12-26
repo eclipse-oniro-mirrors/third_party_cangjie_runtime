@@ -103,7 +103,7 @@ extern int64_t CJ_TIME_ReadAllBytesFromFile(const char* path, int64_t pathLen, c
     return (int64_t)numOfBytesRead;
 }
 
-extern const int64_t CJ_TIME_GetLocalTimeOffset()
+extern int64_t CJ_TIME_GetLocalTimeOffset()
 {
     DYNAMIC_TIME_ZONE_INFORMATION tzInfo;
 
@@ -203,7 +203,7 @@ extern int64_t CJ_TIME_ReadAllBytesFromFile(const char* path, int64_t pathLen, c
 }
 
 #include <time.h>
-extern int64_t CJ_TIME_GetLocalTimeOffset()
+extern const int64_t CJ_TIME_GetLocalTimeOffset()
 {
     time_t now;
     (void)time(&now);
@@ -288,4 +288,3 @@ extern uint8_t* CJ_TIME_GetTzDataById(const char* id, int64_t* len)
     return NULL;
 #endif
 }
-
