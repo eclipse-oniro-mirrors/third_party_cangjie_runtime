@@ -24,7 +24,7 @@
 #if defined (MRT_LINUX) || defined (MRT_MACOS)
 #include "schdpoll.h"
 #endif
-#ifdef MRT_IOS
+#ifdef __IOS__
 #include "Mutator/MutatorManager.h"
 #include "UnwindStack/PrintStackInfo.h"
 #endif
@@ -679,12 +679,12 @@ void UpdateArkVMStackInfo(unsigned long long arkvm)
     // update stack info for arkts, thus use __OHOS__ macro.
     UpdateStackInfoFunc UpdateStackInfo = g_scheduleManager.updateStackInfoFunc;
     if (UpdateStackInfo == nullptr) {
-        LOG(RTLOG_ERROR, "UpdateStackInfoFunc is not registered");
+        HILOG_ERROR(ERRNO_SCHD_UITHREAD_ERROR, "UpdateStackInfoFunc is not registered");
         return;
     }
     CJThread* cjthread = CJThreadGet();
     if (cjthread == nullptr) {
-        LOG(RTLOG_ERROR, "cjthread is nullptr when UpdateArkVMStackInfo");
+        HILOG_ERROR(ERRNO_SCHD_UITHREAD_ERROR, "cjthread is nullptr when UpdateArkVMStackInfo");
         return;
     }
     if (g_scheduleManager.arkVM == 0) {
@@ -704,7 +704,7 @@ bool IsForeignThread()
     ScheduleType type = cjthread->schedule->scheduleType;
     switch (type) {
         case SCHEDULE_DEFAULT:
-            LOG(RTLOG_FATAL, "Forbidden to use JSRuntime() in a spawn!");
+            HILOG_FATAL(ERRNO_SCHD_WRONG_TYPE, "Forbidden to use JSRuntime() in a spawn!");
         case SCHEDULE_UI_THREAD:
             return false;
         case SCHEDULE_FOREIGN_THREAD:
@@ -1467,15 +1467,17 @@ void ScheduleAllThreadListAdd(struct Thread *thread, struct Schedule *schedule)
 
 int ScheduleAllCJThreadListAdd(struct CJThread *cjthread)
 {
-    if (cjthread->schedule->state != SCHEDULE_RUNNING &&
-        cjthread->schedule->state != SCHEDULE_INIT &&
-        cjthread->schedule->state != SCHEDULE_EXITING) {
+    ScheduleState scheduleState = cjthread->schedule->state.load();
+    if (scheduleState != SCHEDULE_RUNNING &&
+        scheduleState != SCHEDULE_INIT &&
+        scheduleState != SCHEDULE_EXITING) {
+        HILOG_ERROR(ERRNO_SCHD_INVALID,
+                    "can't add cjthread to the target scheduler, schedule type %d, schedule state %d",
+                    cjthread->schedule->scheduleType, scheduleState);
         return -1;
     }
-#ifndef MRT_TEST
     cjthread->mutator = MapleRuntime::Mutator::NewMutator();
     cjthread->mutator->MapleRuntime::Mutator::SetCjthreadPtr(static_cast<void*>(cjthread));
-#endif
     pthread_mutex_lock(&g_scheduleManager.allCJThreadListLock);
     DulinkAdd(&(cjthread->allCJThreadDulink), &(g_scheduleManager.allCJThreadList));
     pthread_mutex_unlock(&g_scheduleManager.allCJThreadListLock);
@@ -1486,12 +1488,12 @@ int ScheduleAllCJThreadListAdd(struct CJThread *cjthread)
 int AddToCJSingleModeThreadList(struct CJThread *cjthread)
 {
     if (cjthread == nullptr) {
-        LOG_ERROR(ERRNO_SCHD_CJTHREAD_NULL, "cjthread is nullptr");
+        HILOG_ERROR(ERRNO_SCHD_CJTHREAD_NULL, "cjthread is nullptr when add to cjSingleModeThreadList.");
         return -1;
     }
     PostTaskFunc PostTask = g_scheduleManager.postTaskFunc;
     if (PostTask == nullptr) {
-        LOG_ERROR(ERRNO_SCHD_EVENT_HANDLER_FUNC_NULL,
+        HILOG_ERROR(ERRNO_SCHD_EVENT_HANDLER_FUNC_NULL,
                   "The event handler function is nullptr when add to cjSingleModeThreadList.");
         return -1;
     }
@@ -1513,7 +1515,7 @@ void RunCJSingleModeThread()
     struct CJThread* cjthread = DULINK_ENTRY(scheduleCJUIThreadNode, struct CJThread, cjSingleModeThreadDulink);
     if (cjthread == nullptr) {
         pthread_mutex_unlock(&g_scheduleManager.cjSingleModeThreadListLock);
-        LOG(RTLOG_ERROR, "cj single mode thread is nullptr.");
+        HILOG_ERROR(ERRNO_SCHD_UITHREAD_ERROR, "cj single mode thread is nullptr");
         return;
     }
     DulinkRemove(&(cjthread->cjSingleModeThreadDulink));
@@ -1550,7 +1552,8 @@ void RunResolveCycle(void* funcPtr)
 {
     PostTaskFunc PostTask = g_scheduleManager.postTaskFunc;
     if (PostTask == nullptr) {
-        LOG(RTLOG_ERROR, "The event handler function is nullptr when try run cjSingleModeThread.");
+        HILOG_ERROR(ERRNO_SCHD_UITHREAD_ERROR,
+                    "The event handler function is nullptr when try run cjSingleModeThread.");
         return;
     }
     while (!PostTask(funcPtr)) {}
@@ -1561,7 +1564,8 @@ void TryRunCJSingleModeThread()
     PostTaskFunc PostTask = g_scheduleManager.postTaskFunc;
     HasHigherPriorityTaskFunc HasHigherPriorityTask = g_scheduleManager.hasHigherPriorityTaskFunc;
     if (PostTask == nullptr) {
-        LOG(RTLOG_ERROR, "The event handler function is nullptr when try run cjSingleModeThread.");
+        HILOG_ERROR(ERRNO_SCHD_UITHREAD_ERROR,
+                    "The event handler function is nullptr when try run cjSingleModeThread.");
         return;
     }
     unsigned long long startTime = CurrentNanotimeGet();
@@ -2192,15 +2196,13 @@ void CJForeignThreadExit(CJThreadHandle foreignThread)
     if (schedule->scheduleType != SCHEDULE_FOREIGN_THREAD) {
         LOG_FATAL(ERRNO_SCHD_WRONG_TYPE, "foreign cj thread has wrong scheduler");
     }
-#ifndef MRT_TEST
     MapleRuntime::Mutator* mutator = foreignCJThread->mutator;
     if (mutator != nullptr && mutator->IsForeignThread()) {
         mutator->SetForeignCJThreadExit();
     }
-#endif
 }
 
-#ifdef MRT_IOS
+#ifdef __IOS__
 MapleRuntime::CString GetThreadStateString(void *cjthreadPtr)
 {
     if (cjthreadPtr == nullptr) {

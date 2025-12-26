@@ -4,8 +4,6 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
-# The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
-
 .idea/*
 **/dist/*
 **/build/*
@@ -85,7 +83,7 @@ third_party/llvm-project
 third_party/runtime
 third_party/ylong
 third_party/binary
-third_party/pcre2-10.44-h1
+third_party/pcre2
 third_party/stdx/
 tests/HLT
 # flatc generated file
