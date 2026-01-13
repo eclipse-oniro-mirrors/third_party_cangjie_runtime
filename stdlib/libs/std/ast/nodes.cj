@@ -1267,7 +1267,10 @@ public class PackageHeader <: Node {
 }
 
 public enum ImportKind <: ToString {
-    Single | Alias | All | Multi
+    | Single
+    | Alias
+    | All
+    | Multi
 
     public func toString(): String {
         return match (this) {
