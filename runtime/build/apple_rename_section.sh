@@ -8,11 +8,13 @@
 
 # The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
+set -e
+
 platform=$1
 c_compiler=$2
 shift 2
 
-if [ ${platform} == "macos_cangjie" ] || [ ${platform} == "mac_x86_64_cangjie" ] || [ ${platform} == "mac_aarch64_cangjie" ]; then
+if [ "${platform}" == "macos_cangjie" ] || [ "${platform}" == "mac_x86_64_cangjie" ] || [ "${platform}" == "mac_aarch64_cangjie" ]; then
   mac_sdk_path=$(xcrun --show-sdk-path)
   for param in "$@"; do
     IFS=';' read -ra target_objects <<< "$param"
@@ -28,10 +30,16 @@ if [ ${platform} == "macos_cangjie" ] || [ ${platform} == "mac_x86_64_cangjie" ]
     done
   done
 else
-  if [ ${platform} == "ios_simulator_cangjie" ]; then
-    CMAKE_IOS_DEVELOPER_ROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer
+  if [ "${platform}" == "ios_simulator_aarch64_cangjie" ]; then
+    XCODE_PATH=$(xcode-select -p)
+    CMAKE_IOS_DEVELOPER_ROOT=${XCODE_PATH}/Platforms/iPhoneSimulator.platform/Developer
     CMAKE_IOS_SDK_ROOT=${CMAKE_IOS_DEVELOPER_ROOT}/SDKs/iPhoneSimulator17.5.sdk
     TARGET=arm64-apple-ios11-simulator
+  elif [ "${platform}" == "ios_simulator_x86_64_cangjie" ]; then
+    XCODE_PATH=$(xcode-select -p)
+    CMAKE_IOS_DEVELOPER_ROOT=${XCODE_PATH}/Platforms/iPhoneSimulator.platform/Developer
+    CMAKE_IOS_SDK_ROOT=${CMAKE_IOS_DEVELOPER_ROOT}/SDKs/iPhoneSimulator17.5.sdk
+    TARGET=x86_64-apple-ios11-simulator
   else
     CMAKE_IOS_DEVELOPER_ROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer
     CMAKE_IOS_SDK_ROOT=${CMAKE_IOS_DEVELOPER_ROOT}/SDKs/iPhoneOS17.5.sdk
