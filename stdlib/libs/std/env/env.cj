@@ -38,6 +38,16 @@ public func getCommand(): String {
     }
 }
 
+@When[os == "iOS"]
+@Deprecated
+public func getCommandLine(): Array<String> {
+    match (getCurrentProcessInfo()[2]) {
+        case Some(commandLine) => commandLine
+        case _ => throw EnvException("Can not get process commandLine.")
+    }
+}
+
+@When[os != "iOS"]
 public func getCommandLine(): Array<String> {
     match (getCurrentProcessInfo()[2]) {
         case Some(commandLine) => commandLine
@@ -77,6 +87,16 @@ public func getVariable(key: String): ?String {
     }
 }
 
+@When[os == "iOS"]
+@Deprecated
+public func getVariables(): Array<(String, String)> {
+    match (getCurrentProcessInfo()[3]) {
+        case Some(environments) => environments
+        case _ => throw EnvException("Can not get process environment.")
+    }
+}
+
+@When[os != "iOS"]
 public func getVariables(): Array<(String, String)> {
     match (getCurrentProcessInfo()[3]) {
         case Some(environments) => environments

@@ -6,17 +6,17 @@
 
 # The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
-# toolchain for linux12_x86_64
+# toolchain for ios_simulator_x86_64
 
 # Platform
-set(PLATFORM_NAME "ios_simulator_cangjie")
+set(PLATFORM_NAME "ios_simulator_x86_64_cangjie")
 
 # Environment info
 set(OS "ios")
 
-set(CPU_CORE "arm64")
-set(CPU_FAMILY "arm")
-set(CPU_TYPE "armarch8")
+set(CPU_CORE "x86_64")
+set(CPU_FAMILY "x86")
+set(CPU_TYPE "i686")
 set(MEM_TYPE "mem")
 set(BYTE_ORDER "le")
 set(COMPILER "gnu")
@@ -104,11 +104,11 @@ else()
 endif()
 
 # The compile flags for release version only
-set(CMAKE_C_FLAGS_RELEASE "-D_FORTIFY_SOURCE=2 -O2 -target arm64-apple-ios11-simulator")
-set(CMAKE_CXX_FLAGS_RELEASE "-D_FORTIFY_SOURCE=2 -O2 -target arm64-apple-ios11-simulator")
+set(CMAKE_C_FLAGS_RELEASE "-D_FORTIFY_SOURCE=2 -O2 -target x86_64-apple-ios11-simulator")
+set(CMAKE_CXX_FLAGS_RELEASE "-D_FORTIFY_SOURCE=2 -O2 -target x86_64-apple-ios11-simulator")
 
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -D_FORTIFY_SOURCE=2 -O2 -target arm64-apple-ios11-simulator")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -D_FORTIFY_SOURCE=2 -O2 -target arm64-apple-ios11-simulator")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -D_FORTIFY_SOURCE=2 -O2 -target x86_64-apple-ios11-simulator")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -D_FORTIFY_SOURCE=2 -O2 -target x86_64-apple-ios11-simulator")
 
 # The assemble flags
 set(CMAKE_ASM_FLAGS
@@ -119,20 +119,20 @@ set(CMAKE_ASM_FLAGS
 # otherwise cmake will add some default compile option which we may not want.
 
 # The assemble flags for debug version only
-set(CMAKE_ASM_FLAGS_DEBUG "-target arm64-apple-ios11-simulator")
+set(CMAKE_ASM_FLAGS_DEBUG "-target x86_64-apple-ios11-simulator")
 
 # The assemble flags for release version only
-set(CMAKE_ASM_FLAGS_RELEASE "-target arm64-apple-ios11-simulator")
-set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-target arm64-apple-ios11-simulator")
+set(CMAKE_ASM_FLAGS_RELEASE "-target x86_64-apple-ios11-simulator")
+set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-target x86_64-apple-ios11-simulator")
 
 # The compile definitions
 add_compile_definitions(
    "_LARGEFILE_SOURCE"
    "_FILE_OFFSET_BITS=64"
    "VOS_OS_VER=VOS_LINUX"
-   "VOS_HARDWARE_PLATFORM=VOS_ARM"
-   "MRT_HARDWARE_PLATFORM=MRT_ARM"
-   "VOS_CPU_TYPE=VOS_CORTEXA72"
+   "VOS_HARDWARE_PLATFORM=VOS_X86"
+   "MRT_HARDWARE_PLATFORM=MRT_X86"
+   "VOS_CPU_TYPE=VOS_X86"
    "VOS_WORDSIZE=64"
    "VOS_BYTE_ORDER=VOS_LITTLE_ENDIAN"
    "USE___THREAD"
@@ -141,7 +141,6 @@ add_compile_definitions(
    "TLS_COMMON_DYNAMIC"
    "CANGJIE"
    "MRT_MACOS"
-   "__IOS__"
    "_XOPEN_SOURCE=600"
    "_DARWIN_C_SOURCE"
 )
@@ -150,8 +149,7 @@ add_compile_definitions(
 set(CMAKE_SHARED_LINKER_FLAGS
     "-m64 \
     -rdynamic \
-    -L${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/hwsecurec/lib/ios \
-    -lsecurec \
+    -lboundscheck \
     -lpthread"
 )
 
@@ -165,3 +163,4 @@ set(CMAKE_IOS_SDK_ROOT "/Applications/Xcode.app/Contents/Developer/Platforms/iPh
 set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator17.5.sdk")
 # The macos minimum version
 set(CMAKE_OSX_DEPLOYMENT_TARGET "")
+set(CMAKE_OSX_ARCHITECTURES "x86_64")

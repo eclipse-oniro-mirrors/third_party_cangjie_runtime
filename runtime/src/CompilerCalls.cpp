@@ -188,6 +188,20 @@ extern "C" TypeInfo* MCC_GetObjClass(const ObjectPtr obj)
 
 extern "C" TypeInfo* MCC_GetTypeForAny(const ObjectPtr obj) { return obj->GetTypeInfo(); }
 
+extern "C" bool MCC_IsWrapperClassForAutoEnv(const TypeInfo* ti)
+{
+    const char* tiName = ti->GetName();
+    const char* targetPattern = ":$Cw$";
+    const char *p = strchr(tiName, ':');
+    if (p == nullptr) {
+        return false;
+    } else if (strncmp(p, targetPattern, strlen(targetPattern)) == 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 extern "C" void CJ_MCC_ArrayCopyRef(const ObjectPtr dstObj, MAddress dstField, size_t dstSize, const ObjectPtr srcObj,
                                     MAddress srcField, size_t srcSize)
 {
@@ -322,6 +336,20 @@ extern "C" void CJ_MCC_SignalRaise(int sig)
 }
 extern "C" void CJ_MCC_AddSignalHandler(int signal, struct SignalAction* sa)
 {
+    if (signal == SIGABRT || signal == SIGILL) {
+        SignalStack::GetStacks()[signal].setUserSigHandler(true);
+    }
+    // By default, block the SIGPIPE signal, and take no action on the SIGPIPE signal;
+    // when the user registers a handler, unblock the SIGPIPE signal,
+    // allowing the user to take action on the SIGPIPE signal.
+    if (signal == SIGPIPE) {
+        sigset_t set;
+        CHECK_SIGNAL_CALL(sigemptyset, (&set), "sigemptyset failed in AddHandlerToSignalStack");
+        CHECK_SIGNAL_CALL(sigaddset, (&set, SIGPIPE), "sigaddset failed in AddHandlerToSignalStack");
+        CHECK_SIGNAL_CALL(pthread_sigmask, (SIG_UNBLOCK, &set, nullptr),
+                          "pthread_sigmask failed in AddHandlerToSignalStack");
+    }
+
     AddHandlerToSignalStack(signal, sa);
 }
 extern "C" void CJ_MCC_RemoveSignalHandler(int signal, bool (*fn)(int, siginfo_t*, void*))
@@ -1298,7 +1326,9 @@ extern "C" TypeInfo* CJ_MCC_GetMethodOuterTI(TypeInfo* ti, TypeInfo* itf, U64 in
 
 extern "C" void CJ_MCC_UpdateVMT(TypeInfo* ti, TypeInfo* itf, ExtensionData* extensionData)
 {
-    return ti->TryUpdateExtensionData(itf, extensionData);
+    if (UNLIKELY(!extensionData->IsFuncTableUpdated())) {
+        return ti->TryUpdateExtensionData(itf, extensionData);
+    }
 }
 
 extern "C" ObjRef MCC_NewGenericObject(const TypeInfo* klass, MSize size)
