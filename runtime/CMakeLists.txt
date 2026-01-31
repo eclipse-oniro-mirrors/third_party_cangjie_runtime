@@ -40,9 +40,9 @@ endif()
 if (WINDOWS_FLAG MATCHES 1)
     # Use target x86_64-w64-mingw32 instead of x86_64-windows-gnu
     # to make sure clang can find x86_64-w64-mingw32-ld (linker for cross-compiling)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static -target x86_64-w64-mingw32 -pthread -femulated-tls -stdlib=libc++ --rtlib=compiler-rt")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static -target x86_64-w64-mingw32 -pthread -femulated-tls --rtlib=compiler-rt")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -target x86_64-w64-mingw32 -pthread -femulated-tls -stdlib=libc++ --rtlib=compiler-rt")
-    set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -static -target x86_64-w64-mingw32 -stdlib=libc++ --rtlib=compiler-rt")
+    set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -static -target x86_64-w64-mingw32 --rtlib=compiler-rt")
     if (NOT CMAKE_AR_PATH)
         set(CMAKE_AR_PATH "llvm-ar.exe")
     endif()
@@ -51,6 +51,7 @@ endif ()
 # project name: CangjieRuntime
 project(CangjieRuntime C CXX ASM)
 include(${CMAKE_CURRENT_SOURCE_DIR}/config.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/SetupAr.cmake)
 
 message("-- BUILD_CJTHREAD: " ${BUILD_CJTHREAD})
 message("-- BUILD_RUNTIME: "   ${BUILD_RUNTIME})
@@ -533,7 +534,7 @@ if (CMAKE_BUILD_TYPE MATCHES "^(Release|MinSizeRel)$")
 endif () # CMAKE_BUILD_TYPE MATCHES "^(Release|MinSizeRel)$"
 
 
-if (IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 2 OR WINDOWS_FLAG MATCHES 1 
+if (IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 2 OR WINDOWS_FLAG MATCHES 1
     OR MACOS_FLAG MATCHES 1 OR (ANDROID_FLAG MATCHES 0 AND OHOS_FLAG MATCHES 0))
     add_library(cangjie-runtime-static STATIC)
     if (WINDOWS_FLAG MATCHES 1)
@@ -631,7 +632,7 @@ if (IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MAT
     endif()
     if (IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 2 OR MACOS_FLAG MATCHES 1)
         add_custom_command(TARGET cangjie-runtime-static PRE_BUILD
-            COMMAND sh ${CMAKE_SOURCE_DIR}/build/apple_rename_section.sh 
+            COMMAND sh ${CMAKE_SOURCE_DIR}/build/apple_rename_section.sh
                 "${RENAME_PLATFORM}"
                 "${CMAKE_C_COMPILER}"
                 "$<TARGET_OBJECTS:runtime>"
@@ -667,11 +668,11 @@ set_target_properties(cangjie-runtime-static PROPERTIES OUTPUT_NAME "cangjie-run
 set(OBJCOPY_PROGRAM objcopy)
 set(STRIP_PROGRAM strip)
 
-install(CODE "execute_process(COMMAND ${OBJCOPY_PROGRAM} --rename-section .text=.text_runtime \
+install(CODE "execute_process(COMMAND ${OBJCOPY_PROGRAM} -D --rename-section .text=.text_runtime \
             ${CMAKE_INSTALL_PREFIX}/lib/${TARGET_ARCH}${SANITIZER_SUBPATH}/libcangjie-runtime.a)"
         COMPONENT cangjie-runtime)
 if(CMAKE_BUILD_TYPE MATCHES "Release" OR CMAKE_BUILD_TYPE MATCHES "MinSizeRel")
-    install(CODE "execute_process(COMMAND ${STRIP_PROGRAM} --strip-unneeded ${CMAKE_INSTALL_PREFIX}/lib${SANITIZER_SUBPATH}/libcangjie-runtime.a)"
+    install(CODE "execute_process(COMMAND ${STRIP_PROGRAM} -D --strip-unneeded ${CMAKE_INSTALL_PREFIX}/lib${SANITIZER_SUBPATH}/libcangjie-runtime.a)"
         COMPONENT cangjie-runtime)
 endif()
 endif()

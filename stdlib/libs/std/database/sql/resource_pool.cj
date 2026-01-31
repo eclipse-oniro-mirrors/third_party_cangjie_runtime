@@ -25,7 +25,7 @@ class ResourcePool<T> <: Pool<T> & Equatable<ResourcePool<T>> {
     var entryCount: Int32
     var isclosed = AtomicBool(false)
 
-    public init(options: Options<T>) {
+    init(options: Options<T>) {
         this.options = options
         entryQueue = LinkedBlockingQueue<Entry<T>>(Int64(options.maxSize))
         idleEntry = BlockingQueue<Entry<T>>(Int64(options.maxSize))
@@ -220,12 +220,12 @@ class ResourcePool<T> <: Pool<T> & Equatable<ResourcePool<T>> {
         }
     }
 
-    public operator func !=(rhs: ResourcePool<T>): Bool {
-        return !(this == rhs)
+    public operator func !=(other: ResourcePool<T>): Bool {
+        return !(this == other)
     }
 
-    public operator func ==(rhs: ResourcePool<T>): Bool {
-        return refEq(this, rhs)
+    public operator func ==(other: ResourcePool<T>): Bool {
+        return refEq(this, other)
     }
 
     func appendLegalIdleEntry(v: Entry<T>, idleCount: Int64, list: ArrayList<Entry<T>>): Unit {

@@ -37,7 +37,9 @@ abstract sealed class Node <: ToTokens {
     }
     public func toTokens(): Tokens
 
-    public func traverse(v: Visitor): Unit
+    public open func traverse(v: Visitor): Unit {
+        v.visit(this)
+    }
 
     public func dump(): Unit {
         beginNode = true
@@ -168,6 +170,7 @@ public class Annotation <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -228,6 +231,7 @@ public class Modifier <: Node {
     }
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         return
     }
 
@@ -301,6 +305,7 @@ public class GenericParam <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         return
     }
 
@@ -400,6 +405,7 @@ public class GenericConstraint <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -498,6 +504,7 @@ public class Body <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -606,6 +613,7 @@ public class Argument <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -767,6 +775,7 @@ public class MatchCase <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -821,7 +830,8 @@ public class MatchCase <: Node {
  * Program is the Cangjie source File node.
  */
 public class Program <: Node {
-    init(pkgHeader: PackageHeader, importLists: ArrayList<ImportList>, decls: ArrayList<Decl>, ftrDirective: FeaturesDirective) {
+    init(pkgHeader: PackageHeader, importLists: ArrayList<ImportList>,
+        decls: ArrayList<Decl>, ftrDirective: Option<FeaturesDirective>) {
         super()
         pkgHeader_ = pkgHeader
         importLists_ = importLists
@@ -847,11 +857,14 @@ public class Program <: Node {
     private var pkgHeader_: PackageHeader = PackageHeader()
     private var importLists_: ArrayList<ImportList> = ArrayList<ImportList>()
     private var decls_: ArrayList<Decl> = ArrayList<Decl>()
-    private var ftrDirective_: FeaturesDirective = FeaturesDirective()
+    private var ftrDirective_: Option<FeaturesDirective> = None
 
-    public mut prop featuresDirective: FeaturesDirective {
+    public mut prop featuresDirective: Option<FeaturesDirective> {
         get() {
-            ftrDirective_
+            if (let Some(v) <- ftrDirective_) {
+                return v
+            }
+            return None
         }
         set(v) {
             ftrDirective_ = v
@@ -883,8 +896,8 @@ public class Program <: Node {
     }
     public func toTokens(): Tokens {
         var ret = Tokens()
-        if (!ftrDirective_.isEmpty()) {
-            ret.append(ftrDirective_.toTokens())
+        if (let Some(ftr) <- ftrDirective_) {
+            ret.append(ftr.toTokens())
         }
         ret.append(pkgHeader_)
         if (!importLists_.isEmpty()) {
@@ -901,10 +914,13 @@ public class Program <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        ftrDirective_.traverse(v)
+        if (let Some(ftr) <- ftrDirective_) {
+            ftr.traverse(v)
+        }
         pkgHeader_.traverse(v)
         for (im in importLists_) {
             im.traverse(v)
@@ -921,9 +937,9 @@ public class Program <: Node {
         if (indent != 0 || beginNode) {
             currentIndent++
         }
-        if (!ftrDirective_.isEmpty()) {
+        if (let Some(ftr) <- ftrDirective_) {
             ret += getIndent(currentIndent) + "-featuresDirective: "
-            ret += ftrDirective_.dump(currentIndent + 1)
+            ret += ftr.dump(currentIndent + 1)
         }
         ret += getIndent(currentIndent) + "-packageHeader: "
         ret += pkgHeader_.dump(currentIndent + 1)
@@ -985,6 +1001,7 @@ public class FeatureId <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         return
     }
 
@@ -1008,41 +1025,36 @@ public class FeatureId <: Node {
 
 }
 
-public class FeaturesDirective <: Node {
-    init(keyword: Token, commas: Tokens, content: ArrayList<FeatureId>) {
+public class FeaturesSet <: Node {
+    init(lCurl: Token, content: ArrayList<FeatureId>, commas: Tokens, rCurl: Token) {
         super()
-        keyword_ = keyword
-        commas_ = commas
-        content_ = content
-    }
-    public init (inputs: Tokens) {
-        try {
-            let features = parseProgram(inputs).featuresDirective
-            if (features.content_.isEmpty()) {
-                throw ASTException("Cannot construct the 'FeaturesDirective' node.")
-            }
-            this.begin_ = features.beginPos
-            this.end_ = features.endPos
-            this.keyword_ = features.keyword_
-            this.commas_ = features.commas_
-            this.content_ = features.content_
-        } catch (e: ParseASTException) {
-            throw ASTException("Cannot construct the 'FeaturesDirective' node.")
-        }
+        this.lCurl_ = lCurl
+        this.content_ = content
+        this.commas_ = commas
+        this.rCurl_ = rCurl
     }
 
     public init() {}
-    private var keyword_: Token = Token(TokenKind.FEATURES)
-    private var commas_: Tokens = Tokens()
+    private var lCurl_: Token = Token()
     private var content_: ArrayList<FeatureId> = ArrayList<FeatureId>()
+    private var commas_: Tokens = Tokens()
+    private var rCurl_: Token = Token()
 
-    public mut prop keyword: Token {
+    public mut prop lCurl: Token {
         get() {
-            keyword_
+            lCurl_
         }
         set(v) {
-            checkTokenType(v, FEATURES)
-            keyword_ = v
+            checkTokenType(v, LCURL)
+            lCurl_ = v
+        }
+    }
+    public mut prop content: ArrayList<FeatureId> {
+        get() {
+            content_
+        }
+        set(v) {
+            content_ = v
         }
     }
     public mut prop commas: Tokens {
@@ -1054,26 +1066,123 @@ public class FeaturesDirective <: Node {
             commas_ = v
         }
     }
-    public mut prop content: ArrayList<FeatureId> {
+    public mut prop rCurl: Token {
         get() {
-            content_
+            rCurl_
         }
         set(v) {
-            content_ = v
+            checkTokenType(v, RCURL)
+            rCurl_ = v
         }
     }
 
     public func toTokens(): Tokens {
-        var ret = Tokens()
-        ret.append(keyword_)
+        var ret = Tokens().append(lCurl_)
         var idx = 0
         for (item in content_) {
             ret.append(item.toTokens())
             if (idx < commas_.size) {
                 ret.append(commas_[idx])
-                idx ++
+                idx++
             }
         }
+        ret.append(rCurl_)
+    }
+
+    public func traverse(v: Visitor): Unit {
+        v.visit(this)
+        super.traverse(v)
+        if (v.needBreakTraverse()) {
+            return
+        }
+        for (ftrId in content_) {
+            ftrId.traverse(v)
+        }
+        return
+    }
+
+    protected func dump(indent: UInt16): String {
+        currentIndent = indent
+        var ret: String = "FeaturesSet {\n"
+        if (indent != 0 || beginNode) {
+            currentIndent++
+        }
+        var idx = 0
+        ret += getTokenIndent("-lCurl", lCurl_, currentIndent)
+        for (item in content_) {
+            ret += getIndent(currentIndent) + "-FeatureId: "
+            ret += item.dump(currentIndent)
+            if (idx < commas_.size) {
+                ret += getTokenIndent("-comma: ", commas_[idx], currentIndent)
+                idx++
+            }
+        }
+        ret += getTokenIndent("-rCurl", rCurl_, currentIndent)
+        ret += getIndent(indent) + "}\n"
+        return ret
+    }
+}
+
+public class FeaturesDirective <: Node {
+    init(annotations: ArrayList<Annotation>, keyword: Token, featuresSet: FeaturesSet) {
+        super()
+        this.annotations_ = annotations
+        this.keyword_ = keyword
+        this.featuresSet_ = featuresSet
+    }
+
+    public init(inputs: Tokens) {
+        try {
+            let features = parseProgram(inputs).featuresDirective
+            let ftr = features ?? throw ParseASTException()
+            this.begin_ = ftr.beginPos
+            this.end_ = ftr.endPos
+            this.annotations_ = ftr.annotations
+            this.keyword_ = ftr.keyword
+            this.featuresSet_= ftr.featuresSet
+        } catch (e: ParseASTException) {
+            throw ASTException("Cannot construct the 'FeaturesDirective' node.")
+        }
+    }
+
+    public init() {}
+    private var annotations_: ArrayList<Annotation> = ArrayList<Annotation>()
+    private var keyword_: Token = Token()
+    private var featuresSet_: FeaturesSet = FeaturesSet()
+
+    public mut prop annotations: ArrayList<Annotation> {
+        get() {
+            annotations_
+        }
+        set(v) {
+            annotations_ = v
+        }
+    }
+    public mut prop keyword: Token {
+        get() {
+            keyword_
+        }
+        set(v) {
+            checkTokenType(v, FEATURES)
+            keyword_ = v
+        }
+    }
+    public mut prop featuresSet: FeaturesSet {
+        get() {
+            featuresSet_
+        }
+        set(v) {
+            featuresSet_ = v
+        }
+    }
+
+    public func toTokens(): Tokens {
+        var ret = Tokens()
+        for (anno in annotations_) {
+            ret.append(anno.toTokens())
+        }
+        ret.append(keyword_)
+        ret.append(featuresSet_.toTokens())
         let endTok = ret[ret.size - 1]
         let endPos = endTok.pos
         ret.append(Token(TokenKind.NL).addPosition(endPos.fileID, endPos.line, endPos.column + Int32(endTok.value.size)))
@@ -1082,9 +1191,11 @@ public class FeaturesDirective <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
-        for (fc in content_) {
-            fc.traverse(v)
+        super.traverse(v)
+        if (v.needBreakTraverse()) {
+            return
         }
+        featuresSet_.traverse(v)
         return
     }
 
@@ -1093,23 +1204,16 @@ public class FeaturesDirective <: Node {
         if (indent != 0 || beginNode) {
             currentIndent++
         }
-        var idx = 0
         var ret: String = "FeaturesDirective {\n"
-        ret += getTokenIndent("-keyword", keyword_, currentIndent)
-        for (item in content_) {
-            ret += getIndent(currentIndent) + "-featureId: "
-            ret += item.dump(currentIndent + 1)
-            if (idx < commas_.size) {
-                ret += getTokenIndent("-comma", commas_[idx], currentIndent + 1)
-                idx++
-            }
+        for (i in 0..annotations_.size) {
+            ret += getIndent(currentIndent) + "-annotation: ${i}, "
+            ret += annotations_[i].dump(currentIndent)
         }
+        ret += getTokenIndent("-keyword", keyword_, currentIndent)
+        ret += getIndent(currentIndent) + "-featuresSet: "
+        ret += featuresSet_.dump(indent + 1)
         ret += getIndent(indent) + "}\n"
         return ret
-    }
-
-    public func isEmpty(): Bool {
-        return content_.isEmpty()
     }
 }
 
@@ -1224,6 +1328,7 @@ public class PackageHeader <: Node {
     }
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         return
     }
 
@@ -1444,6 +1549,13 @@ public class ImportContent <: Node {
     }
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
+        if (v.needBreakTraverse()) {
+            return
+        }
+        for (item in items_) {
+            item.traverse(v)
+        }
         return
     }
 
@@ -1546,6 +1658,11 @@ public class ImportList <: Node {
     }
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
+        if (v.needBreakTraverse()) {
+            return
+        }
+        content_.traverse(v)
         return
     }
 
@@ -1667,6 +1784,7 @@ public class Constructor <: Node {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
