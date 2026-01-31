@@ -32,8 +32,8 @@ public enum OpenMode <: ToString & Equatable<OpenMode> {
     | Append    // O_WRONLY | O_CREAT | O_APPEND
     | ReadWrite // O_RDWR | O_CREAT
 
-    public operator func ==(that: OpenMode): Bool {
-        return match ((this, that)) {
+    public operator func ==(other: OpenMode): Bool {
+        return match ((this, other)) {
             case (Read, Read)           => true
             case (Write, Write)         => true
             case (Append, Append)       => true
@@ -42,8 +42,8 @@ public enum OpenMode <: ToString & Equatable<OpenMode> {
         }
     }
 
-    public operator func !=(that: OpenMode): Bool {
-        return !(this == that)
+    public operator func !=(other: OpenMode): Bool {
+        return !(this == other)
     }
 
     public func toString(): String {

@@ -21,6 +21,7 @@ public open class Expr <: Node {
     }
     public open func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
     }
 
     protected open func dump(_: UInt16): String {
@@ -100,6 +101,7 @@ public class Block <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -205,6 +207,7 @@ public class BinaryExpr <: Expr {
     }
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -287,6 +290,7 @@ public class UnaryExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -378,6 +382,7 @@ public class IsExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -471,6 +476,7 @@ public class AsExpr <: Expr {
     }
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -560,6 +566,7 @@ public class ParenExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -632,6 +639,7 @@ public class LitConstExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         return
     }
 
@@ -745,6 +753,7 @@ public class RefExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -829,6 +838,7 @@ public class ReturnExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -908,6 +918,7 @@ public class ThrowExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -978,6 +989,7 @@ public class PerformExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -1012,7 +1024,7 @@ public class ResumeExpr <: Expr {
             match (parseExpr(inputs) as ResumeExpr) {
                 case Some(v) =>
                     this.resume_ = v.resume_
-                    this.with_ = with_
+                    this.with_ = v.with_
                     this.withExpr_ = v.withExpr_
                     this.throwing_ = v.throwing_
                     this.throwingExpr_ = v.throwingExpr_
@@ -1106,6 +1118,7 @@ public class ResumeExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -1223,6 +1236,7 @@ public class AssignExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -1337,6 +1351,7 @@ public class CallExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -1497,6 +1512,7 @@ public class MemberAccess <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -1649,6 +1665,7 @@ public class IfExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -1758,6 +1775,7 @@ public class LetPatternExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -1905,6 +1923,7 @@ public class MatchExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2028,6 +2047,7 @@ public class WhileExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2151,6 +2171,7 @@ public class DoWhileExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2286,6 +2307,7 @@ public class LambdaExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2412,6 +2434,7 @@ public class SpawnExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2529,6 +2552,7 @@ public class SynchronizedExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2603,6 +2627,7 @@ public class TrailingClosureExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2700,6 +2725,7 @@ public class TypeConvExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2864,6 +2890,7 @@ public class ForInExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -2934,6 +2961,7 @@ public class PrimitiveTypeExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         return
     }
 
@@ -3026,6 +3054,7 @@ public class ArrayLiteral <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -3126,6 +3155,7 @@ public class TupleLiteral <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -3263,6 +3293,7 @@ public class RangeExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -3408,6 +3439,7 @@ public class SubscriptExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -3467,6 +3499,7 @@ public class JumpExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         return
     }
 
@@ -3539,6 +3572,7 @@ public class IncOrDecExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -3749,6 +3783,7 @@ public class TryExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -3869,6 +3904,7 @@ public class OptionalExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -3910,6 +3946,7 @@ public class QuoteToken <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         return
     }
 
@@ -4019,6 +4056,7 @@ public class QuoteExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -4073,6 +4111,7 @@ public class WildcardExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
     }
 
     protected func dump(indent: UInt16): String {
@@ -4169,6 +4208,7 @@ public class VArrayExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
@@ -4262,10 +4302,10 @@ public class MacroExpandExpr <: Expr {
     }
     public mut prop identifier: Token {
         get() {
-            identifier_
+            pkgIdentifier_
         }
         set(v) {
-            identifier_ = v
+            pkgIdentifier_ = v
         }
     }
 
@@ -4310,6 +4350,11 @@ public class MacroExpandExpr <: Expr {
         }
         set(v) {
             macroInputs_ = v
+            macroInputDecl_ = try {
+                Some(parseDecl(v))
+            } catch (_: ParseASTException | ASTException) {
+                None
+            }
         }
     }
     public mut prop rParen: Token {
@@ -4337,15 +4382,14 @@ public class MacroExpandExpr <: Expr {
             let identifier = identArray[identArray.size - 1]
             ret = ret + Token(TokenKind.IDENTIFIER, identifier).addPosition(identPos.fileID, identPos.line, identColumn)
         }
-        ret.append(Token(TokenKind.NL))
-        if (isValidToken(lSquare_)) {
+        if (isValidToken(lSquare_) && isValidToken(rSquare_)) {
             ret.append(lSquare_).append(macroAttrs_).append(rSquare_)
         }
-        if (hasParenthesis_) {
+        if (isValidToken(lParen_) && isValidToken(rParen_)) {
             ret.append(lParen_).append(macroInputs_).append(rParen_)
         } else {
             match (macroInputDecl_) {
-                case Some(v) => ret.append(v)
+                case Some(v) => ret.append(Token(NL)).append(v)
                 case None => ()
             }
         }
@@ -4354,6 +4398,13 @@ public class MacroExpandExpr <: Expr {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
+        if (v.needBreakTraverse()) {
+            return
+        }
+        if (let Some(decl) <- macroInputDecl_) {
+            decl.traverse(v)
+        }
         return
     }
 

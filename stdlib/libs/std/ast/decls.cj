@@ -190,20 +190,8 @@ public open class Decl <: Node {
     }
 
     public open func traverse(v: Visitor): Unit {
-        if (v.needBreakTraverse()) {
-            return
-        }
-        for (anno in annotations_) {
-            anno.traverse(v)
-        }
-        for (modifier in modifiers_) {
-            modifier.traverse(v)
-        }
-        match (this.genericParam_) {
-            case Some(node) => node.traverse(v)
-            case _ => ()
-        }
-        return
+        v.visit(this)
+        super.traverse(v)
     }
 
     protected open func dump(indent: UInt16): String {
@@ -232,6 +220,20 @@ public open class Decl <: Node {
             case _ => ()
         }
         ret
+    }
+
+    // Traverse annotations, modifiers and generic parameters.
+    func traverseCommonChild(v: Visitor) {
+        for (anno in this.annotations_) {
+            anno.traverse(v)
+        }
+        for (modifier in modifiers_) {
+            modifier.traverse(v)
+        }
+        match (this.genericParam_) {
+            case Some(node) => node.traverse(v)
+            case _ => ()
+        }
     }
 }
 
@@ -303,10 +305,11 @@ public class ClassDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         for (ty in superTypes_) {
             ty.traverse(v)
         }
@@ -398,10 +401,11 @@ public class StructDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         for (ty in superTypes_) {
             ty.traverse(v)
         }
@@ -494,10 +498,11 @@ public class InterfaceDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         for (ty in superTypes_) {
             ty.traverse(v)
         }
@@ -681,10 +686,11 @@ public class EnumDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         for (ty in superTypes_) {
             ty.traverse(v)
         }
@@ -817,10 +823,11 @@ public class ExtendDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         extendType_.traverse(v)
         for (ty in superTypes_) {
             ty.traverse(v)
@@ -1002,10 +1009,11 @@ public class FuncDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         for (param in params_) {
             param.traverse(v)
         }
@@ -1161,10 +1169,11 @@ public class MainDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         for (param in params_) {
             param.traverse(v)
         }
@@ -1306,10 +1315,11 @@ public class MacroDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         for (param in params_) {
             param.traverse(v)
         }
@@ -1439,10 +1449,11 @@ public class PrimaryCtorDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         for (param in params_) {
             param.traverse(v)
         }
@@ -1606,10 +1617,11 @@ public class VarDecl <: Decl {
     }
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         match (pattern_) {
             case Some(node) => node.traverse(v)
             case None => ()
@@ -1788,10 +1800,12 @@ public open class FuncParam <: Decl {
 
     public open func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
+            v.breakTraverse()
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         paramType_.traverse(v)
         match (expr_) {
             case Some(node) => node.traverse(v)
@@ -1940,10 +1954,11 @@ public class PropDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         declType_.traverse(v)
         match (getter_) {
             case Some(node) => node.traverse(v)
@@ -2027,10 +2042,11 @@ public class TypeAliasDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        super.traverse(v)
+        this.traverseCommonChild(v)
         aliasType_.traverse(v)
         return
     }
@@ -2220,10 +2236,10 @@ public class MacroExpandDecl <: Decl {
             let identifier = identArray[identArray.size - 1]
             ret = ret + Token(TokenKind.IDENTIFIER, identifier).addPosition(identPos.fileID, identPos.line, identColumn)
         }
-        if (isValidToken(lSquare_)) {
+        if (isValidToken(lSquare_) && isValidToken(rSquare_)) {
             ret.append(lSquare_).append(macroAttrs_).append(rSquare_)
         }
-        if (isValidToken(lParen_)) {
+        if (isValidToken(lParen_) && isValidToken(rParen_)) {
             ret.append(lParen_).append(macroInputs_).append(rParen_).append(Token(NL))
         } else {
             match (macroInputDecl_) {
@@ -2236,12 +2252,11 @@ public class MacroExpandDecl <: Decl {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        for (anno in annotations) {
-            anno.traverse(v)
-        }
+        this.traverseCommonChild(v)
         match (macroInputDecl_) {
             case Some(node) => node.traverse(v)
             case None => ()
@@ -2420,10 +2435,10 @@ public class MacroExpandParam <: FuncParam {
             let identifier = identArray[identArray.size - 1]
             ret = ret + Token(TokenKind.IDENTIFIER, identifier).addPosition(identPos.fileID, identPos.line, identColumn)
         }
-        if (isValidToken(lSquare_)) {
+        if (isValidToken(lSquare_) && isValidToken(rSquare_)) {
             ret.append(lSquare_).append(macroAttrs_).append(rSquare_)
         }
-        if (isValidToken(lParen_)) {
+        if (isValidToken(lParen_) && isValidToken(rParen_)) {
             ret.append(lParen_).append(macroInputs_).append(rParen_).append(Token(NL))
         } else {
             match (macroInputDecl_) {
@@ -2436,12 +2451,11 @@ public class MacroExpandParam <: FuncParam {
 
     public func traverse(v: Visitor): Unit {
         v.visit(this)
+        super.traverse(v)
         if (v.needBreakTraverse()) {
             return
         }
-        for (anno in annotations) {
-            anno.traverse(v)
-        }
+        this.traverseCommonChild(v)
         match (macroInputDecl_) {
             case Some(node) => node.traverse(v)
             case None => ()

@@ -99,8 +99,8 @@ public func ifNone<T>(o: Option<T>, action: () -> Unit): Unit {
 
 extend<T> Option<T> <: Equatable<Option<T>> where T <: Equatable<T> {
     @Frozen
-    public operator func ==(that: Option<T>): Bool {
-        return match ((this, that)) {
+    public operator func ==(other: Option<T>): Bool {
+        return match ((this, other)) {
             case (Some(v1), Some(v2)) => v1 == v2
             case (None, None) => true
             case _ => false
@@ -108,8 +108,8 @@ extend<T> Option<T> <: Equatable<Option<T>> where T <: Equatable<T> {
     }
 
     @Frozen
-    public operator func !=(that: Option<T>): Bool {
-        return !(this == that)
+    public operator func !=(other: Option<T>): Bool {
+        return !(this == other)
     }
 }
 

@@ -39,8 +39,8 @@ public enum ConnectionState <: Equatable<ConnectionState> {
      */
     | Connected
 
-    public operator func ==(rhs: ConnectionState): Bool {
-        match ((this, rhs)) {
+    public operator func ==(other: ConnectionState): Bool {
+        match ((this, other)) {
             case (Broken, Broken) => true
             case (Closed, Closed) => true
             case (Connecting, Connecting) => true
@@ -49,7 +49,7 @@ public enum ConnectionState <: Equatable<ConnectionState> {
         }
     }
 
-    public operator func !=(rhs: ConnectionState): Bool {
-        return !(this == rhs)
+    public operator func !=(other: ConnectionState): Bool {
+        return !(this == other)
     }
 }

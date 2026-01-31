@@ -2292,26 +2292,12 @@ public class FeatureId <: Node {
 
 > **注意:**
 >
-> Feature 声明必须以 `features`，其次是 feature id 列表，Feature 声明必须出现在源文件的包名声明之前。
+> 必须以关键字开头`features`，其次是 feature id 列表，必须出现在源文件的包名声明之前。
 > feature id 由标识符组成，标识符之间用点号分隔。feature id 不能用反引号转义。
 
 父类型:
 
 - [Node](#class-node)
-
-### prop dots
-
-```cangjie
-public mut prop dots: Tokens
-```
-
-功能：获取或设置 feature 的点号。例如：`features user.define.sample`。
-
-类型：[Tokens](ast_package_classes.md#class-tokens)
-
-异常：
-
-- [ASTException](ast_package_exceptions.md#class-astexception) - 当设置的 [Tokens](ast_package_classes.md#class-tokens) 不是一组 `.`。
 
 ### prop identifiers
 
@@ -2326,6 +2312,20 @@ public mut prop identifiers: Tokens
 异常：
 
 - [ASTException](ast_package_exceptions.md#class-astexception) - 当设置的 [Tokens](ast_package_classes.md#class-tokens) 不是一组标识符。
+
+### prop dots
+
+```cangjie
+public mut prop dots: Tokens
+```
+
+功能：获取或设置 feature 的点号。例如：`features { user.define.sample }`。
+
+类型：[Tokens](ast_package_classes.md#class-tokens)
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) - 当设置的 [Tokens](ast_package_classes.md#class-tokens) 不是一组 `.`。
 
 ### init()
 
@@ -2363,8 +2363,8 @@ public func traverse(v: Visitor): Unit
 
 ```cangjie
 public class FeaturesDirective <: Node {
-    public init(inputs: Tokens)
     public init()
+    public init(input: Tokens)
 }
 ```
 
@@ -2372,39 +2372,21 @@ public class FeaturesDirective <: Node {
 
 > **注意：**
 >
-> Features 声明必须以关键字 `features` 开头，并且必须出现在源文件的包声明之前。
+> Features 声明必须以关键字 `features` 开头，后跟 [features set](#class-featuresset)，并且必须出现在源文件的包头之前。
 
 父类型：
 
 - [Node](#class-node)
 
-### prop commas
+### prop annotations
 
 ```cangjie
-public mut prop commas: Tokens 
+public mut prop annotations: ArrayList<Annotation>
 ```
 
-功能：获取或设置一组 `,`。
+功能：获取或设置在 [FeaturesDirective](ast_package_classes.md#class-featuresdirective) 上的注解。
 
-类型：[Tokens](ast_package_classes.md#class-tokens)
-
-异常：
-
-- [ASTException](ast_package_exceptions.md#class-astexception) - 当配置的不是一组 `,` 时抛出异常。
-
-### prop content
-
-```cangjie
-public mut prop content: ArrayList<FeatureId> 
-```
-
-功能：获取或设置一组 feature id。
-
-类型：[ArrayList](../../collection/collection_package_api/collection_package_class.md#class-arraylistt)\<[featuresId](ast_package_classes.md#class-featureid)>
-
-异常：
-
-- [ASTException](ast_package_exceptions.md#class-astexception) - 当配置的不是一组 feature id 时抛出异常。
+类型：[ArrayList](../../collection/collection_package_api/collection_package_class.md#class-arraylistt)\<[Annotation](ast_package_classes.md#class-annotation)>
 
 ### prop keyword
 
@@ -2419,6 +2401,16 @@ public mut prop keyword: Token
 异常：
 
 - [ASTException](ast_package_exceptions.md#class-astexception) - 在配置的不是关键字时抛出异常。
+
+### prop featuresSet
+
+```cangjie
+public mut prop featuresSet: FeaturesSet
+```
+
+功能：获取或设置 [FeaturesDirective](ast_package_classes.md#class-featuresdirective) 节点里的 features 名称。
+
+类型：[FeaturesSet](ast_package_classes.md#class-featuresset)
 
 ### init()
 
@@ -2444,17 +2436,112 @@ public init(inputs: Tokens)
 
 - [ASTException](ast_package_exceptions.md#class-astexception) - 当输入的 [Tokens](ast_package_classes.md#class-tokens) 无法构造 [FeaturesDirective](ast_package_classes.md#class-featuresdirective) 的时候抛出异常。
 
-### func isEmpty()
+### func toTokens()
 
 ```cangjie
-public func isEmpty(): Bool
+public func toTokens(): Tokens
 ```
 
-功能：`content` 为空时返回 `true`。
+功能：转换一个语法树节点为 [Tokens](ast_package_classes.md#class-tokens)。
 
 返回值：
 
-- [Bool](../../core/core_package_api/core_package_intrinsics.md#bool) - content 是否为空。
+- [Tokens](ast_package_classes.md#class-tokens) - 转换好的 [Tokens](ast_package_classes.md#class-tokens) 类型对象。
+
+### func traverse(Visitor)
+
+```cangjie
+public func traverse(v: Visitor): Unit
+```
+
+功能：遍历当前语法树节点及其子节点。要提前终止子节点遍历，请重写 `visit` 函数并调用 `breakTraverse` 函数来终止遍历行为。参见 [自定义访问函数遍历 AST 对象](../ast_samples/traverse.md)。
+
+参数：
+
+- v: [Visitor](ast_package_classes.md#class-visitor) - 一个 [Visitor](ast_package_classes.md#class-visitor) 类型实例。
+
+## class FeaturesSet
+
+```cangjie
+public class FeaturesSet <: Node {
+    public init()
+    public init(input: Tokens)
+}
+```
+
+功能：一组 features 名称。
+
+> **注意：**
+>
+> featuresSet 必须开被 `{}` 包裹。featureSet 包含一组 [featuresId](ast_package_classes.md#class-featureid)。
+
+父类型：
+
+- [Node](#class-node)
+
+### prop lCurl
+
+```cangjie
+public mut prop lCurl: Token
+```
+
+功能：获取或设置在 [FeaturesSet](ast_package_classes.md#class-featureset) 节点里的 `{` 。
+
+类型：[Token](ast_package_structs.md#struct-token)
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) - 当配置的不是 `{` 时抛出异常。
+
+### prop content
+
+```cangjie
+public mut prop content: ArrayList<FeatureId> 
+```
+
+功能：获取或设置在 [FeaturesSet](ast_package_classes.md#class-featureset) 节点里的一组 feature id。
+
+类型：[ArrayList](../../collection/collection_package_api/collection_package_class.md#class-arraylistt)\<[featuresId](ast_package_classes.md#class-featureid)>
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) - 当配置的不是一组 feature id 时抛出异常。
+
+### prop commas
+
+```cangjie
+public mut prop commas: Tokens 
+```
+
+功能：获取或设置在 [FeaturesSet](ast_package_classes.md#class-featureset) 节点里的一组 `,`。
+
+类型：[Tokens](ast_package_classes.md#class-tokens)
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) - 当配置的不是一组 `,` 时抛出异常。
+
+### prop rCurl
+
+```cangjie
+public mut prop rCurl: Token
+```
+
+功能：获取或设置在 [FeaturesSet](ast_package_classes.md#class-featureset) 节点里的 `}` 。
+
+类型：[Token](ast_package_structs.md#struct-token)
+
+异常：
+
+- [ASTException](ast_package_exceptions.md#class-astexception) - 当配置的不是 `}` 时抛出异常。
+
+### init()
+
+```cangjie
+public init()
+```
+
+功能：构造一个默认的 [FeaturesSet](ast_package_classes.md#class-featuresset) 对象。
 
 ### func toTokens()
 
@@ -6557,7 +6644,7 @@ public init(inputs: Tokens)
 
 异常：
 
-- [ASTException](ast_package_exceptions.md#class-astexception) — 当输入的 [Tokens](ast_package_classes.md#class-tokens) 无法解析为 [PerformExpr](ast_package_classes.md#class-performexpr) 节点时抛出。
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当输入的 [Tokens](ast_package_classes.md#class-tokens) 无法解析为 [PerformExpr](ast_package_classes.md#class-performexpr) 节点，或编译未开启 `Effect Handlers` 实验特性时抛出。
 
 ### func toTokens()
 
@@ -6977,12 +7064,12 @@ public mut prop decls: ArrayList<Decl>
 ### prop featuresDirective
 
 ```cangjie
-public mut prop featuresDirective: FeaturesDirective
+public mut prop featuresDirective: Option<FeaturesDirective> 
 ```
 
-功能：获取或设置仓颉源码文件中 `TopLevel` 作用域内定义的 `features` 声明节点。
+功能：获取或设置仓颉源码文件中 TopLevel 作用域内定义的 `features` 声明节点。
 
-类型：[FeaturesDirective](ast_package_classes.md#class-featuresdirective)
+类型：[Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<[FeaturesDirective](ast_package_classes.md#class-featuresdirective)>
 
 ### prop importLists
 
@@ -7998,7 +8085,7 @@ public init(inputs: Tokens)
 
 异常：
 
-- [ASTException](ast_package_exceptions.md#class-astexception) — 当输入的 [Tokens](ast_package_classes.md#class-tokens) 无法解析为 [ResumeExpr](ast_package_classes.md#class-resumeexpr) 节点时抛出。
+- [ASTException](ast_package_exceptions.md#class-astexception) — 当输入的 [Tokens](ast_package_classes.md#class-tokens) 无法解析为 [ResumeExpr](ast_package_classes.md#class-resumeexpr) 节点，或编译未开启 `Effect Handlers` 实验特性时抛出。
 
 ### func toTokens()
 
@@ -10723,6 +10810,7 @@ public abstract class Visitor {}
 >
 > - `visit` 函数搭配 `traverse` 一起使用，可实现对节点的访问和修改, 所有 `visit` 函数都有默认为空的实现，可以按需实现需要的 `visit` 方法。
 > - 该类需要被继承使用，并允许子类重新定义访问函数。
+> - 对于有父类的节点类型，`traverse` 函数的遍历顺序为先遍历当前节点，再遍历父类节点，最后遍历子节点。对于无父类的节点类型，`traverse` 函数先遍历当前节点，再遍历子节点。
 
 ### func breakTraverse()
 
@@ -10739,6 +10827,10 @@ protected func needBreakTraverse(): Bool
 ```
 
 功能：用于判断是否需要停止遍历。
+
+> **注意:**
+>
+> 该函数会在判断需要停止遍历后将用于判断的标记位重置，因此若在先调用 `breakTraverse()` 的情况下调用该函数，可能导致上一次 `breakTraverse()` 失效，影响遍历的停止。
 
 返回值：
 
@@ -10984,6 +11076,42 @@ protected open func visit(_: ExtendDecl): Unit
 
 - _: [ExtendDecl](ast_package_classes.md#class-extenddecl) - [ExtendDecl](ast_package_classes.md#class-extenddecl) 类型的被遍历节点。
 
+### func visit(FeatureId)
+
+```cangjie
+protected open func visit(_: FeatureId): Unit
+```
+
+功能：定义访问节点时的操作，需要重写。
+
+参数：
+
+- _: [FeatureId](ast_package_classes.md#class-featureid) - [FeatureId](ast_package_classes.md#class-featureid) 类型的被遍历节点。
+
+### func visit(FeaturesDirective)
+
+```cangjie
+protected open func visit(_: FeaturesDirective): Unit
+```
+
+功能：定义访问节点时的操作，需要重写。
+
+参数：
+
+- _: [FeaturesDirective](ast_package_classes.md#class-featuresdirective) - [FeaturesDirective](ast_package_classes.md#class-featuresdirective) 类型的被遍历节点。
+
+### func visit(FeaturesSet)
+
+```cangjie
+protected open func visit(_: FeaturesSet): Unit
+```
+
+功能：定义访问节点时的操作，需要重写。
+
+参数：
+
+- _: [FeaturesSet](ast_package_classes.md#class-featuresset) - [FeaturesSet](ast_package_classes.md#class-featuresset) 类型的被遍历节点。
+
 ### func visit(ForInExpr)
 
 ```cangjie
@@ -11211,6 +11339,18 @@ protected open func visit(_: MacroExpandExpr): Unit
 参数：
 
 - _: [MacroExpandExpr](ast_package_classes.md#class-macroexpandexpr) - [MacroExpandExpr](ast_package_classes.md#class-macroexpandexpr) 类型的被遍历节点。
+
+### func visit(MacroExpandParam)
+
+```cangjie
+protected open func visit(_: MacroExpandParam): Unit
+```
+
+功能：定义访问节点时的操作，需要重写。
+
+参数：
+
+- _: [MacroExpandParam](ast_package_classes.md#class-macroexpandparam) - [MacroExpandParam](ast_package_classes.md#class-macroexpandparam) 类型的被遍历节点。
 
 ### func visit(MainDecl)
 
@@ -11451,6 +11591,18 @@ protected open func visit(_: QuoteExpr): Unit
 参数：
 
 - _: [QuoteExpr](ast_package_classes.md#class-quoteexpr) - [QuoteExpr](ast_package_classes.md#class-quoteexpr) 类型的被遍历节点。
+
+### func visit(QuoteToken)
+
+```cangjie
+protected open func visit(_: QuoteToken): Unit
+```
+
+功能：定义访问节点时的操作，需要重写。
+
+参数：
+
+- _: [QuoteToken](ast_package_classes.md#class-quotetoken) - [QuoteToken](ast_package_classes.md#class-quotetoken) 类型的被遍历节点。
 
 ### func visit(RangeExpr)
 
