@@ -1,4 +1,5 @@
 - [仓颉编程语言标准库概述](std/std_module_overview.md)
+<!--RP1--><!--RP1End-->
 - [std.core](std/core/core_package_overview.md)
     - [函数](std/core/core_package_api/core_package_funcs.md)
     - [类型别名](std/core/core_package_api/core_package_types.md)
@@ -65,7 +66,7 @@
 - [std.convert](std/convert/convert_package_overview.md)
     - [接口](std/convert/convert_package_api/convert_package_interfaces.md)
     - [示例教程]()
-        - [covert 使用示例](std/convert/convert_samples/convert_samples.md)
+        - [convert 使用示例](std/convert/convert_samples/convert_samples.md)
 - [std.crypto.cipher](std/crypto/cipher/cipher_package_overview.md)
     - [接口](std/crypto/cipher/cipher_package_api/cipher_package_interfaces.md)
 - [std.crypto.digest](std/crypto/digest/digest_package_overview.md)
@@ -204,7 +205,7 @@
     - [函数](std/runtime/runtime_package_api/runtime_package_funcs.md)
     - [结构体](std/runtime/runtime_package_api/runtime_package_structs.md)
     - [示例教程]()
-        - [runtime 示例](std/runtime/runtime_package_samples/runtime_sample.md)
+        - [Signal 示例](std/runtime/runtime_package_samples/runtime_sample.md)
 - [std.sort](std/sort/sort_package_overview.md)
     - [函数](std/sort/sort_package_api/sort_package_funcs.md)
     - [接口](std/sort/sort_package_api/sort_package_interfaces.md)
