@@ -64,17 +64,18 @@ template("cangjie_prebuilts") {
     _deps += [ ":lib${lib_name}" ]
   }
 
-  foreach(full_lib_name, fullname_prebuilt_libs) {
-    ohos_prebuilt_shared_library(full_lib_name) {
-      source = "${prebuilt_libs_path}/${full_lib_name}"
+  foreach(full_lib, fullname_prebuilt_libs) {
+    ohos_prebuilt_shared_library(full_lib.name) {
+      source = "${prebuilt_libs_path}/${full_lib.name}"
       enable_strip = true
       install_enable = true
       part_name = "cangjie_runtime"
       subsystem_name = "thirdparty"
       relative_install_dir = "platformsdk/cjsdk"
+      symlink_target_name = full_lib.symlink_target_name
       install_images = [ "system" ]
     }
-    _deps += [ ":${full_lib_name}" ]
+    _deps += [ ":${full_lib.name}" ]
   }
 
   group(target_name) {
@@ -125,8 +126,9 @@ cangjie_prebuilts("cangjie_prebuilts_package") {
     "boundscheck",
   ]
   fullname_prebuilt_libs = [
-    "libpcre2-8.so",
-    "libpcre2-8.so.0",
-    "libpcre2-8.so.0.14.0",
+    {
+      name = "libpcre2-8.so.0.14.0"
+      symlink_target_name = [ "libpcre2-8.so.0" ]
+    },
   ]
 }
