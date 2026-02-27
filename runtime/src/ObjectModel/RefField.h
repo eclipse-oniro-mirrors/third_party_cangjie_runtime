@@ -161,7 +161,6 @@ private:
     using RefFieldValue = MAddress;
 #endif
 
-
 #ifdef __arm__
     union {
         struct {
