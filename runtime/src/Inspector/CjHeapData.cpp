@@ -95,6 +95,7 @@ void CjHeapData::DumpHeap()
 
     // step3 - close file
     int ret = fclose(fp);
+    fp = nullptr;
     if (ret) {
         LOG(RTLOG_ERROR, "Fail to close file when dump heap data finished, %s", strerror(errno));
     }
@@ -131,6 +132,7 @@ bool CjHeapData::DumpHeap(int fd)
     // if fclose success, no need to close fd.
     // if fclose failed, close fd to prevent resource leakage.
     int ret = fclose(fp);
+    fp = nullptr;
     if (ret) {
         close(copyfd);
         LOG(RTLOG_ERROR, "Fail to close file when dump heap data finished, %s", strerror(errno));

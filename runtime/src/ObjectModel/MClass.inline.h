@@ -74,6 +74,22 @@ inline EnumInfo* TypeTemplate::GetEnumInfo()
     return nullptr;
 }
 
+inline EnumDebugInfo* TypeTemplate::GetEnumDebugInfo()
+{
+    if (IsEnum() || IsTempEnum()) {
+        return enumDebugInfo;
+    }
+    return nullptr;
+}
+
+inline EnumCtorReflectInfo* TypeTemplate::GetEnumCtorReflectInfo()
+{
+    if (IsEnumCtor()) {
+        return enumCtorReflectInfo;
+    }
+    return nullptr;
+}
+
 inline const char* TypeInfo::GetName() const { return typeInfoName; }
 
 inline MSize TypeInfo::GetInstanceSize() const { return instanceSize; }
@@ -132,6 +148,8 @@ inline bool TypeInfo::IsNothing() const { return type == TypeKind::TYPE_KIND_NOT
 
 inline bool TypeInfo::IsUnit() const { return type == TypeKind::TYPE_KIND_UNIT; }
 
+inline bool TypeInfo::IsBool() const { return type == TypeKind::TYPE_KIND_BOOL; }
+
 inline bool TypeInfo::IsTuple() const { return type == TypeKind::TYPE_KIND_TUPLE; }
 
 inline bool TypeInfo::IsEnum() const { return type == TypeKind::TYPE_KIND_ENUM; }
@@ -158,6 +176,11 @@ inline bool TypeInfo::IsFloat64() const { return type == TypeKind::TYPE_KIND_FLO
 
 inline bool TypeInfo::IsCFunc() const { return type == TypeKind::TYPE_KIND_CFUNC; }
 
+inline bool TypeInfo::IsUnknownSize() const 
+{ 
+    return GetModifier() & MODIFIER_UNKNOWN_SIZE;
+}
+
 inline bool TypeInfo::IsGenericTypeInfo() const
 {
     return (typeArgsNum > 0) || IsRawArray() || IsVArray() || IsCPointer();
@@ -183,9 +206,7 @@ inline bool TypeInfo::IsGeneric() const
 
 inline bool TypeInfo::IsReflectUnsupportedType() const
 {
-    return type == TypeKind::TYPE_KIND_VARRAY ||
-           type == TypeKind::TYPE_KIND_TUPLE ||
-           type == TypeKind::TYPE_KIND_ENUM;
+    return type == TypeKind::TYPE_KIND_VARRAY;
 }
 
 
@@ -218,6 +239,14 @@ inline EnumInfo* TypeInfo::GetEnumInfo()
     return nullptr;
 }
 
+inline EnumCtorReflectInfo* TypeInfo::GetEnumCtorReflectInfo()
+{
+    if ((IsEnum() || IsTempEnum()) && IsEnumCtor()) {
+        return enumCtorReflectInfo;
+    }
+    return nullptr;
+}
+
 inline bool TypeInfo::HasRefField() const
 {
     if (IsArrayType()) {
@@ -239,7 +268,13 @@ inline bool TypeInfo::IsMonitorClass() const { return static_cast<bool>(flag & F
 inline bool TypeInfo::IsMutexClass() const { return static_cast<bool>(flag & FLAG_MONITOR_CLASS); }
 inline bool TypeInfo::IsWaitQueueClass() const { return static_cast<bool>(flag & FLAG_WAIT_QUEUE_CLASS); }
 inline bool TypeInfo::HasExtPart() const { return static_cast<bool>(flag & FLAG_HAS_EXT_PART); }
-inline bool TypeInfo::IsBoxClass() { return static_cast<bool>(GetModifier() & MODIFIER_BOXCLASS); }
+inline bool TypeInfo::IsBoxClass() const
+{
+    if (IsGeneric()) {
+        return false;
+    }
+    return static_cast<bool>(GetModifier() & MODIFIER_BOXCLASS);
+}
 
 inline bool TypeInfo::ReflectInfoIsNull() const { return reflectInfo == nullptr; }
 
@@ -272,14 +307,6 @@ inline U32 TypeInfo::GetClassSize() const
 {
     return sizeof(TypeInfo);
 }
-
-inline EnumCtorInfo* EnumInfo::GetEnumCtor(U32 idx) const
-{
-    CHECK(idx < GetNumOfEnumCtor());
-    EnumCtorInfo* enumCtorInfo = enumCtorInfos.GetDataRef();
-    return enumCtorInfo + idx;
-}
-
 inline const char* GenericTypeInfo::GetSourceGenericName() { return tt->GetName(); }
 } // namespace MapleRuntime
 #endif // MRT_MCLASS_INLINE_H

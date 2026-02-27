@@ -19,7 +19,7 @@ void GCStackInfo::FillInStackTrace()
 {
     UnwindContext uwContext;
     // Top unwind context can only be runtime or Cangjie context.
-    
+
     CheckTopUnwindContextAndInit(uwContext);
     while (!uwContext.frameInfo.mFrame.IsAnchorFrame(anchorFA)) {
         AnalyseAndSetFrameType(uwContext);
@@ -56,6 +56,7 @@ void GCStackInfo::VisitStackRoots(const RootVisitor& func, Mutator& mutator) con
                 break;
             case FrameType::C2R_STUB:
             case FrameType::C2N_STUB:
+            case FrameType::EXSLUSIVE:
                 TracingCollector::RecordStubCalleeSaved(regSlotsMap, reinterpret_cast<Uptr>(frame.mFrame.GetFA()));
                 break;
             default: {
@@ -78,6 +79,7 @@ void GCStackInfo::VisitHeapReferencesOnStack(const RootVisitor& rootVisitor, con
             }
             case FrameType::C2R_STUB:
             case FrameType::C2N_STUB:
+            case FrameType::EXSLUSIVE:
                 TracingCollector::RecordStubCalleeSaved(regSlotsMap, reinterpret_cast<Uptr>(frame.mFrame.GetFA()));
                 break;
             case FrameType::SAFEPOINT:
@@ -138,6 +140,7 @@ void RecordStackInfo::VisitStackRoots(const RootVisitor &func, Mutator &mutator)
                 break;
             case FrameType::C2R_STUB:
             case FrameType::C2N_STUB:
+            case FrameType::EXSLUSIVE:
                 TracingCollector::RecordStubCalleeSaved(regSlotsMap, reinterpret_cast<Uptr>(frame->mFrame.GetFA()));
                 break;
             default: {

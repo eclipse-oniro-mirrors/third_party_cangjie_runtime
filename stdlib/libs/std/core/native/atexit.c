@@ -9,6 +9,11 @@
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
 #include <stdatomic.h>
+#include <stdlib.h>
+
+#ifdef WIN32
+#include <windows.h>
+#endif  // WIN32
 
 #ifdef __arm__
 #pragma GCC diagnostic push
@@ -25,6 +30,18 @@ extern void CJ_CORE_AtExitCallbackListUnlook(void)
 {
     atomic_flag_clear(&g_atexitCallbackListLocker);
 }
+
+#ifdef WIN32
+extern void CJ_CORE_Abort(void)
+{
+    TerminateProcess(GetCurrentProcess(), 1);
+}
+#else
+extern void CJ_CORE_Abort(void)
+{
+    abort();
+}
+#endif
 
 #ifdef __arm__
 #pragma GCC diagnostic pop

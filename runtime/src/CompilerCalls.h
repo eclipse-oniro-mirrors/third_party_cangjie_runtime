@@ -92,7 +92,7 @@ extern "C" void MCC_EndCatch();
 extern "C" void MCC_ThrowStackOverflowError(uint32_t size);
 
 extern "C" ArrayRef MCC_FillInStackTraceImpl(const TypeInfo* arrayInfo, const ArrayRef excepMsg);
-extern "C" StackTraceData MCC_DecodeStackTraceImpl(const uint64_t ip, const uint64_t pc, const uint64_t fa,
+extern "C" StackTraceData MCC_DecodeStackTraceImpl(const uint64_t ip, const uint64_t pc, const uint64_t funcDesc,
                                                    const TypeInfo* charArray);
 extern "C" MRT_EXPORT ArrayRef MCC_GetAllThreadSnapshotImpl(const TypeInfo* arraySnapshot,
                                                             const TypeInfo* arrayStackTrace,
@@ -113,6 +113,7 @@ extern "C" MRT_EXPORT int32_t __ccc_personality_v0();
 // Add prefix "CJ_" to MCC_*.
 extern "C" MRT_EXPORT void CJ_MCC_C2NStub(...);
 extern "C" MRT_EXPORT void CJ_MCC_N2CStub(...);
+extern "C" MRT_EXPORT void* CJ_MCC_ExclusiveScope(...);
 extern "C" MRT_EXPORT ArrayRef CJ_MCC_DecodeStackTrace(const ArrayRef pcArray, const TypeInfo* steObjInfo,
                                                        const TypeInfo* steArrayInfo, const TypeInfo* charArrayInfo);
 extern "C" MRT_EXPORT ArrayRef CJ_MCC_GetAllThreadSnapshot(const TypeInfo* arraySnapshot,
@@ -147,8 +148,8 @@ extern "C" MRT_EXPORT void CJ_MCC_ArrayCopyRef(const ObjectPtr dstObj, MAddress 
                                                const ObjectPtr srcObj, MAddress srcField, size_t srcSize);
 extern "C" MRT_EXPORT void CJ_MCC_ArrayCopyStruct(const ObjectPtr dstObj, MAddress dstField, size_t dstSize,
                                                   const ObjectPtr srcObj, MAddress srcField, size_t srcSize);
-extern "C" MRT_EXPORT ObjectPtr CJ_MCC_ReadRefField(const ObjectPtr obj, RefField<false>* filed);
-extern "C" MRT_EXPORT ObjectPtr CJ_MCC_ReadWeakRef(const ObjectPtr obj, RefField<false>* filed);
+extern "C" MRT_EXPORT ObjectPtr CJ_MCC_ReadRefField(const ObjectPtr obj, RefField<false>* field);
+extern "C" MRT_EXPORT ObjectPtr CJ_MCC_ReadWeakRef(const ObjectPtr obj, RefField<false>* field);
 extern "C" MRT_EXPORT void CJ_MCC_ReadStructField(MAddress dstPtr, ObjectPtr obj, MAddress srcField, size_t size);
 extern "C" MRT_EXPORT ObjectPtr CJ_MCC_ReadStaticRef(RefField<false>* field);
 extern "C" MRT_EXPORT void CJ_MCC_ReadStaticStruct(MAddress dstPtr, size_t dstSize, MAddress srcPtr, size_t srcSize,
