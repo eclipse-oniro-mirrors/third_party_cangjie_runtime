@@ -40,7 +40,7 @@ public:
 
     bool IsUserSigHandler() { return isUserSigHandler; }
 
-    void setUserSigHandler(bool flag)
+    void SetUserSigHandler(bool flag)
     {
         isUserSigHandler = flag;
     }
@@ -62,7 +62,7 @@ private:
     bool isMark;
 
     bool isUserSigHandler;
-    
+
     std::vector<SignalAction> handlerStack;
 #ifdef __APPLE__
     static SignalStack stacks[NSIG];
