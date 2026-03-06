@@ -320,7 +320,7 @@ bool Demangler<T>::IsCFunctionWrapper() const
 }
 
 template<typename T>
-bool Demangler<T>::IsWrappedFunction() const 
+bool Demangler<T>::IsWrappedFunction() const
 {
     return mangledName.Find(MANGLE_WRAPPED_FUNCTION_PREFIX, 0) == 0;
 }
@@ -1376,14 +1376,14 @@ DemangleInfo<T> Demangler<T>::DemangleInnerFunction()
 }
 
 template<typename T>
-DemangleInfo<T> Demangler<T>::DemangleWrappedFunction() 
+DemangleInfo<T> Demangler<T>::DemangleWrappedFunction()
 {
     auto endIndex = mangledName.Find(MANGLE_END, currentIndex);
     auto prefixIndex = currentIndex + strlen(MANGLE_WRAPPED_FUNCTION_PREFIX);
     mangledName = T(MANGLE_CANGJIE_PREFIX) + mangledName.SubStr(prefixIndex, endIndex - prefixIndex);
     auto di = DemangleDecl();
     di.demangled += WRAPPED_FUNCTION_SUFFIX_INFO;
-    di.type = TypeKind::WRAPPED_FUNCTION;    
+    di.type = TypeKind::WRAPPED_FUNCTION;  
     return di;
 }
 

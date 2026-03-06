@@ -62,7 +62,8 @@ size_t Logger::GetLogFileSize()
     return DEFAULT_MAX_FILE_SIZE;
 }
 
-void ATraceBeginAsync(const char* name, int32_t taskId) {
+void ATraceBeginAsync(const char* name, int32_t taskId)
+{
 #if __ANDROID_API__ >= 28
     ATrace_beginAsyncSection(name, taskId);
 #else
@@ -82,7 +83,8 @@ void ATraceEndAsync(const char* name, int32_t taskId) {
 #endif
 }
 
-void ATraceSetCounter(const char* name, int64_t value) {
+void ATraceSetCounter(const char* name, int64_t value)
+{
 #if __ANDROID_API__ >= 28
     ATrace_setCounter(name, value);
 #else

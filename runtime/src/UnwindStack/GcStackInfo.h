@@ -73,7 +73,7 @@ class CJThreadStackInfo : public GCStackInfo {
 public:
     explicit CJThreadStackInfo(const UnwindContext* context = nullptr, uint32_t pMaxStrSize = 0)
         : GCStackInfo(context), maxStrSize(pMaxStrSize) {}
-    
+
     ~CJThreadStackInfo() override = default;
 
     void FillInStackTrace() override;
