@@ -62,7 +62,8 @@ size_t Logger::GetLogFileSize()
     return DEFAULT_MAX_FILE_SIZE;
 }
 
-void ATraceBeginAsync(const char* name, int32_t taskId) {
+void ATraceBeginAsync(const char* name, int32_t taskId)
+{
 #if __ANDROID_API__ >= 28
     ATrace_beginAsyncSection(name, taskId);
 #else
@@ -82,7 +83,8 @@ void ATraceEndAsync(const char* name, int32_t taskId) {
 #endif
 }
 
-void ATraceSetCounter(const char* name, int64_t value) {
+void ATraceSetCounter(const char* name, int64_t value)
+{
 #if __ANDROID_API__ >= 28
     ATrace_setCounter(name, value);
 #else
@@ -473,7 +475,8 @@ const char* TraceInfoFormat(const char* name, unsigned long long id, unsigned in
 #endif
 
 #if defined(__ANDROID__)
-ATraceWrapper::ATraceWrapper() {
+ATraceWrapper::ATraceWrapper()
+{
     libHandle = dlopen("libandroid.so", RTLD_LAZY);
     if (!libHandle) {
         PRINT_ERROR("Failed to dlopen libandroid.so: %s\n", dlerror());
@@ -483,7 +486,6 @@ ATraceWrapper::ATraceWrapper() {
     beginAsyncFunc = reinterpret_cast<ATraceBeginAsyncSectionFunc>(dlsym(libHandle, "ATrace_beginAsyncSection"));
     endAsyncFunc = reinterpret_cast<ATraceEndAsyncSectionFunc>(dlsym(libHandle, "ATrace_endAsyncSection"));
     setCounterFunc = reinterpret_cast<ATraceSetCounterFunc>(dlsym(libHandle, "ATrace_setCounter"));
-
     if (beginAsyncFunc && endAsyncFunc && setCounterFunc) {
         PRINT_ERROR("ATrace functions all loaded successfully \n");
     } else {
@@ -492,7 +494,8 @@ ATraceWrapper::ATraceWrapper() {
     }
 }
 
-ATraceWrapper::~ATraceWrapper() {
+ATraceWrapper::~ATraceWrapper()
+{
     if (libHandle) {
         dlclose(libHandle);
         libHandle = nullptr;
@@ -503,24 +506,28 @@ ATraceWrapper::~ATraceWrapper() {
     setCounterFunc = nullptr;
 }
 
-ATraceWrapper& ATraceWrapper::GetInstance() {
+ATraceWrapper& ATraceWrapper::GetInstance()
+{
     static ATraceWrapper instance;
     return instance;
 }
 
-void ATraceWrapper::BeginAsyncSection(const char* name, int32_t taskId) {
+void ATraceWrapper::BeginAsyncSection(const char* name, int32_t taskId)
+{
     if (beginAsyncFunc) {
         beginAsyncFunc(name, taskId);
     }
 }
 
-void ATraceWrapper::EndAsyncSection(const char* name, int32_t taskId) {
+void ATraceWrapper::EndAsyncSection(const char* name, int32_t taskId)
+{
     if (endAsyncFunc) {
         endAsyncFunc(name, taskId);
     }
 }
 
-void ATraceWrapper::SetCounter(const char* name, int64_t count) {
+void ATraceWrapper::SetCounter(const char* name, int64_t count)
+{
     if (setCounterFunc) {
         setCounterFunc(name, count);
     }
@@ -528,7 +535,8 @@ void ATraceWrapper::SetCounter(const char* name, int64_t count) {
 #endif
     
 #if defined(__IOS__)
-SignpostWrapper::SignpostWrapper() {
+SignpostWrapper::SignpostWrapper()
+{
     libHandle = dlopen("libSystem.dylib", RTLD_LAZY);
     if (!libHandle) {
         PRINT_ERROR("Failed to dlopen libSystem.dylib: %{public}s \n", dlerror());
@@ -538,10 +546,9 @@ SignpostWrapper::SignpostWrapper() {
     emitWithNameImplFunc = reinterpret_cast<EmitWithNameImplFunc>(dlsym(libHandle, "_os_signpost_emit_with_name_impl"));
     idGenerateFunc = reinterpret_cast<IdGenerateFunc>(dlsym(libHandle, "os_signpost_id_generate"));
     idMakeWithPointerFunc = reinterpret_cast<IdMakeWithPointerFunc>(dlsym(libHandle,
-                                                                    "os_signpost_id_make_with_pointer"));
+                                                                          "os_signpost_id_make_with_pointer"));
     osSignpostEnabledFunc = reinterpret_cast<OsSignpostEnabledFunc>(dlsym(libHandle, "os_signpost_enabled"));
-
-     if (emitWithNameImplFunc && idGenerateFunc && idMakeWithPointerFunc && osSignpostEnabledFunc) {
+    if (emitWithNameImplFunc && idGenerateFunc && idMakeWithPointerFunc && osSignpostEnabledFunc) {
         isAvailable = true;
         PRINT_ERROR("signpost functions all loaded successfully \n");
     } else {
@@ -550,7 +557,8 @@ SignpostWrapper::SignpostWrapper() {
     }
 }
 
-SignpostWrapper::~SignpostWrapper() {
+SignpostWrapper::~SignpostWrapper()
+{
     if (libHandle) {
         dlclose(libHandle);
         libHandle = nullptr;
@@ -563,12 +571,14 @@ SignpostWrapper::~SignpostWrapper() {
     endName = nullptr;
 }
 
-SignpostWrapper& SignpostWrapper::GetInstance() {
+SignpostWrapper& SignpostWrapper::GetInstance()
+{
     static SignpostWrapper instance;
     return instance;
 }
 
-bool SignpostWrapper::IsIdValid(os_signpost_id_t spId) {
+bool SignpostWrapper::IsIdValid(os_signpost_id_t spId)
+{
     if (spId == OS_SIGNPOST_ID_NULL || spId == OS_SIGNPOST_ID_INVALID) {
         PRINT_WARN("id is null or invalid \n");
         return false;
@@ -576,7 +586,8 @@ bool SignpostWrapper::IsIdValid(os_signpost_id_t spId) {
     return true;
 }
 
-bool SignpostWrapper::IsLogValid(os_log_t osLog) {
+bool SignpostWrapper::IsLogValid(os_log_t osLog)
+{
     if (osSignpostEnabledFunc(osLog)) {
         return true;
     }
@@ -584,7 +595,8 @@ bool SignpostWrapper::IsLogValid(os_log_t osLog) {
     return false;
 }
 
-std::pair<size_t, void *> SignpostWrapper::FormatArgs(SignpostType type, const char* name, int64_t value) {
+std::pair<size_t, void *> SignpostWrapper::FormatArgs(SignpostType type, const char* name, int64_t value)
+{
     size_t alignment = 16;
     size_t bufferSize = 0;
     void *buffer = nullptr;
@@ -657,7 +669,8 @@ std::pair<size_t, void *> SignpostWrapper::FormatArgs(SignpostType type, const c
     return {bufferSize, buffer};
 }
 
-void SignpostWrapper::IntervalBegin(const char* name) {
+void SignpostWrapper::IntervalBegin(const char* name)
+{
     if (!isAvailable) {
         return;
     }
@@ -682,7 +695,8 @@ void SignpostWrapper::IntervalBegin(const char* name) {
     std::free(buffer);
 }
 
-void SignpostWrapper::IntervalEnd() {
+void SignpostWrapper::IntervalEnd()
+{
     if (!isAvailable) {
         return;
     }
@@ -706,7 +720,8 @@ void SignpostWrapper::IntervalEnd() {
     std::free(buffer);
 }
 
-void SignpostWrapper::IntervalBeginAsync(const char* name, int32_t taskId) {
+void SignpostWrapper::IntervalBeginAsync(const char* name, int32_t taskId)
+{
     if (!isAvailable) {
         return;
     }
@@ -731,7 +746,8 @@ void SignpostWrapper::IntervalBeginAsync(const char* name, int32_t taskId) {
     std::free(buffer);
 }
 
-void SignpostWrapper::IntervalEndAsync(const char* name, int32_t taskId) {
+void SignpostWrapper::IntervalEndAsync(const char* name, int32_t taskId)
+{
     if (!isAvailable) {
         return;
     }
@@ -756,7 +772,8 @@ void SignpostWrapper::IntervalEndAsync(const char* name, int32_t taskId) {
     std::free(buffer);
 }
 
-void SignpostWrapper::EventEmit(const char* name, int64_t count) {
+void SignpostWrapper::EventEmit(const char* name, int64_t count)
+{
     if (!isAvailable) {
         return;
     }

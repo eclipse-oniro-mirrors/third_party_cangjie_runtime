@@ -77,6 +77,5 @@ public:
 private:
     std::stack<FrameInfo* > frames;
 };
- 
 } // namespace MapleRuntime
 #endif

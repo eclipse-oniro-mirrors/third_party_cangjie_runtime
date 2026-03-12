@@ -36,6 +36,7 @@ enum class FrameType {
     C2R_STUB = 6,
     NATIVE = 7,
     STACKGROW = 8,
+    EXSLUSIVE = 9,
 };
 
 enum class StackMode {
@@ -164,6 +165,8 @@ public:
     bool IsC2NStubFrame() const;
 
     bool IsC2RStubFrame() const;
+
+    bool IsExclusiveStubFrame() const;
 
 #if defined(ENABLE_BACKWARD_PTRAUTH_CFI)
     bool IsC2NExceptionStubFrame() const;

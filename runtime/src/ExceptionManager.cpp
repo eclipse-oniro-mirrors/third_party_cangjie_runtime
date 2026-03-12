@@ -11,6 +11,9 @@
 #include "Base/LogFile.h"
 #include "Common/Runtime.h"
 #include "Exception/ExceptionCApi.h"
+#ifdef __APPLE__
+#include "Exception/CFException.h"
+#endif
 #include "ExceptionManager.inline.h"
 #include "Mutator/Mutator.h"
 #include "ObjectModel/MObject.h"
@@ -95,7 +98,7 @@ void ExceptionManager::RegisterUncaughtExceptionHandler(const CJUncaughtExceptio
 }
 #endif
 
-#ifdef __APPLE__
+#ifdef __IOS__
 void ExceptionManager::DefaultUncaughtTask(const char* sunmary, const CJErrorObject errorObj)
 {
     (void)sunmary;
@@ -124,7 +127,8 @@ void ExceptionManager::DumpException()
 #if defined(__OHOS__) && (__OHOS__ == 1) || (__APPLE__)
         const char* summary = "Uncaught exception was found.";
         CString exceptionMsg(eWrapper.GetExceptionMessage());
-#if defined(__APPLE__)
+#if defined(__APPLE__) && (__IOS__ == 1)
+        CFException::ReportBacktraceToIosIpsLog(eWrapper);
         LOG(RTLOG_ERROR, summary);
         LOG(RTLOG_ERROR, exceptionMsg.Str());
 #endif
@@ -192,7 +196,7 @@ void ExceptionManager::DumpException()
         for (auto ste : stackTrace) {
 #ifdef __APPLE__
             PRINT_ERROR("\t at %s%s%s(%s:%lld)\n", ste.className.Str(), ste.className.Length() > 0 ? "." : "",
-                       ste.methodName.Str(), ste.fileName.Str(), ste.lineNumber);
+                        ste.methodName.Str(), ste.fileName.Str(), ste.lineNumber);
 #endif
             LOG(RTLOG_ERROR, "\t at %s%s%s(%s:%ld)\n", ste.className.Str(), ste.className.Length() > 0 ? "." : "",
                 ste.methodName.Str(), ste.fileName.Str(), ste.lineNumber);

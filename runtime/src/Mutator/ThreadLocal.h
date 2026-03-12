@@ -70,7 +70,7 @@ public:
     {
         GetThreadLocalData()->foreignCJThread = cjthread;
     }
-    
+
     static void* GetForeignCJThread()
     {
         return GetThreadLocalData()->foreignCJThread;
