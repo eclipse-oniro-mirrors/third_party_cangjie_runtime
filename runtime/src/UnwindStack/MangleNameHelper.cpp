@@ -66,7 +66,7 @@ bool MangleNameHelper::IsNeedFilt() const
         return false;
     }
 
-    for (auto filtMangleName : filtMangleNameSet) {
+    for (const auto& filtMangleName : filtMangleNameSet) {
         if (mangleName.Find(filtMangleName.Str()) == 0) {
             return true;
         }

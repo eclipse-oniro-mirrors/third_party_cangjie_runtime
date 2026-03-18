@@ -7,6 +7,7 @@
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
     .text
+    .globl __CJ_Init_Start
     .p2align  4, 0x90
 __CJ_Init_Start:                        # @__CJ_Init_Start
     .cfi_startproc
@@ -25,6 +26,7 @@ __CJ_Init_Start:                        # @__CJ_Init_Start
                                             # -- End function
 
     .text
+    .globl __CJ_Fini_End
     .p2align  4, 0x90
 __CJ_Fini_End:                        # @__CJ_Fini_End
      .cfi_startproc
