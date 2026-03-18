@@ -39,12 +39,14 @@ struct ThreadLocalData {
 };
 
 struct CleanThreadLocalData {
+    CleanThreadLocalData();
     ~CleanThreadLocalData();
 };
 
 class ThreadLocal { // merge this to ThreadLocalData.
 public:
     static ThreadLocalData* GetThreadLocalData();
+    static void InitializeCleaner();
 
     static void SetMutator(Mutator* newMutator) { GetThreadLocalData()->mutator = newMutator; }
 
