@@ -311,8 +311,7 @@ public static func stubFunction<TRet>(
 
 参数：
 
-- stubCall: () -> Unit - 桩签名对应的调用表达式。
-- _: () -> TArg - 用于捕获属性或者字段的类型。
+- stubCall: () -> TRet - 桩签名对应的调用表达式。
 - matchers: Array\<[ArgumentMatcher](#class-argumentmatcher)> - 对应入参的参数匹配器。
 - prefixRefName: [Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<[String](../../core/core_package_api/core_package_structs.md#struct-string)> - 用于模拟类/接口成员的对象引用令牌，用于模拟静态声明的类型引用令牌，用于顶级声明的时为 None。
 - methodName: [String](../../core/core_package_api/core_package_structs.md#struct-string) - 方法的名称。
@@ -549,41 +548,9 @@ public func throws(exceptionFactory: () -> Exception): CardinalitySelector<Gette
 extend MethodActionSelector<Unit> {}
 ```
 
-功能：扩展 [MethodActionSelector](#class-methodactionselectortret)。
+功能：扩展 [MethodActionSelector](#class-methodactionselectortret) 。
 
 示例：
-
-<!-- run -->
-```cangjie
-import std.unittest.mock.*
-import std.unittest.mock.mockmacro.*
-
-class Printer {
-    func print(message: String): Bool { return true }
-}
-
-@Test
-func test() {
-    let printerMock = mock<Printer>()
-    @On(printerMock.print(_)).returns(false)
-    @On(printerMock.print("throw")).throws(TimeoutException())
-    @On(printerMock.print("fail")).fails()
-
-    @ExpectThrows[TimeoutException](printerMock.print("throw"))
-    @Expect(printerMock.print("something"), false)
-    // printerMock.print("fail") // expected to fail
-
-    let printer = Printer()
-    let printerSpy = spy(printer)
-    @On(printerSpy.print(_)).callsOriginal()
-    @On(printerSpy.print("hello")).returns(false)
-
-    @Expect(printerSpy.print("hello"), false)
-    @Expect(printerSpy.print("something"), true)
-}
-```
-
-示例:
 
 <!-- run -->
 ```cangjie
@@ -741,6 +708,10 @@ public static func capture<T>(listener: ValueListener<T>): TypedMatcher<T>
 
 功能：允许 listener 值监听器对类型为 T 的传入参数值进行处理。当 capture 的类型参数未指定时，将使用值监听器的类型参数值。
 
+> **注意：**
+>
+> 值监听器不允许在 @Called 的参数范围内使用。
+
 参数：
 
 - listener: [ValueListener](unittest_mock_package_interfaces.md#interface-valuelistenert)\<T> - 值监听器。
@@ -748,8 +719,6 @@ public static func capture<T>(listener: ValueListener<T>): TypedMatcher<T>
 返回值：
 
 - [TypedMatcher](#class-typedmatchert)\<T> - 拥有值监听器的类型匹配器。
-
-注意：值监听器不允许在 @Called 的参数范围内使用。
 
 ### static func default\<T>(T)
 
@@ -1806,7 +1775,7 @@ public static func fromStub<R>(
     objName: Option<String>,
     declarationName: String,
     callDescription: String,
-    lineNumber: Int64
+    _: Int64
 ): VerifyStatement
 ```
 
@@ -1819,7 +1788,7 @@ public static func fromStub<R>(
 - objName: [Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<[String](../../core/core_package_api/core_package_structs.md#struct-string)> - 被插桩的对象的名称。
 - declarationName: [String](../../core/core_package_api/core_package_structs.md#struct-string) - 声明的名称。
 - callDescription: [String](../../core/core_package_api/core_package_structs.md#struct-string) - 桩签名对应的调用表达式的字符串表达。
-- lineNumber: Int64 - 行号。
+- _: Int64 - 行号。
 
 返回值：
 
