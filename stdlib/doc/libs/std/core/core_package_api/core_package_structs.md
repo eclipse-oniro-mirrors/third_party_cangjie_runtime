@@ -3014,7 +3014,7 @@ public init()
 
 > **注意：**
 >
-> 未来版本即将废弃不再使用，可使用 [acquireArrayRawData](./core_package_funcs.md#func-acquirearrayrawdatatarrayt-where-t--ctype) 函数构造 CPointerHandle 实例。
+> 未来版本即将废弃，可使用 [acquireArrayRawData](./core_package_funcs.md#func-acquirearrayrawdatatarrayt-where-t--ctype) 函数构造 CPointerHandle 实例。
 
 示例：
 
@@ -3046,14 +3046,14 @@ public init(ptr: CPointer<T>, arr: Array<T>)
 
 功能：通过传入的 [CPointer](core_package_intrinsics.md#cpointert) 和 [Array](core_package_structs.md#struct-arrayt) 初始化一个 [CPointerHandle](core_package_structs.md#struct-cpointerhandlet-where-t--ctype)。
 
+> **注意：**
+>
+> 未来版本即将废弃，可使用 [acquireArrayRawData](./core_package_funcs.md#func-acquirearrayrawdatatarrayt-where-t--ctype) 函数构造 CPointerHandle 实例。
+
 参数：
 
 - ptr: [CPointer](core_package_intrinsics.md#cpointert)\<T> - 数组原始指针。
 - arr: [Array](core_package_structs.md#struct-arrayt)\<T> - 指针对应的仓颉数组。
-
-> **注意：**
->
-> 未来版本即将废弃不再使用，可使用 [acquireArrayRawData](./core_package_funcs.md#func-acquirearrayrawdatatarrayt-where-t--ctype) 函数构造 CPointerHandle 实例。
 
 示例：
 
@@ -6639,7 +6639,7 @@ Comparing 'apple' to 'apple': Ordering.EQ
 public func contains(str: String): Bool
 ```
 
-功能：判断原字符串中是否包含字符串 str。
+功能：判断原字符串中是否包含指定字符串。
 
 参数：
 
@@ -6647,7 +6647,7 @@ public func contains(str: String): Bool
 
 返回值：
 
-- [Bool](core_package_intrinsics.md#bool) - 如果字符串 str 在原字符串中，返回 true，否则返回 false。特别地，如果 str 字符串长度为 0，返回 true。
+- [Bool](core_package_intrinsics.md#bool) - 如果指定字符串在原字符串中，返回 true，否则返回 false。特别地，如果指定字符串长度为 0，返回 true。
 
 示例：
 

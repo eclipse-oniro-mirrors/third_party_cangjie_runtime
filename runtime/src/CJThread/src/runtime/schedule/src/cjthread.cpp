@@ -535,8 +535,14 @@ MRT_STATIC_INLINE void CJThreadExit(void)
 
 void *CJThreadEntry(struct CJThread *cjthread)
 {
+#ifdef __OHOS__
+    PushUIThreadStackTop(GetThreadStackTop());
+#endif
     // execute cjtrhead task
     cjthread->func(cjthread->argStart, cjthread->argSize);
+#ifdef __OHOS__
+    PopUIThreadStackTop();
+#endif
     // cjthread exit. Switch cjthread to cjthread0, release cjthread and switch the next
     CJThreadExit();
 
@@ -544,8 +550,41 @@ void *CJThreadEntry(struct CJThread *cjthread)
     return nullptr;
 }
 
-#ifdef __OHOS__
-void DecSingleModelC2NCount()
+#if defined(__OHOS__)
+unsigned long long GetThreadStackTop()
+{
+    Schedule* schedule = ScheduleGet();
+    if (schedule == nullptr || schedule->scheduleType != SCHEDULE_UI_THREAD) {
+        return 0;
+    }
+    Thread* thread = ThreadGet();
+    if (thread == nullptr) {
+        return 0;
+    }
+#if defined(__aarch64__)
+    return thread->context.sp;
+#elif defined(__x86_64__)
+    return thread->context.rsp;
+#else
+    return 0;
+#endif
+}
+
+unsigned long long GetUIThreadStackTop()
+{
+    Schedule* schedule = ScheduleGet();
+    if (schedule == nullptr || schedule->scheduleType != SCHEDULE_UI_THREAD) {
+        return 0;
+    }
+    CJThread* cjthread = CJThreadGet();
+    if (cjthread == nullptr || cjthread->threadStackTopList.size() == 0) {
+        return 0;
+    }
+    unsigned long long res = cjthread->threadStackTopList.back();
+    return res;
+}
+
+void PopUIThreadStackTop()
 {
     bool runtimeFinished = MapleRuntime::MRT_CheckRuntimeFinished();
     if (runtimeFinished) {
@@ -556,13 +595,13 @@ void DecSingleModelC2NCount()
         return;
     }
     CJThread* cjthread = CJThreadGet();
-    if (cjthread == nullptr || cjthread->singleModelC2NCount == 0) {
+    if (cjthread == nullptr || cjthread->threadStackTopList.size() == 0) {
         return;
     }
-    cjthread->singleModelC2NCount--;
+    cjthread->threadStackTopList.pop_back();
 }
 
-void AddSingleModelC2NCount()
+void PushUIThreadStackTop(unsigned long long stackTop)
 {
     bool runtimeFinished = MapleRuntime::MRT_CheckRuntimeFinished();
     if (runtimeFinished) {
@@ -576,7 +615,7 @@ void AddSingleModelC2NCount()
     if (cjthread == nullptr) {
         return;
     }
-    cjthread->singleModelC2NCount++;
+    cjthread->threadStackTopList.push_back(stackTop);
 }
 #endif
 
@@ -845,11 +884,6 @@ struct CJThread* CJThreadBuild(ScheduleHandle schedule, const struct CJThreadAtt
 
     atomic_store_explicit(&newCJThread->state, CJTHREAD_READY, std::memory_order_relaxed);
 
-#ifdef __OHOS__
-    newCJThread->stackInfo.stackLimit =
-        static_cast<unsigned long long int>(reinterpret_cast<uintptr_t>(newCJThread->stack.stackTopAddr));
-#endif
-
     return newCJThread;
 }
 
@@ -879,12 +913,43 @@ void ExclusiveExecutor(struct Thread* thread, struct CJThread* newCJThread)
     return;
 }
 
+// Called from ExclusiveScope.S assembly to avoid hardcoding of thread context offset,
+//  which differs across platforms due to sizeof(sem_t)
+void* ExclusiveGetThreadContext(struct Thread* thread)
+{
+    if (thread == nullptr) {
+        LOG(RTLOG_ERROR, "ExclusiveGetThreadContext received null thread.");
+        return nullptr;
+    }
+    return static_cast<void*>(&thread->context);
+}
+
+int IsExclusiveCJThread(struct CJThread* cjthread)
+{
+    if (cjthread == nullptr || cjthread->schedule == nullptr) {
+        return 0;
+    }
+    return cjthread->schedule->scheduleType == SCHEDULE_EXCLUSIVE ? 1 : 0;
+}
+
 // ExclusiveRestore restore from exclusive cjthread
 void ExclusiveRestore(struct CJThread* oldCJThread, struct Thread* thread,
                       struct CJThread* newCJThread, struct Processor* oldProcessor)
 {
+    if (oldCJThread == nullptr || thread == nullptr || newCJThread == nullptr || oldProcessor == nullptr) {
+        LOG(RTLOG_ERROR, "ExclusiveRestore oldCJThread=%p, thread=%p, newCJThread=%p, oldProcessor=%p",
+            oldCJThread, thread, newCJThread, oldProcessor);
+        return;
+    }
+
     struct Schedule* oldSchedule = oldCJThread->schedule;
     struct Schedule* newSchedule = newCJThread->schedule;
+
+    if (oldSchedule == nullptr || newSchedule == nullptr) {
+        LOG(RTLOG_ERROR, "ExclusiveRestore: invalid schedule detected. oldSchedule=%p, newSchedule=%p",
+            oldSchedule, newSchedule);
+        return;
+    }
 
     // Get saved values
     uintptr_t threadData = MapleRuntime::MRT_GetThreadLocalData();
@@ -1194,9 +1259,9 @@ int CJThreadPark(ParkCallbackFunc func, TraceEvent waitReason, void *arg)
 #endif
     TRACE_START_ASYNC(TRACE_CJTHREAD_PARK, cjthread->id);
 #ifdef __OHOS__
-    // cjthread is with foreign context if singleModelC2NCount size greater than 1.
+    // cjthread is with foreign context if threadStackTopList size greater than 1.
     // cjthread is on UI thread if schedule type is SCHEDULE_UI_THREAD.
-    if (cjthread->schedule->scheduleType == SCHEDULE_UI_THREAD && cjthread->singleModelC2NCount > 0) {
+    if (cjthread->schedule->scheduleType == SCHEDULE_UI_THREAD && cjthread->threadStackTopList.size() > 1) {
         HILOG_WARN(ERRNO_SCHD_UITHREAD_ERROR,
                    "parking cjthread with foreign function context on UI thread is not permitted.");
         return CJThreadParkInForeignThread(cjthread, func, arg);
@@ -1405,7 +1470,7 @@ bool ShouldWakeDirectly(Schedule* schedule, CJThread* cjthread)
     // just wake this schedule.
     if (schedule->scheduleType == SCHEDULE_UI_THREAD &&
         g_scheduleManager.postTaskFunc != nullptr &&
-        cjthread->singleModelC2NCount > 0) {
+        cjthread->threadStackTopList.size() > 1) {
         return true;
     }
 #else
