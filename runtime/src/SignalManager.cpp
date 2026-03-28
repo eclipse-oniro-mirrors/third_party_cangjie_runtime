@@ -24,7 +24,7 @@
 #include "Inspector/CjHeapData.h"
 #include "Heap/Collector/TaskQueue.h"
 #ifdef COV_SIGNALHANDLE
-extern "C" void __gcov_flush(void);
+extern "C" void __gcov_dump(void);
 #endif
 namespace MapleRuntime {
 
@@ -184,7 +184,7 @@ bool SignalManager::HandleUnexpectedSignal(int sig, siginfo_t* info, void* conte
     CheckSuspendState();
     PrintSignalHandlerStack(sig, info, context);
 #ifdef COV_SIGNALHANDLE
-    __gcov_flush();
+    __gcov_dump();
 #endif
 
     return false;
