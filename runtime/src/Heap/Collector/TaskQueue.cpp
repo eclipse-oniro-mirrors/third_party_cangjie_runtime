@@ -11,7 +11,7 @@
 
 #include "CollectorProxy.h"
 #ifdef COV_SIGNALHANDLE
-extern "C" void __gcov_flush(void);
+extern "C" void __gcov_dump(void);
 #endif
 namespace MapleRuntime {
 
@@ -48,7 +48,7 @@ bool GCExecutor::Execute(void* owner)
                 LOG(RTLOG_ERROR, "cjHeapData Init Failed");
             }
 #ifdef COV_SIGNALHANDLE
-            __gcov_flush();
+            __gcov_dump();
 #endif
             break;
         }
@@ -74,7 +74,7 @@ bool GCExecutor::Execute(void* owner)
                 LOG(RTLOG_ERROR, "cjHeapData Init Failed");
             }
 #ifdef COV_SIGNALHANDLE
-            __gcov_flush();
+            __gcov_dump();
 #endif
             break;
         }

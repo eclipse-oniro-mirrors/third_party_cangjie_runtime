@@ -62,7 +62,7 @@ public:
     void Traverse(std::function<bool(void*, T, Res*)> func, Res* result)
     {
         lock.LockRead();
-        for (auto kv : this->map) {
+        for (const auto& kv : this->map) {
             if (func(kv.first, kv.second, result)) {
                 lock.UnlockRead();
                 return;

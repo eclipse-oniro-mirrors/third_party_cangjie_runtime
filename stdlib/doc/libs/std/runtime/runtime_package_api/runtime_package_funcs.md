@@ -76,37 +76,6 @@ main() {
 }
 ```
 
-## func isGCRunning()
-
-```cangjie
-public func isGCRunning(): Bool
-```
-
-功能：GC 状态查询函数，用于检测当前虚拟机中是否有垃圾回收过程正在执行。
-
-返回值：
-
-- [Bool](../../core/core_package_api/core_package_intrinsics.md#bool) - 正在执行返回 `true`，否则返回 `false`。
-
-示例：
-
-<!-- verify -->
-```cangjie
-import std.runtime.*
-
-main() {
-    // 调用GC状态查询函数
-    let gcStatus = isGCRunning()
-    println("当前GC运行状态: ${gcStatus}")
-}
-```
-
-运行结果：
-
-```text
-当前GC运行状态: false
-```
-
 ## func gc(Bool)
 
 ```cangjie
@@ -505,6 +474,13 @@ public func registerSignalHandler(sig: Signal, handler: SignalHandlerFunc): Unit
 
 功能：注册信号的处理函数。同一个信号可以注册多个函数，信号触发时函数按照先进先出策略执行。如果 [SignalHandlerFunc](./runtime_package_types.md#type-signalhandlerfunc--int32---bool) 的返回值是 `true` 则停止后续函数的执行，否则继续执行后续函数，直到所有注册的函数执行完。
 
+> **注意：**
+>
+> - 不支持平台：Windows。
+> - 仅支持前 31 个可被捕获的非实时信号。
+> - 暂不支持 SIGBUS、SIGFPE、SIGSEGV 等中断信号。
+> - handler 暂不支持成员函数和 foreign 函数。
+
 参数：
 
 - sig: [Signal](./runtime_package_class.md#class-signal) - 目标信号。
@@ -513,13 +489,6 @@ public func registerSignalHandler(sig: Signal, handler: SignalHandlerFunc): Unit
 异常：
 
 - [IllegalArgumentException](../../core/core_package_api/core_package_exceptions.md#class-illegalargumentexception) - 若信号值超过 31 则抛出异常。
-
-> **注意：**
->
-> - 目前不支持 Windows 平台。
-> - 仅支持前 31 个可被捕获的非实时信号。
-> - 暂不支持 SIGBUS、SIGFPE、SIGSEGV 等中断信号。
-> - handler 暂不支持成员函数和 foreign 函数。
 
 示例：
 
@@ -585,6 +554,12 @@ public func resetSignalHandler(sigs: Array<Signal>): Unit
 
 功能：清空注册的信号处理函数，如果输入信号为空，则清空所有信号的注册函数。
 
+> **注意：**
+>
+> - 不支持平台：Windows。
+> - 仅支持前 31 个可被捕获的非实时信号。
+> - 暂不支持 SIGBUS、SIGFPE、SIGSEGV 等中断信号。
+
 参数：
 
 - sigs: [Array](../../core/core_package_api/core_package_structs.md#struct-arrayt)\<[Signal](./runtime_package_class.md#class-signal)> - 需要被重置的信号列表。
@@ -592,12 +567,6 @@ public func resetSignalHandler(sigs: Array<Signal>): Unit
 异常：
 
 - [IllegalArgumentException](../../core/core_package_api/core_package_exceptions.md#class-illegalargumentexception) - 若信号值超过 31 则抛出异常。
-
-> **注意：**
->
-> - 目前不支持 Windows 平台。
-> - 仅支持前 31 个可被捕获的非实时信号。
-> - 暂不支持 SIGBUS、SIGFPE、SIGSEGV 等中断信号。
 
 示例：
 
@@ -784,6 +753,13 @@ public func unregisterSignalHandler(sig: Signal, handler: SignalHandlerFunc): Un
 
 功能：取消注册信号的处理函数。
 
+> **注意：**
+>
+> - 不支持平台：Windows。
+> - 仅支持前 31 个可被捕获的非实时信号。
+> - 暂不支持 SIGBUS、SIGFPE、SIGSEGV 等中断信号。
+> - handler 暂不支持成员函数和 foreign 函数。
+
 参数：
 
 - sig: [Signal](./runtime_package_class.md#class-signal) - 需要取消注册的信号。
@@ -792,13 +768,6 @@ public func unregisterSignalHandler(sig: Signal, handler: SignalHandlerFunc): Un
 异常：
 
 - [IllegalArgumentException](../../core/core_package_api/core_package_exceptions.md#class-illegalargumentexception) - 若信号值超过 31 则抛出异常。
-
-> **注意：**
->
-> - 目前不支持 Windows 平台。
-> - 仅支持前 31 个可被捕获的非实时信号。
-> - 暂不支持 SIGBUS、SIGFPE、SIGSEGV 等中断信号。
-> - handler 暂不支持成员函数和 foreign 函数。
 
 示例：
 

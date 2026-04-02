@@ -131,7 +131,14 @@ unwindPCForC2NStub:
     callq   MRT_EnterSaferegion@PLT
     movq    %rax, -232(%rbp)
 #ifdef __OHOS__
-    callq   CJ_AddSingleModelC2NCount
+    callq   CJ_GetUIThreadStackTop
+    test    %rax, %rax
+    jz      .L_setstack_end
+    movq    %rax, -240(%rbp)
+    movq    %rsp, %rdi
+    callq   CJ_PushUIThreadStackTop
+    movq    -240(%rbp), %rax
+.L_setstack_end:
 #endif
 
     // Store rsp before coping arg6, arg7...
@@ -149,6 +156,12 @@ unwindPCForC2NStub:
     movq    %rbp, %r13
     addq    $32,  %r13
 
+#ifdef __OHOS__
+    // rax is the return value of CJ_GetUIThreadStackTop
+    TEST    %rax, %rax
+    jz      .L_copy
+    movq    %rax, %rsp
+#endif
     // copy arg6, arg7, ...(if existed)
 .L_copy:
     cmpq    %r13,    %r14
@@ -201,9 +214,16 @@ unwindPCForC2NStub:
 
     // Restore the value of rsp before coping arg6, arg7...
 #ifdef __OHOS__
-    callq   CJ_DecSingleModelC2NCount
+    callq   CJ_GetUIThreadStackTop
+    test    %rax, %rax
+    jz      .L_restore_sp
+    mov     %rax, %rsp
+    callq   CJ_PopUIThreadStackTop
+    jmp     .L_restore_sp_end
 #endif
+.L_restore_sp:
     movq    -240(%rbp), %rsp
+.L_restore_sp_end:
 
     // set potential return value
     movq    -48(%rbp), %rdx

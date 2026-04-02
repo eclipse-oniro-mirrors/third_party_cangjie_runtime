@@ -20,6 +20,7 @@
 #include "UnwindStack/MangleNameHelper.h"
 #include "Heap/Collector/CollectorResources.h"
 #include "Heap/Collector/GcRequest.h"
+#include "Inspector/CjHeapData.h"
 namespace MapleRuntime {
 std::mutex ExceptionManager::gUncaughtExceptionHandlerMtx;
 void ExceptionManager::OutOfMemory()
@@ -29,14 +30,24 @@ void ExceptionManager::OutOfMemory()
         eWrapper.SetThrowingOOME(true);
         eWrapper.SetFatalException(false);
         eWrapper.SetExceptionType(ExceptionWrapper::ExceptionType::OUT_OF_MEMORY);
-        {
-            // HeapDump before throwing OOM
-            const char* env = std::getenv("cjHeapDumpOnOOM");
-            CString s = CString(env).RemoveBlankSpace();
-            env = s.Str();
-            if (env && !strcmp(env, "on")) { // env variable: cjHeapDumpOnOOM=on/off
-                Heap::GetHeap().GetCollectorResources().RequestHeapDump(GCTask::TaskType::TASK_TYPE_DUMP_HEAP_OOM);
+
+        // ohos Fork child process to perform heap dump asynchronously
+        // check environment variable cjHeapDumpOnOOM=on/off
+        const char* env = std::getenv("cjHeapDumpOnOOM");
+        CString s = CString(env).RemoveBlankSpace();
+        env = s.Str();
+        if (env && !strcmp(env, "on")) {
+#if defined(__OHOS__) && (__OHOS__ == 1)
+            LOG(RTLOG_INFO, "start child process for OOM heap dump");
+            pid_t childPid = CjHeapData::ForkAndDumpHeap(-1, true);
+            if (childPid < 0) {
+                LOG(RTLOG_ERROR, "Failed to start child process for OOM heap dump");
             }
+            LOG(RTLOG_INFO, "start sleep 5s to wait child process finishing heapdump");
+            std::this_thread::sleep_for(std::chrono::seconds(5)); // wait 5s for child process to dump heap
+#else
+            Heap::GetHeap().GetCollectorResources().RequestHeapDump(GCTask::TaskType::TASK_TYPE_DUMP_HEAP_OOM);
+#endif
         }
         ThrowImplicitException(OOM);
     } else {
@@ -47,7 +58,6 @@ void ExceptionManager::OutOfMemory()
     }
     eWrapper.SetThrowingOOME(false);
 }
-
 MRT_OPTIONAL_DISABLE_TAIL_CALL
 void ExceptionManager::StackOverflow(uint32_t adjustedSize __attribute__((unused)), void* ip)
 {
@@ -138,7 +148,7 @@ void ExceptionManager::DumpException()
         if (str == nullptr) {
             LOG(RTLOG_FATAL, "Alloca memory failed when Cangjie dump uncaught exception.");
         }
-        for (auto ste : stackTrace) {
+        for (const auto& ste : stackTrace) {
             const int strLen = 10;
             char* str = static_cast<char*>(malloc(strLen * sizeof(char)));
             sprintf_s(str, strLen, "%ld", ste.lineNumber);
@@ -193,7 +203,7 @@ void ExceptionManager::DumpException()
 #endif
             LOG(RTLOG_ERROR, "\t ... Some frames are not displayed ...\n");
         }
-        for (auto ste : stackTrace) {
+        for (const auto& ste : stackTrace) {
 #ifdef __APPLE__
             PRINT_ERROR("\t at %s%s%s(%s:%lld)\n", ste.className.Str(), ste.className.Length() > 0 ? "." : "",
                         ste.methodName.Str(), ste.fileName.Str(), ste.lineNumber);

@@ -26,6 +26,8 @@
 #include "UnwindStack/PrintStackInfo.h"
 #include "UnwindStack/StackInfo.h"
 #include "UnwindStack/StackMetadataHelper.h"
+#include <Mutator/MutatorManager.h>
+
 namespace MapleRuntime {
 static bool g_oomIsTrigged = false;
 
@@ -55,11 +57,12 @@ void CjHeapData::ProcessHeap()
     CHECK_E(UNLIKELY(!ret), "theAllocator.ForEachObj() in DumpHeap() return false.");
 }
 
-void CjHeapData::DumpHeap()
+void CjHeapData::DumpHeap(bool needStopTheWorld)
 {
     // step1 - open file
     CString specifiedPath;
     if (dumpAfterOOM && !g_oomIsTrigged) {
+        LOG(RTLOG_INFO, "OOM DumpHeap dumpAfterOOM");
         g_oomIsTrigged = true;
         Logger::GetLogger().GetLogPath("cjHeapDumpLog", specifiedPath);
         auto pid = MapleRuntime::GetPid();
@@ -72,12 +75,12 @@ void CjHeapData::DumpHeap()
         if (specifiedPath.IsEmpty()) {
             // dump to current path
             fp = fopen(dumpFile.Str(), "wb");
-            PRINT_INFO("Heap dump log is writing into .%s%s ...\n", separator, dumpFile.Str());
+            LOG(RTLOG_INFO, "Heap dump log is writing into .%s%s ...\n", separator, dumpFile.Str());
         } else {
             // dump to specified path
             dumpFile = specifiedPath + separator + dumpFile;
             fp = fopen(dumpFile.Str(), "wb");
-            PRINT_INFO("Heap dump log is writing into %s ...\n", dumpFile.Str());
+            LOG(RTLOG_INFO, "Heap dump log is writing into %s ...\n", dumpFile.Str());
         }
     } else {
         // dump for cjprof
@@ -89,9 +92,14 @@ void CjHeapData::DumpHeap()
         return;
     }
     // step2 - write file
-    ScopedStopTheWorld scopedStopTheWorld("dump heap to file");
-    ProcessHeap();
-    WriteHeap();
+    if (needStopTheWorld) {
+        ScopedStopTheWorld scopedStopTheWorld("dump heap to file");
+        ProcessHeap();
+        WriteHeap();
+    } else {
+        ProcessHeap();
+        WriteHeap();
+    }
 
     // step3 - close file
     int ret = fclose(fp);
@@ -111,7 +119,7 @@ void CjHeapData::DumpHeap()
     }
 }
 
-bool CjHeapData::DumpHeap(int fd)
+bool CjHeapData::DumpHeap(int fd, bool needStopTheWorld)
 {
     int copyfd = dup(fd);
     if (copyfd == -1) {
@@ -124,9 +132,14 @@ bool CjHeapData::DumpHeap(int fd)
         return false;
     }
 
-    ScopedStopTheWorld scopedStopTheWorld("dump heap to fd");
-    ProcessHeap();
-    WriteHeap();
+    if (needStopTheWorld) {
+        ScopedStopTheWorld scopedStopTheWorld("dump heap to fd");
+        ProcessHeap();
+        WriteHeap();
+    } else {
+        ProcessHeap();
+        WriteHeap();
+    }
 
     // fclose will close fd
     // if fclose success, no need to close fd.
@@ -210,9 +223,7 @@ void CjHeapData::ProcessStructClass(TypeInfo* klass)
 void CjHeapData::ProcessStacktrace(RecordStackInfo* recordStackInfo)
 {
     std::vector<FrameInfo*> framesInStack = recordStackInfo->stacks;
-    if (stacktraces.find(recordStackInfo) == stacktraces.end()) {
-        stacktraces.insert(
-            std::pair<RecordStackInfo*, CjHeapDataStackTraceSerialNumber>(recordStackInfo, traceSerialNum++));
+    if (stacktraces.emplace(recordStackInfo, traceSerialNum++).second) {
         CString threadIdx = CString(threadId);
         LookupStringId(threadName);
         for (size_t i = 0; i < framesInStack.size(); ++i) {
@@ -650,7 +661,7 @@ void CjHeapData::WriteInstance(BaseObject*& obj, const u1 tag)
  */
 void CjHeapData::WriteString()
 {
-    for (auto string : strings) {
+    for (const auto& string : strings) {
         WriteRecordHeader(TAG_STRING_IN_UTF8, kCjHeapDataTime);
         CjHeapDataStringId id = string.second;
         AddStringId(id);
@@ -901,12 +912,44 @@ void CjHeapData::ModifyLength()
 
 CjHeapData::CjHeapDataStringId CjHeapData::LookupStringId(const CString& string)
 {
-    auto it = strings.find(string);
-    if (it != strings.end()) {
-        return it->second;
+    auto res = strings.insert(std::pair<CString, CjHeapDataStringId>(string, stringId));
+    if (res.second) {
+        stringId++;
     }
-    CjHeapData::CjHeapDataStringId id = stringId++;
-    strings.insert(std::pair<CString, CjHeapDataStringId>(string, id));
-    return id;
+    return res.first->second;
 }
+
+#if defined(__OHOS__) && (__OHOS__ == 1)
+pid_t CjHeapData::ForkAndDumpHeap(int fd, bool fromOOM)
+{
+    LOG(RTLOG_INFO, "enter ForkAndDumpHeap start to fork the child process");
+    pid_t childPid = fork();
+    if (childPid < 0) {
+        // Fork failed
+        LOG(RTLOG_ERROR, "Failed to fork child process for heap dump: %s", strerror(errno));
+        return -1;
+    } else if (childPid == 0) {
+        // Child process - execute heap dump
+        LOG(RTLOG_ERROR, "Child process started for heap dump, pid: %d", getpid());
+        CjHeapData* cjHeapData = new CjHeapData(fromOOM);
+        if (cjHeapData != nullptr) {
+            if (fd >= 0) {
+                cjHeapData->DumpHeap(fd, false);
+            } else {
+                cjHeapData->DumpHeap(false);
+            }
+            LOG(RTLOG_ERROR, "Child process completed heap dump successfully");
+            delete cjHeapData;
+        } else {
+            LOG(RTLOG_ERROR, "Failed to allocate CjHeapData in child process");
+        }
+
+        // Exit child process
+        _exit(0);
+    }
+    // Parent process - return child pid immediately without waiting
+    LOG(RTLOG_INFO, "Forked child process %d for heap dump, parent process continues", childPid);
+    return childPid;
+}
+#endif
 } // namespace MapleRuntime

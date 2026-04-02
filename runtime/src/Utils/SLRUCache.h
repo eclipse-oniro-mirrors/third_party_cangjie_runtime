@@ -44,7 +44,7 @@ public:
 
     ~LRUCache()
     {
-        for (auto pair : cache) {
+        for (const auto& pair : cache) {
             delete pair.second;
         }
         cache.clear();

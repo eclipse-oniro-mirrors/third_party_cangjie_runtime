@@ -298,7 +298,7 @@ if (OHOS_FLAG IN_LIST OHOS_FLAG_LIST)
     )
 elseif (WINDOWS_FLAG MATCHES 1)
     set(CMAKE_INIT_FLAGS "-Wno-unused-command-line-argument -fno-omit-frame-pointer -fvisibility=hidden -fno-exceptions \
-        -fno-rtti -ffunction-sections -Wall -fstack-protector-strong -Wunused-variable -Wno-inconsistent-dllimport")
+        -fno-rtti -Wall -fstack-protector-strong -Wunused-variable -Wno-inconsistent-dllimport")
 elseif (ANDROID_FLAG MATCHES 1 OR ANDROID_FLAG MATCHES 2)
     message("android toolchain, clang version=${CLANG_VERSION_STRING}")
     set(CMAKE_INIT_FLAGS "-Wno-unused-command-line-argument -fno-omit-frame-pointer \
@@ -421,7 +421,7 @@ endif ()
 include_directories(${BOUNDSCHECK_INCLUDE})
 
 # Set coverage compilation flags.
-set(CMAKE_COV_FLAGS "-fprofile-arcs -ftest-coverage -Xclang -coverage-cfg-checksum -Xclang -coverage-no-function-names-in-data -Xclang -coverage-version=A75\\*")
+set(CMAKE_COV_FLAGS "-fprofile-arcs -ftest-coverage -O0 -fno-inline")
 
 # Set compilation option of each module.
 option(BUILD_CJTHREAD "Build cjthread module" ON)
