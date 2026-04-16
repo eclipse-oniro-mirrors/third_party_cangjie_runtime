@@ -94,7 +94,7 @@ public func cbrt(x: Float16): Float16 {
  * @since 0.17.4
  */
 public func logBase(x: Float32, base: Float32): Float32 {
-    if (x <= 0.0 || base <= 0.0 || isEqual(base, 1.0)) {
+    if (x <= 0.0 || base <= 0.0 || base == 1.0) {
         throw IllegalArgumentException("The input parameter is invalid. Please enter a correct parameter.")
     }
     unsafe { return log(x) / log(base) }
@@ -121,7 +121,7 @@ public func logBase(x: Float32, base: Float32): Float32 {
  * @since 0.17.4
  */
 public func logBase(x: Float64, base: Float64): Float64 {
-    if (x <= 0.0 || base <= 0.0 || isEqual(base, 1.0)) {
+    if (x <= 0.0 || base <= 0.0 || base == 1.0) {
         throw IllegalArgumentException("The input parameter is invalid. Please enter a correct parameter.")
     }
     return unsafe { log(x) / log(base) }
@@ -148,7 +148,7 @@ public func logBase(x: Float64, base: Float64): Float64 {
  * @since 0.17.4
  */
 public func logBase(x: Float16, base: Float16): Float16 {
-    if (x <= 0.0 || base <= 0.0 || isEqual(base, 1.0)) {
+    if (x <= 0.0 || base <= 0.0 || base == 1.0) {
         throw IllegalArgumentException("The input parameter is invalid. Please enter a correct parameter.")
     }
     unsafe { return log(x) / log(base) }
@@ -416,6 +416,9 @@ public func atan(x: Float16): Float16 {
  * @since 0.17.4
  */
 public func sinh(x: Float64): Float64 {
+    if (x.isNaN()) {
+        return Float64.NaN
+    }
     unsafe { return CJ_MATH_Sinh(x) }
 }
 
@@ -428,6 +431,9 @@ public func sinh(x: Float64): Float64 {
  * @since 0.17.4
  */
 public func sinh(x: Float32): Float32 {
+    if (x.isNaN()) {
+        return Float32.NaN
+    }
     unsafe { return CJ_MATH_Sinhf(x) }
 }
 
@@ -440,6 +446,9 @@ public func sinh(x: Float32): Float32 {
  * @since 0.17.4
  */
 public func sinh(x: Float16): Float16 {
+    if (x.isNaN()) {
+        return Float16.NaN
+    }
     unsafe { return Float16(CJ_MATH_Sinh(Float64(x))) }
 }
 
@@ -452,6 +461,9 @@ public func sinh(x: Float16): Float16 {
  * @since 0.17.4
  */
 public func cosh(x: Float64): Float64 {
+    if (x.isNaN()) {
+        return Float64.NaN
+    }
     unsafe { return CJ_MATH_Cosh(x) }
 }
 
@@ -464,6 +476,9 @@ public func cosh(x: Float64): Float64 {
  * @since 0.17.4
  */
 public func cosh(x: Float32): Float32 {
+    if (x.isNaN()) {
+        return Float32.NaN
+    }
     unsafe { return Float32(CJ_MATH_Cosh(Float64(x))) }
 }
 
@@ -476,6 +491,9 @@ public func cosh(x: Float32): Float32 {
  * @since 0.17.4
  */
 public func cosh(x: Float16): Float16 {
+    if (x.isNaN()) {
+        return Float16.NaN
+    }
     unsafe { return Float16(CJ_MATH_Cosh(Float64(x))) }
 }
 
@@ -488,6 +506,9 @@ public func cosh(x: Float16): Float16 {
  * @since 0.17.4
  */
 public func tanh(x: Float64): Float64 {
+    if (x.isNaN()) {
+        return Float64.NaN
+    }
     unsafe { return CJ_MATH_Tanh(x) }
 }
 
@@ -500,6 +521,9 @@ public func tanh(x: Float64): Float64 {
  * @since 0.17.4
  */
 public func tanh(x: Float32): Float32 {
+    if (x.isNaN()) {
+        return Float32.NaN
+    }
     unsafe { return CJ_MATH_Tanhf(x) }
 }
 
@@ -512,6 +536,9 @@ public func tanh(x: Float32): Float32 {
  * @since 0.17.4
  */
 public func tanh(x: Float16): Float16 {
+    if (x.isNaN()) {
+        return Float16.NaN
+    }
     unsafe { return Float16(CJ_MATH_Tanh(Float64(x))) }
 }
 
@@ -524,6 +551,9 @@ public func tanh(x: Float16): Float16 {
  * @since 0.17.4
  */
 public func asinh(x: Float64): Float64 {
+    if (x.isNaN()) {
+        return Float64.NaN
+    }
     unsafe { return CJ_MATH_Asinh(x) }
 }
 
@@ -536,6 +566,9 @@ public func asinh(x: Float64): Float64 {
  * @since 0.17.4
  */
 public func asinh(x: Float32): Float32 {
+    if (x.isNaN()) {
+        return Float32.NaN
+    }
     unsafe { return CJ_MATH_Asinhf(x) }
 }
 
@@ -548,6 +581,9 @@ public func asinh(x: Float32): Float32 {
  * @since 0.17.4
  */
 public func asinh(x: Float16): Float16 {
+    if (x.isNaN()) {
+        return Float16.NaN
+    }
     unsafe { return Float16(CJ_MATH_Asinh(Float64(x))) }
 }
 
@@ -2161,6 +2197,9 @@ public func clamp(v: Float64, min: Float64, max: Float64): Float64 {
  * @since 0.25.2
  */
 public func round(x: Float64): Float64 {
+    if (x.isNaN()) {
+        return Float64.NaN
+    }
     var result: Float64 = abs(x)
     // note: if result >= 1e16, Float64(1e16) + 1 = ceil(Float64(1e16) + 0.9)
     if (result >= 1e16) {
@@ -2197,6 +2236,9 @@ public func round(x: Float64): Float64 {
  * @since 0.25.2
  */
 public func round(x: Float32): Float32 {
+    if (x.isNaN()) {
+        return Float32.NaN
+    }
     var result: Float32 = abs(x)
     // note: if result >= 1e8, Float32(1e8) + 1 != ceil(Float32(1e8) + 0.9)
     if (result >= 1e8) {
@@ -2233,6 +2275,9 @@ public func round(x: Float32): Float32 {
  * @since 0.25.2
  */
 public func round(x: Float16): Float16 {
+    if (x.isNaN()) {
+        return Float16.NaN
+    }
     var result: Float16 = abs(x)
     // note: if result >= 1e4, Float16(1e4) + 1 != ceil(Float16(1e4) + 0.5)
     if (result >= 1e4) {
@@ -2288,7 +2333,10 @@ public func atan2(y: Float16, x: Float16): Float16 {
  * ref: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fmod.html
  */
 public func fmod(x: Float64, y: Float64): Float64 {
-    if (isEqual(x, Float64.Inf) || isEqual(y, 0.0)) {
+    if (x.isNaN() || y.isNaN()) {
+        return Float64.NaN
+    }
+    if (x.isInf() || y == 0.0) {
         throw IllegalArgumentException("The input parameter is invalid. Please enter a correct parameter.")
     }
     return unsafe { CJ_MATH_Fmod(x, y) }
@@ -2301,7 +2349,10 @@ public func fmod(x: Float64, y: Float64): Float64 {
  * ref: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fmod.html
  */
 public func fmod(x: Float32, y: Float32): Float32 {
-    if (isEqual(x, Float32.Inf) || isEqual(y, 0.0)) {
+    if (x.isNaN() || y.isNaN()) {
+        return Float32.NaN
+    }
+    if (x.isInf() || y == 0.0) {
         throw IllegalArgumentException("The input parameter is invalid. Please enter a correct parameter.")
     }
     return unsafe { CJ_MATH_Fmodf(x, y) }
@@ -2314,7 +2365,10 @@ public func fmod(x: Float32, y: Float32): Float32 {
  * ref: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fmod.html
  */
 public func fmod(x: Float16, y: Float16): Float16 {
-    if (isEqual(x, Float16.Inf) || isEqual(y, 0.0)) {
+    if (x.isNaN() || y.isNaN()) {
+        return Float16.NaN
+    }
+    if (x.isInf() || y == 0.0) {
         throw IllegalArgumentException("The input parameter is invalid. Please enter a correct parameter.")
     }
     return unsafe { Float16(CJ_MATH_Fmod(Float64(x), Float64(y))) }

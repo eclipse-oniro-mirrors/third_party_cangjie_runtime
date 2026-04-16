@@ -85,7 +85,7 @@ public class Future<T> {
             case v: FutureOk<T> => return v.value
             case e: FutureExcept => throw e.except
             case e: FutureErr => throw e.err
-            case _ => return get()
+            case _ => throw IllegalStateException("Future result is in an unexpected state.")
         }
     }
 
@@ -103,7 +103,7 @@ public class Future<T> {
             case v: FutureOk<T> => return v.value
             case e: FutureExcept => throw e.except
             case e: FutureErr => throw e.err
-            case _ => return get()
+            case _ => throw IllegalStateException("Future result is in an unexpected state.")
         }
     }
 
@@ -133,7 +133,7 @@ public class Future<T> {
             case v: FutureOk<T> => return v.value
             case e: FutureExcept => throw e.except
             case e: FutureErr => throw e.err
-            case _ => return get()
+            case _ => throw IllegalStateException("Future result is in an unexpected state.")
         }
     }
 
