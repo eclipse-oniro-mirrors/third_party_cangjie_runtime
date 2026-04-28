@@ -109,6 +109,7 @@ extern void CJ_RawAddressDestroy(struct SockAddr* addrPtr)
     if (addrPtr != NULL) {
         if (addrPtr->sockaddr != NULL) {
             free(addrPtr->sockaddr);
+            addrPtr->sockaddr = NULL;
         }
         free(addrPtr);
     }

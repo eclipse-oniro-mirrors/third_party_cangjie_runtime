@@ -278,7 +278,9 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         var result: HashSet<R> = HashSet<R>()
         let len = entries.size
         for (i in 0..len) {
-            result.add(transform(entries[i].key))
+            if (entries[i].hash >= 0) {
+                result.add(transform(entries[i].key))
+            }
         }
         return result
     }
@@ -295,7 +297,7 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         var result: HashSet<T> = HashSet<T>()
         let len = entries.size
         for (i in 0..len) {
-            if (predicate(entries[i].key)) {
+            if (entries[i].hash >= 0 && predicate(entries[i].key)) {
                 result.add(entries[i].key)
             }
         }
@@ -314,9 +316,11 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         var result: HashSet<R> = HashSet<R>()
         let len = entries.size
         for (i in 0..len) {
-            match (transform(entries[i].key)) {
-                case Some(v) => result.add(v)
-                case None => continue
+            if (entries[i].hash >= 0) {
+                match (transform(entries[i].key)) {
+                    case Some(v) => result.add(v)
+                    case None => continue
+                }
             }
         }
         return result
@@ -332,7 +336,9 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         let entries = myMap.entries
         let len = entries.size
         for (i in 0..len) {
-            action(entries[i].key)
+            if (entries[i].hash >= 0) {
+                action(entries[i].key)
+            }
         }
     }
 
@@ -347,7 +353,7 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         let entries = myMap.entries
         let len = entries.size
         for (i in 0..len) {
-            if (!predicate(entries[i].key)) {
+            if (entries[i].hash >= 0 && !predicate(entries[i].key)) {
                 return false
             }
         }
@@ -365,7 +371,7 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         let entries = myMap.entries
         let len = entries.size
         for (i in 0..len) {
-            if (predicate(entries[i].key)) {
+            if (entries[i].hash >= 0 && predicate(entries[i].key)) {
                 return true
             }
         }
@@ -383,7 +389,7 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         let entries = myMap.entries
         let len = entries.size
         for (i in 0..len) {
-            if (predicate(entries[i].key)) {
+            if (entries[i].hash >= 0 && predicate(entries[i].key)) {
                 return false
             }
         }
@@ -403,7 +409,9 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         let entries = myMap.entries
         let len = entries.size
         for (i in 0..len) {
-            result = operation(result, entries[i].key)
+            if (entries[i].hash >= 0) {
+                result = operation(result, entries[i].key)
+            }
         }
         return result
     }
@@ -421,9 +429,21 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
         }
         let entries = myMap.entries
         let len = entries.size
-        var result: T = entries[0].key
-        for (i in 1..len) {
-            result = operation(result, entries[i].key)
+        var index = 0
+        var result: T = unsafe { zeroValue<T>() }
+        while (index < len) {
+            if (entries[index].hash >= 0) {
+                result = entries[index].key
+                index++
+                break
+            }
+            index++
+        }
+        while (index < len) {
+            if (entries[index].hash >= 0) {
+                result = operation(result, entries[index].key)
+            }
+            index++
         }
         return result
     }
