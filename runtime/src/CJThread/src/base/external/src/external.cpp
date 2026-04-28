@@ -20,9 +20,12 @@ struct SchdfdManager *SchdfdManagerInit()
     if (schdfdManager == nullptr) {
         return nullptr;
     }
-    schdfdManager->initLock = PTHREAD_MUTEX_INITIALIZER;
     for (int i = 0; i < SCHDFD_SLOTS_MAX_LAYER; i++) {
         schdfdManager->slots[i] = nullptr;
+    }
+    if (pthread_mutex_init(&schdfdManager->initLock, nullptr) != 0) {
+        free(schdfdManager);
+        return nullptr;
     }
     return schdfdManager;
 }
@@ -53,6 +56,7 @@ void FreeSchdfdManager(struct SchdfdManager *schdfdManager)
         slots[i] = nullptr;
     }
 
+    pthread_mutex_destroy(&schdfdManager->initLock);
     free(schdfdManager);
 }
 
