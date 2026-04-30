@@ -25,7 +25,14 @@
 #include "Flags.h"
 
 namespace MapleRuntime {
+#ifdef __arm__
+const size_t TYPEINFO_PTR_SIZE = sizeof(TypeInfo*) + 4;
+#else
+const size_t TYPEINFO_PTR_SIZE = sizeof(TypeInfo*);
+#endif
+
 typedef void *(*GenericiFn)(U32 size, TypeInfo* args[]);
+
 TypeInfo* ExtensionData::GetInterfaceTypeInfo(U32 argsNum, TypeInfo** args) const
 {
     if (isInterfaceTypeInfo) {
@@ -35,12 +42,6 @@ TypeInfo* ExtensionData::GetInterfaceTypeInfo(U32 argsNum, TypeInfo** args) cons
     TypeInfo* itf = reinterpret_cast<TypeInfo*>(TypeTemplate::ExecuteGenericFunc(iFn, argsNum, args));
     return itf;
 }
-
-#ifdef __arm__
-const size_t TYPEINFO_PTR_SIZE = sizeof(TypeInfo*) + 4;
-#else
-const size_t TYPEINFO_PTR_SIZE = sizeof(TypeInfo*);
-#endif
 
 CString TypeTemplate::GetTypeInfoName(U32 argSize, TypeInfo *args[])
 {
@@ -156,7 +157,7 @@ void TypeInfo::TryInitMTable()
     }
 }
 
-MTableDesc::MTableDesc(BIT_TYPE bitmap_)
+MTableDesc::MTableDesc(ArchUInt bitmap_)
 {
     mTableBitmap.tag = bitmap_;
 }
@@ -168,7 +169,7 @@ void TypeInfo::TryInitMTableNoLock()
         auto& tim = TypeInfoManager::GetTypeInfoManager();
         auto desc = tim.GetMTableDesc(tiUUID);
         if (desc == nullptr) {
-            BIT_TYPE bitmap = GetResolveBitmapFromMTableDesc();
+            ArchUInt bitmap = GetResolveBitmapFromMTableDesc();
             desc = new (std::nothrow) MTableDesc(bitmap);
             CHECK_DETAIL(desc != nullptr, "fail to allocate MTableDesc");
             tim.RecordMTableDesc(tiUUID, desc);
