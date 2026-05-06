@@ -468,7 +468,7 @@ bool CJFileLoader::DoInitImage(BaseFile* baseFile) const
         if (reinterpret_cast<void*>(func) != nullptr) {
             using FuncType = void (*)();
             FuncType initAddr = reinterpret_cast<FuncType>(func);
-#if defined(__OHOS__)
+#if defined(__OHOS__) || defined(__IOS__)
             InitCJLibraryStub(reinterpret_cast<void*>(initAddr));
 #else
             Mutator* mutator = ThreadLocal::GetMutator();
@@ -513,13 +513,9 @@ bool CJFileLoader::CheckPackageCompatibility(BaseFile* file)
     if (file == nullptr) {
         return false;
     }
-#ifdef __arm__
-    bool isCompatible = true;
-#else
     CString packageName = file->GetRealPath();
     CString packageVersion = file->GetSDKVersion();
     bool isCompatible = compatibility.CheckPackageCompatibility(packageName, packageVersion);
-#endif
     file->SetFileCompatibility(isCompatible);
     AddLoadedFiles(file);
     return isCompatible;
