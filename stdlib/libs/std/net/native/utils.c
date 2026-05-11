@@ -89,7 +89,12 @@ extern struct SockAddr* CJ_RawAddressCreate(struct sockaddr_storage* arr, sockle
     if (sockaddr == NULL) {
         return NULL;
     }
-    sockaddr->sockaddr = arr;
+    sockaddr->sockaddr = malloc(size);
+    if (sockaddr->sockaddr == NULL) {
+        free(sockaddr);
+        return NULL;
+    }
+    memcpy_s(sockaddr->sockaddr, size, arr, size);
     sockaddr->addrLen = size;
     return sockaddr;
 }
@@ -102,6 +107,10 @@ extern socklen_t CJ_RawAddressLenGet(struct SockAddr* addrPtr)
 extern void CJ_RawAddressDestroy(struct SockAddr* addrPtr)
 {
     if (addrPtr != NULL) {
+        if (addrPtr->sockaddr != NULL) {
+            free(addrPtr->sockaddr);
+            addrPtr->sockaddr = NULL;
+        }
         free(addrPtr);
     }
     return;
