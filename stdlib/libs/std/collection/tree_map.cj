@@ -1561,13 +1561,7 @@ class Node<K, V> where K <: Comparable<K> {
     }
 
     func quickEquals(that: Node<K, V>): Bool {
-        if (this.entrySize == that.entrySize && this.entrySize != 0) {
-            if (this.entries[0].key == that.entries[0].key) {
-                return true
-            }
-            return false
-        }
-        return false
+        refEq(this, that)
     }
 
     func isEmpty(): Bool {
