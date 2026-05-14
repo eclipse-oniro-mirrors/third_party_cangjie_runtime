@@ -11,7 +11,6 @@
 package std.reflect
 
 import std.collection.*
-import std.sync.*
 
 /**
  * Contains reflective information about classes.
