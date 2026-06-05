@@ -6,7 +6,6 @@
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
-
 #include "PrintStackInfo.h"
 
 #include "Common/StackType.h"
@@ -19,9 +18,17 @@ void PrintStackInfo::FillInStackTrace()
     CheckTopUnwindContextAndInit(uwContext);
     while (!uwContext.frameInfo.mFrame.IsAnchorFrame(anchorFA)) {
         AnalyseAndSetFrameType(uwContext);
-        if (uwContext.frameInfo.GetFrameType() == FrameType::MANAGED) {
+
+        FrameType currentFrameType = uwContext.frameInfo.GetFrameType();
+        if (currentFrameType == FrameType::MANAGED) {
             stack.emplace_back(uwContext.frameInfo);
         }
+#ifdef INTERPRETER_ENABLED
+        if (currentFrameType == FrameType::INTERPRETER_I2I || currentFrameType == FrameType::INTERPRETER_C2I ||
+            currentFrameType == FrameType::INTERPRETER_PROLOGUE) {
+            stack.emplace_back(uwContext.frameInfo);
+        }
+#endif
 
         UnwindContext caller;
         lastFrameType = uwContext.frameInfo.GetFrameType();

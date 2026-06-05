@@ -169,7 +169,7 @@ struct BenchStepEntry {
         let caseId: TestCaseId,
         let measurementInfo: MeasurementInfo
     ) {
-        result.calculate()
+        result.calculate(measurementInfo)
     }
 }
 

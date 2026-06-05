@@ -29,6 +29,8 @@
 #include "UnwindStack/MangleNameHelper.h"
 #include "Loader/CjFileLoader/CjFileLoader.h"
 #include "LoaderManager.h"
+#include "Interpreter/InterpreterSpecific.h"
+#include "Interpreter/RuntimeAPI.h"
 #if defined(__OHOS__) && (__OHOS__ == 1)
 #include "Inspector/FileStream.h"
 #include "Inspector/ProfilerAgentImpl.h"
@@ -298,6 +300,28 @@ RTErrorCode InitCJRuntime(const struct RuntimeParam* param)
     return E_OK;
 }
 
+#ifdef INTERPRETER_ENABLED
+RTErrorCode InitCJInterpreter(const struct InterpreterParam* param)
+{
+    if (g_runtimeFinished.load()) {
+        LOG(RTLOG_ERROR, "Interpreter initialization started too late, runtime is already fully initialized.");
+        return E_STATE;
+    }
+    if (MapleRuntime::Runtime::CurrentRef() == nullptr) {
+        LOG(RTLOG_ERROR, "Cangjie runtime should be initialized before interpreter initialization.");
+        return E_STATE;
+    }
+    if (param == nullptr) {
+        LOG(RTLOG_ERROR, "Interpreter initialization parameter is null.");
+        return E_ARGS;
+    }
+#if defined(GENERAL_ASAN_SUPPORT_INTERFACE)
+    MapleRuntime::Sanitizer::AsanRead(param, sizeof(struct InterpreterParam));
+#endif
+    return MapleRuntime::InitInterpreter(*param);
+}
+#endif
+
 void* InitUIScheduler()
 {
     if (!g_runtimeInited.load()) {
@@ -457,7 +481,8 @@ ScheduleHandle GetScheduler()
 }
 
 CJThreadHandle RunCJTaskImpl(const CJTaskFunc func, void* args, int num = 0, CJThreadSpecificDataInner* data = nullptr,
-                             ScheduleHandle schedule = nullptr, bool isSignal = false)
+                             ScheduleHandle schedule = nullptr,
+                             CJThreadCreateSource createSource = CJTHREAD_CREATE_SOURCE_DEFAULT)
 {
     MapleRuntime::ScopedEntryTrace trace("CJRT_INVOKE_CJTASK_ASYNC");
     if (!CheckRuntimeValid(func)) {
@@ -472,7 +497,7 @@ CJThreadHandle RunCJTaskImpl(const CJTaskFunc func, void* args, int num = 0, CJT
         LOG(RTLOG_ERROR, "new future failed.\n");
         return nullptr;
     }
-    if (isSignal) {
+    if (createSource == CJTHREAD_CREATE_SOURCE_SIGNAL) {
         fi->autoRelease = true;  // Mark for auto-release after signal task execution
     }
     {
@@ -497,7 +522,7 @@ CJThreadHandle RunCJTaskImpl(const CJTaskFunc func, void* args, int num = 0, CJT
     lwtData.threadObject = nullptr;
     lwtData.obj = fi;
     CJThreadHandle handle = CJThreadNewToSchedule(scheduler, (const struct CJThreadAttr*)(&attr), UserFuncExecutor,
-                                                  &lwtData, sizeof(lwtData), isSignal);
+                                                  &lwtData, sizeof(lwtData), createSource);
     if (handle == nullptr) {
         LOG(RTLOG_ERROR, "failed to create cjthread.\n");
         std::lock_guard<std::mutex> lck(g_mtx);
@@ -513,7 +538,7 @@ CJThreadHandle RunCJTaskImpl(const CJTaskFunc func, void* args, int num = 0, CJT
 CJThreadHandle RunCJTask(const CJTaskFunc func, void* args) { return RunCJTaskImpl(func, args); }
 CJThreadHandle RunCJTaskSignal(const CJTaskFunc func, void* args)
 {
-    return RunCJTaskImpl(func, args, 0, nullptr, nullptr, true);
+    return RunCJTaskImpl(func, args, 0, nullptr, nullptr, CJTHREAD_CREATE_SOURCE_SIGNAL);
 }
 
 CJThreadHandle RunCJTaskToSchedule(const CJTaskFunc func, void* args, ScheduleHandle schedule)

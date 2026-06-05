@@ -77,7 +77,7 @@
 //                 | arg7         |
 //   stub rsp  --> | arg6         | <== MCC_N2CStub frame ends at here
 
-    .text
+    .section __TEXT,__cjrt_text,regular
     .align 2
     .global   _CJ_MCC_N2CStub
 _CJ_MCC_N2CStub:
@@ -119,7 +119,7 @@ _CJ_MCC_N2CStub:
 
     // store whether new CJThread result in -60(%rbp)
     // and use it after calling Cangjie function.
-    callq   _MRT_TryNewAndRunCJThread
+    callq   _MRT_NewForeignCJThread
     mov     %al,  -60(%rbp)
 
     // mutator mustn't be in safe region before setting context.
@@ -198,7 +198,7 @@ _unwindPCForN2CStub:
     mov     -60(%rbp), %al
     cmp     $0, %al
     je      .L_no_need_end
-    callq   _MRT_EndCJThread
+    callq   _MRT_EndForeignCJThread
     cmpq    $1, %rax
     je      .L_none_enter
 .L_no_need_end:
@@ -237,7 +237,7 @@ _unwindPCForN2CStub:
     retq
     .cfi_endproc
 
-    .text
+    .section __TEXT,__cjrt_text,regular
     .align 2
     .global   _InitCJLibraryStub
 _InitCJLibraryStub:
@@ -256,7 +256,7 @@ _InitCJLibraryStub:
     retq
     .cfi_endproc
 
-    .text
+    .section __TEXT,__cjrt_text,regular
     .align 2
     .global   _ExecuteCangjieStub
 _ExecuteCangjieStub:
@@ -270,7 +270,7 @@ _ExecuteCangjieStub:
     retq
     .cfi_endproc
 
-    .text
+    .section __TEXT,__cjrt_text,regular
     .align 2
     .global   _ApplyCangjieMethodStub
     .global   _ApplyCangjieMethodStubFloat32
