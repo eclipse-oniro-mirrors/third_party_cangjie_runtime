@@ -68,6 +68,7 @@ extern "C" size_t MCC_GetNativeThreadNumber();
 extern "C" size_t MCC_GetGCCount();
 extern "C" uint64_t MCC_GetGCTimeUs();
 extern "C" size_t MCC_GetGCFreedSize();
+extern "C" bool MCC_IsGCRunning();
 
 extern "C" bool MCC_StartCpuProfiling();
 extern "C" bool MCC_StopCpuProfiling(int fd);
@@ -114,6 +115,7 @@ extern "C" MRT_EXPORT int32_t __ccc_personality_v0();
 // Add prefix "CJ_" to MCC_*.
 extern "C" MRT_EXPORT void CJ_MCC_C2NStub(...);
 extern "C" MRT_EXPORT void CJ_MCC_N2CStub(...);
+extern "C" MRT_EXPORT void CJ_MCC_StackGrowStub(...);
 extern "C" MRT_EXPORT void* CJ_MCC_ExclusiveScope(...);
 extern "C" MRT_EXPORT ArrayRef CJ_MCC_DecodeStackTrace(const ArrayRef pcArray, const TypeInfo* steObjInfo,
                                                        const TypeInfo* steArrayInfo, const TypeInfo* charArrayInfo);

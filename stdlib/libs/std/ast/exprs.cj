@@ -655,6 +655,23 @@ public class LitConstExpr <: Expr {
     }
 }
 
+// Appends "<...>" type arguments and synthesizes missing comma tokens between adjacent type nodes.
+private func appendExprTypeArguments(ret: Tokens, lAngle: Token, typeArgs: ArrayList<TypeNode>, commas: Tokens,
+    rAngle: Token): Tokens {
+    if (!typeArgs.isEmpty()) {
+        ret.append(lAngle)
+        for (i in 0..typeArgs.size) {
+            ret.append(typeArgs[i].toTokens())
+            if (i != typeArgs.size - 1) {
+                let comma = commas.tryGet(i) ?? Token(TokenKind.COMMA)
+                ret.append(comma)
+            }
+        }
+        ret.append(rAngle)
+    }
+    ret
+}
+
 public class RefExpr <: Expr {
     init(identifier: Token, lAngle: Token, typeArgs: ArrayList<TypeNode>, commas: Tokens, rAngle: Token) {
         identifier_ = identifier
@@ -737,18 +754,7 @@ public class RefExpr <: Expr {
     }
     public func toTokens(): Tokens {
         var ret = Tokens().append(identifier_)
-        if (!typeArgs_.isEmpty()) {
-            ret.append(lAngle_)
-            for (i in 0..typeArgs_.size) {
-                ret.append(typeArgs_[i].toTokens())
-                if (i != typeArgs_.size - 1) {
-                    let comma = commas.tryGet(i) ?? Token(TokenKind.COMMA)
-                    ret.append(comma)
-                }
-            }
-            ret.append(rAngle_)
-        }
-        ret
+        appendExprTypeArguments(ret, lAngle_, typeArgs_, commas, rAngle_)
     }
 
     public func traverse(v: Visitor): Unit {
@@ -1496,18 +1502,7 @@ public class MemberAccess <: Expr {
             addParen(ret, postfixExpr_, this, addOnEqualPred: false)
         }
         ret.append(dot_).append(ident_)
-        if (!typeArgs_.isEmpty()) {
-            ret.append(lAngle_)
-            for (i in 0..typeArgs_.size) {
-                ret.append(typeArgs_[i].toTokens())
-                if (i != typeArgs_.size - 1) {
-                    let comma = commas.tryGet(i) ?? Token(TokenKind.COMMA)
-                    ret.append(comma)
-                }
-            }
-            ret.append(rAngle_)
-        }
-        ret
+        appendExprTypeArguments(ret, lAngle_, typeArgs_, commas, rAngle_)
     }
 
     public func traverse(v: Visitor): Unit {
@@ -3070,10 +3065,7 @@ public class ArrayLiteral <: Expr {
         if (indent != 0 || beginNode) {
             currentIndent++
         }
-        for (i in 0..elements_.size) {
-            ret += getIndent(currentIndent) + "-elements: ${i}, "
-            ret += elements_[i].dump(currentIndent)
-        }
+        ret += dumpNodes("-elements", elements_, currentIndent)
         ret += getIndent(indent) + "}\n"
         ret
     }
@@ -3171,10 +3163,7 @@ public class TupleLiteral <: Expr {
         if (indent != 0 || beginNode) {
             currentIndent++
         }
-        for (i in 0..elements_.size) {
-            ret += getIndent(currentIndent) + "-elements: ${i}, "
-            ret += elements_[i].dump(currentIndent)
-        }
+        ret += dumpNodes("-elements", elements_, currentIndent)
         ret += getIndent(indent) + "}\n"
         ret
     }

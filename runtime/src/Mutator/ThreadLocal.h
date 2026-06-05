@@ -12,6 +12,8 @@
 
 #include <cstdint>
 #include "Base/RwLock.h"
+#include "Interpreter/Options.h"
+#include "Interpreter/RTInterface.h"
 
 namespace MapleRuntime {
 class AllocBuffer;
@@ -32,10 +34,18 @@ struct ThreadLocalData {
     uint64_t safepointState;
     uint64_t tid;
     void* foreignCJThread;
+#ifdef INTERPRETER_ENABLED
+    // Duplicate of Mutator::interpreterCJThreadData for fast access.
+    // Should be updated together with mutator field.
+    DYN_CJThreadSpecificData interpreterCJThreadData;
+#endif
     // Internal thread local var.
     ThreadType threadType;
     bool isCJProcessor;
     void* threadCache;
+
+public:
+    void SetMutator(Mutator* newMutator);
 };
 
 struct CleanThreadLocalData {
@@ -48,7 +58,7 @@ public:
     static ThreadLocalData* GetThreadLocalData();
     static void InitializeCleaner();
 
-    static void SetMutator(Mutator* newMutator) { GetThreadLocalData()->mutator = newMutator; }
+    static void SetMutator(Mutator* newMutator) { GetThreadLocalData()->SetMutator(newMutator); }
 
     static Mutator* GetMutator() { return GetThreadLocalData()->mutator; }
 
@@ -83,6 +93,11 @@ public:
         GetThreadLocalData()->cjthread = reinterpret_cast<uint8_t*>(cjthread);
     }
 
+    static void* GetSchedule()
+    {
+        return GetThreadLocalData()->schedule;
+    }
+
     static void SetSchedule(void* schedule)
     {
         GetThreadLocalData()->schedule = reinterpret_cast<uint8_t*>(schedule);
@@ -113,6 +128,7 @@ public:
     {
         tlEnableLock.UnlockRead();
     }
+
 private:
     static RwLock tlEnableLock;
 };

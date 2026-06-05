@@ -16,6 +16,7 @@
 
 #include "Base/AtomicSpinLock.h"
 #include "Common/TypeDef.h"
+#include "Interpreter/Options.h"
 #include "MethodInfo.h"
 #include "FieldInfo.h"
 #include "Flags.h"
@@ -494,7 +495,7 @@ private:
     U32 modifier;
 };
 
-class ATTR_PACKED(4) TypeTemplate {
+class TypeTemplate {
 public:
     inline bool IsRawArray() const;
     inline bool IsVArray() const;
@@ -576,6 +577,9 @@ class TypeInfo {
 class ATTR_PACKED(4) TypeInfo {
 #endif
     friend class TypeInfoManager;
+#ifdef INTERPRETER_ENABLED
+    friend struct TypeInfoLayoutCheck;
+#endif
 public:
     // property/field query
     inline GCTib GetGCTib() const;

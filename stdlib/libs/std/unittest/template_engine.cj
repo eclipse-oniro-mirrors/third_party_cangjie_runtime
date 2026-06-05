@@ -20,10 +20,10 @@ func substituteTemplate(template: String, values: JsonValue): String {
 
 // template consists of
 //  - named subtemplate `{{Type <subtemplate> }}` where `Type` is the name identifying this subtemplate. Can't contain nested subtemplates.
-//  - placeholders in the form of `$ident` which substiture `ident` field value in that place, or `$ident:Type`
+//  - placeholders in the form of `$ident` which substitute `ident` field value in that place, or `$ident:Type`
 //    which substitute subtemplate named `Type` with value of `ident` field.
 //  - repetitions in form of `{! <subtemplate>  !}. This will repeatedly insert subtemplate
-//    repeating non-array fields and zipping array fields for all placeholders inside of it until any of arrays is finished.
+//    repeating non-array fields and zipping array fields for all placeholders inside of it until *any* of arrays is finished.
 //    if repetition is the only subtemplate in current scope then it also works on array of structs so preliminary unzipping is not required
 class Root {
     var templates = HashMap<String, Template>()
@@ -45,10 +45,6 @@ class Root {
         builder.append(template[idx..])
 
         rootTemplate = Template("Root", builder.toString())
-
-        // temporary workaround due to bug in CHIR interpreter
-        Template.REPEATABLES_MATCHER = Regex("\\{\\!(([^!]|\\![^}])+)\\!\\}")
-        Template.VARIABLES_MATCHER = Regex("\\$([a-zA-Z0-9_]+)\\:?([a-zA-Z0-9_]+)?")
     }
 
     func substitute(values: JsonValue): String {
@@ -63,8 +59,8 @@ class Template {
         Template(parts[0].trimEnd(" \r\n"), parts[1])
     }
 
-    static var REPEATABLES_MATCHER: Regex = Regex("temp")
-    static var VARIABLES_MATCHER: Regex = Regex("temp")
+    static let REPEATABLES_MATCHER: Regex = Regex("\\{\\!(([^!]|\\![^}])+)\\!\\}")
+    static let VARIABLES_MATCHER: Regex = Regex("\\$([a-zA-Z0-9_]+)\\:?([a-zA-Z0-9_]+)?")
     static let REPETITIONS_SANITY_CHECK: Int64 = 1000;
 
     func substitute(values: JsonValue, templates: HashMap<String, Template>, index: Int64): ?String {
@@ -74,7 +70,7 @@ class Template {
 
         var baseText = this.baseText
 
-        while (let Some(repeated) <- REPEATABLES_MATCHER.matcher(baseText).find()) {
+        while (let Some(repeated) <- REPEATABLES_MATCHER.find(baseText, group: true)) {
             let data = StringBuilder()
             data.append(baseText[0..repeated.matchPosition().start])
 
@@ -90,16 +86,18 @@ class Template {
             baseText = data.toString()
         }
 
-        while (let Some(variable) <- VARIABLES_MATCHER.matcher(baseText).find()) {
+        var hadArrays = values is JsonArray
+        while (let Some(variable) <- VARIABLES_MATCHER.find(baseText, group: true)) {
             let data = StringBuilder()
             data.append(baseText[0..variable.matchPosition().start])
 
             let field = variable.matchString(1)
+            hadArrays = hadArrays || values.getOrNull(field) is JsonArray
             let values = values.getIndexed(field, index) ?? return None
-            let substitutionName = variable.matchString(2)
-            if (substitutionName.isEmpty()) {
+            if (variable.groupNumber() == 1) {
                 data.append(values.render())
             } else {
+                let substitutionName = variable.matchString(2)
                 if (!templates.contains(substitutionName)) {
                     data.append("<Error: subtemplate \"${substitutionName}\" not found.>")
                 } else {
@@ -110,6 +108,9 @@ class Template {
             }
             data.append(baseText[variable.matchPosition().end..])
             baseText = data.toString()
+        }
+        if (!hadArrays && index >= 1) {
+            return None
         }
         baseText
     }
@@ -173,6 +174,9 @@ extend JsonValue {
 }
 
 extend JsonValue {
+    func getOrNull(field: String): JsonValue {
+        ((this as JsonObject)?.get(field) ?? return JsonNull()) ?? JsonNull()
+    }
     // Index in SoA and AoS simultaneously
     func getIndexed(field: String, index: Int64): ?JsonValue {
         if (let Some(arr) <- (this as JsonArray)) {
@@ -188,7 +192,7 @@ extend JsonValue {
             case Some(arr) where arr is JsonNull => None
             case Some(other) => other
             case None =>
-                JsonNull()
+                return None
         }
     }
 

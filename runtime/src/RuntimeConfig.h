@@ -6,7 +6,6 @@
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
-
 #ifndef MRT_RUNTIME_CONFIG_H
 #define MRT_RUNTIME_CONFIG_H
 
@@ -21,15 +20,28 @@ namespace MapleRuntime {
 extern "C" {
 #endif
 
+enum LibraryKind {
+    SYSTEM,
+    SDK,
+    APP,
+};
+
 struct BinLoadApi {
+    void* (*binLoadLib)(LibraryKind, const char*);
     void* (*binLoad)(const char*);
     int (*binUnload)(void*);
     int (*getBinaryInfoFromAddress)(const void*, Os::Loader::BinaryInfo*);
     void* (*getBinHandle)(const char*);
     void* (*findSymbol)(void*, const char* symbolName);
     BinLoadApi()
-        : binLoad(nullptr), binUnload(nullptr), getBinaryInfoFromAddress(nullptr), getBinHandle(nullptr),
-          findSymbol(nullptr) {}
+        : binLoadLib(nullptr),
+          binLoad(nullptr),
+          binUnload(nullptr),
+          getBinaryInfoFromAddress(nullptr),
+          getBinHandle(nullptr),
+          findSymbol(nullptr)
+    {
+    }
 };
 
 MRT_EXPORT uintptr_t MRT_StopGCWork();

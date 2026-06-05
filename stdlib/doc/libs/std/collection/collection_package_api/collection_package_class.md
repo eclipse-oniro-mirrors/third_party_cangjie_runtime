@@ -618,7 +618,7 @@ extend<T> ArrayDeque<T> <: ToString where T <: ToString
 public func toString(): String
 ```
 
-功能：获取当前 [ArrayDeque](./collection_package_class.md#class-arraydequet)\<T> 实例的字符串表示。
+功能：获取当前[ArrayDeque](./collection_package_class.md#class-arraydequet)\<T>实例的字符串表示。
 
 该字符串包含双端队列内每个元素的字符串表示，其顺序为从前到后的顺序，形如："[elem1, elem2, elem3]"。
 
@@ -825,7 +825,7 @@ main() {
 public init()
 ```
 
-功能：构造一个初始容量大小为默认值`16`的 [ArrayList](collection_package_class.md#class-arraylistt)。
+功能：构造一个初始容量大小为默认值`16`的[ArrayList](collection_package_class.md#class-arraylistt)。
 
 示例：
 
@@ -1233,6 +1233,7 @@ main() {
 所有元素都是偶数: true
 添加奇数后所有元素都是偶数: false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -1287,8 +1288,8 @@ main() {
 存在偶数: false
 添加偶数后存在偶数: true
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func clear()
 
 ```cangjie
@@ -1420,6 +1421,7 @@ main() {
 原列表: [1, 2, 3, 4, 5, 6]
 偶数列表: [2, 4, 6]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -1475,6 +1477,7 @@ main() {
 正数字符串列表: [1, 2]
 类型检查: true
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -1525,6 +1528,7 @@ main() {
 原列表: [1, 2, 3]
 压平映射后: [1, 1, 2, 4, 3, 9]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -1574,6 +1578,7 @@ main() {
 原列表: [1, 2, 3, 4]
 元素乘积: 24
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -1629,8 +1634,8 @@ main() {
 5
 元素总和: 15
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func get(Int64)
 
 ```cangjie
@@ -1779,8 +1784,8 @@ main() {
 数字原列表: [1, 2, 3, 4]
 数字插入分隔符后: [1, 0, 2, 0, 3, 0, 4]
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func isEmpty()
 
 ```cangjie
@@ -1908,6 +1913,7 @@ main() {
 平方后: [1, 4, 9, 16, 25]
 转换为字符串: [1, 2, 3, 4, 5]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -1962,6 +1968,7 @@ main() {
 所有元素都不是偶数: true
 添加偶数后所有元素都不是偶数: false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -2029,8 +2036,8 @@ main() {
 最大值: Some(5)
 空列表的最大值: None
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func remove(Int64)
 
 ```cangjie
@@ -2270,7 +2277,7 @@ main() {
 public func skip(count: Int64): ArrayList<T>
 ```
 
-功能：跳过特定个数元素并返回一个新 [ArrayList](collection_package_class.md#class-arraylistt)。
+功能： 跳过特定个数元素并返回一个新 [ArrayList](collection_package_class.md#class-arraylistt)。
 
 当 count 小于等于 0 时，抛出异常。当 count 等于 0 时，相当没有跳过任何元素，返回包含源 [ArrayList](collection_package_class.md#class-arraylistt) 所有元素的新 [ArrayList](collection_package_class.md#class-arraylistt) 。当 count 大于 0 小于源 [ArrayList](collection_package_class.md#class-arraylistt) 的大小时，跳过前 count 个元素，返回包含剩下的元素的新 [ArrayList](collection_package_class.md#class-arraylistt)。当 count 大于等于 [ArrayList](collection_package_class.md#class-arraylistt) 的大小时，返回空 [ArrayList](collection_package_class.md#class-arraylistt)。
 
@@ -2321,8 +2328,8 @@ main() {
 跳过后: [3, 4, 5]
 跳过10个元素后: []
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func slice(Range\<Int64>)
 
 ```cangjie
@@ -2499,6 +2506,8 @@ public func step(count: Int64): ArrayList<T>
 
 功能：以指定的间隔从 [ArrayList](collection_package_class.md#class-arraylistt) 中提取元素，并返回一个新 [ArrayList](collection_package_class.md#class-arraylistt)。
 
+当 count 小于等于 0 时，抛出异常
+
 > **注意：**
 >
 > 不支持平台：OpenHarmony。
@@ -2540,6 +2549,7 @@ main() {
 原列表: [0, 1, 2, 3, 4, 5, 6, 7]
 步长为3: [0, 3, 6]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -2600,8 +2610,8 @@ main() {
 取前3个: [0, 1, 2]
 取10个元素: [0, 1, 2, 3, 4, 5]
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func toArray()
 
 ```cangjie
@@ -2858,10 +2868,6 @@ public func zip<R>(other: ArrayList<R>): ArrayList<(T, R)>
 
 功能：将两个 [ArrayList](collection_package_class.md#class-arraylistt) 合并成一个新 [ArrayList](collection_package_class.md#class-arraylistt)（长度取决于短的那个 [ArrayList](collection_package_class.md#class-arraylistt)）。
 
-> **注意：**
->
-> 不支持平台：OpenHarmony。
-
 参数：
 
 - other: [ArrayList](collection_package_class.md#class-arraylistt)\<R> - 要合并的其中一个 [ArrayList](collection_package_class.md#class-arraylistt)。
@@ -2905,8 +2911,8 @@ Alice 的年龄是 25 岁
 Bob 的年龄是 30 岁
 Charlie 的年龄是 35 岁
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### extend\<T> ArrayList\<T> <: Equatable\<ArrayList\<T>> where T <: Equatable\<T>
 
 ```cangjie
@@ -3829,7 +3835,7 @@ extend<T> ArrayQueue<T> <: ToString where T <: ToString
 public func toString(): String
 ```
 
-功能：获取当前 [ArrayQueue](./collection_package_class.md#class-arrayqueuet)\<T> 实例的字符串表示。
+功能：获取当前[ArrayQueue](./collection_package_class.md#class-arrayqueuet)\<T>实例的字符串表示。
 
 该字符串包含双端队列内每个元素的字符串表示，其顺序为从前到后的顺序，形如："[elem1, elem2, elem3]"。
 
@@ -4617,7 +4623,7 @@ public init(elements: Array<(K, V)>)
 
 功能：通过传入的键值对数组构造一个 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek)。
 
-该构造函数根据传入数组的 size 设置 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 的容量。由于 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 内部不允许键重复，当 [Array](../../core/core_package_api/core_package_structs.md#struct-arrayt) 中存在重复的键时，按照迭代器顺序，出现在后面的键值对将会覆盖前面的键值对。
+该构造函数根据传入数组的 size 设置 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 的容量。由于[HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 内部不允许键重复，当 [Array](../../core/core_package_api/core_package_structs.md#struct-arrayt) 中存在重复的键时，按照迭代器顺序，出现在后面的键值对将会覆盖前面的键值对。
 
 参数：
 
@@ -4662,7 +4668,7 @@ public init(elements: Collection<(K, V)>)
 
 功能：通过传入的键值对集合构造一个 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek)。
 
-该构造函数根据传入集合 elements 的 size 设置 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 的容量。由于 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 内部不允许键重复，当 [Array](../../core/core_package_api/core_package_structs.md#struct-arrayt) 中存在重复的键时，按照迭代器顺序，出现在后面的键值对将会覆盖前面的键值对。
+该构造函数根据传入集合 elements 的 size 设置 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 的容量。由于[HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 内部不允许键重复，当 [Array](../../core/core_package_api/core_package_structs.md#struct-arrayt) 中存在重复的键时，按照迭代器顺序，出现在后面的键值对将会覆盖前面的键值对。
 
 参数：
 
@@ -4752,7 +4758,7 @@ public init(size: Int64, initElement: (Int64) -> (K, V))
 
 功能：通过传入的元素个数 size 和函数规则来构造 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek)。
 
-构造出的 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 的容量受 size 大小影响。由于 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 内部不允许键重复，当函数 initElement 生成相同的键时，后构造的键值对将会覆盖之前出现的键值对。
+构造出的 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 的容量受 size 大小影响。由于[HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 内部不允许键重复，当函数 initElement 生成相同的键时，后构造的键值对将会覆盖之前出现的键值对。
 
 参数：
 
@@ -4956,6 +4962,7 @@ main() {
 所有值都大于5: true
 所有值都大于25: false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -5012,8 +5019,8 @@ main() {
 存在值大于35的键值对: true
 存在值大于50的键值对: false
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func clear()
 
 ```cangjie
@@ -5296,6 +5303,7 @@ main() {
 原映射: [(a, 10), (b, 20), (c, 30), (d, 40)]
 筛选后: [(c, 30), (d, 40)]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -5347,6 +5355,7 @@ main() {
 原映射: [(a, 10), (b, 20), (c, 30), (d, 40)]
 值的总和: 100
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -5392,8 +5401,8 @@ main() {
   c: 30
   d: 40
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func get(K)
 
 ```cangjie
@@ -5634,6 +5643,7 @@ main() {
 原映射: [(a, 10), (b, 20), (c, 30), (d, 40)]
 字符串映射: [(a, 10), (b, 20), (c, 30), (d, 40)]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -5682,6 +5692,7 @@ main() {
 原映射: [(a, 10), (b, 20), (c, 30), (d, 40)]
 平方映射: [(a, 100), (b, 400), (c, 900), (d, 1600)]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -5734,6 +5745,7 @@ main() {
 所有值都不大于50: true
 所有值都不大于35: false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -5801,8 +5813,8 @@ main() {
 最大值: Some(40)
 空映射的最大值: None
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func remove(Collection\<K>)
 
 ```cangjie
@@ -5868,7 +5880,7 @@ public func remove(key: K): Option<V>
 
 返回值：
 
-- [Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<V> - 被从 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 中移除的键对应的值，用 [Option](../../core/core_package_api/core_package_enums.md#enum-optiont) 封装，如果 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 中不存该键，返回 None 。
+- [Option](../../core/core_package_api/core_package_enums.md#enum-optiont)\<V> - 被从 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 中移除的键对应的值，用 [Option](../../core/core_package_api/core_package_enums.md#enum-optiont) 封装，如果 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek)中不存该键，返回 None 。
 
 示例：
 
@@ -5920,7 +5932,7 @@ public func removeIf(predicate: (K, V) -> Bool): Unit
 
 功能：传入 lambda 表达式，如果满足条件，则删除对应的键值对。
 
-该函数会遍历整个 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek)，所以满足 `predicate(K, V) == true` 的键值对都会被删除。
+该函数会遍历整个[HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek)，所以满足 `predicate(K, V) == true` 的键值对都会被删除。
 
 参数：
 
@@ -6560,7 +6572,7 @@ public class HashSet<T> <: Set<T> where T <: Hashable & Equatable<T> {
 
 功能：基于 [HashMap](collection_package_class.md#class-hashmapk-v-where-k--hashable--equatablek) 实现的 [Set](collection_package_interface.md#interface-sett) 接口的实例。
 
-[HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet) 中的元素是无序的，不允许有重复元素。当我们向 [HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet) 中添加元素时，[HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet) 会根据元素的哈希值来确定该元素在哈希表中的位置。
+[HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet)中的元素是无序的，不允许有重复元素。当我们向[HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet)中添加元素时，[HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet)会根据元素的哈希值来确定该元素在哈希表中的位置。
 
 > **提示：**
 >
@@ -6938,7 +6950,7 @@ main() {
 public func add(element: T): Bool
 ```
 
-功能：将指定的元素添加到 [HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet) 中，若添加的元素在 [HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet) 中存在，则添加失败。
+功能：将指定的元素添加到 [HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet) 中, 若添加的元素在 [HashSet](collection_package_class.md#class-hashsett-where-t--hashable--equatablet) 中存在, 则添加失败。
 
 参数：
 
@@ -7030,6 +7042,7 @@ main() {
 所有元素都是偶数: true
 添加奇数后所有元素都是偶数: false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -7081,8 +7094,8 @@ main() {
 存在长度大于5的字符串: true
 存在长度大于10的字符串: false
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func clear()
 
 ```cangjie
@@ -7319,6 +7332,7 @@ main() {
 偶数集合大小: 3
 大于3的数字个数: 3
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -7370,6 +7384,7 @@ main() {
 转换后的数字集合: [123, 456]
 检查其中元素是否都是Int64类型: true
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -7422,6 +7437,7 @@ main() {
 所有元素的和: 10
 所有元素的乘积: 24
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -7469,8 +7485,8 @@ main() {
 元素: banana, 长度: 6
 元素: cherry, 长度: 6
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func isEmpty()
 
 ```cangjie
@@ -7615,6 +7631,7 @@ main() {
 长度集合: [5, 6]
 大写集合: [APPLE, BANANA, CHERRY]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -7667,6 +7684,7 @@ main() {
 集合中没有偶数: true
 添加偶数后没有偶数: false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -7719,8 +7737,8 @@ main() {
 非空集合所有元素的和: Some(10)
 空集合的所有元素的和: None
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func remove(Collection\<T>)
 
 ```cangjie
@@ -9169,6 +9187,7 @@ main() {
 链表所有元素都为正数: true
 添加负数后所有元素都为正数: false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -9229,8 +9248,8 @@ main() {
 全负数链表存在正数: false
 添加正数后存在正数: true
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func backward(LinkedListNode\<T>)
 
 ```cangjie
@@ -9370,6 +9389,7 @@ main() {
 偶数列表: [2, 4, 6]
 大于3的数字: [4, 5, 6]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -9423,6 +9443,7 @@ main() {
 原始链表: [1, 2, 3, 4, 5, 6]
 偶数的平方: [4, 16, 36]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -9478,6 +9499,7 @@ main() {
 原始链表: [1, 2, 3]
 每个元素的2倍和3倍数: [2, 3, 4, 6, 6, 9]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -9542,6 +9564,7 @@ main() {
 总和: 15
 最大值: 5
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -9588,8 +9611,8 @@ main() {
  橙子
  葡萄
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func forward(LinkedListNode\<T>)
 
 ```cangjie
@@ -9624,7 +9647,7 @@ main() {
     if (let Some(node) <- middleNode) {
         println("从节点值 ${node.value} 开始向前遍历:")
 
-        // 使用forward方法从中间节点向后遍历到尾部
+        // 使用 forward 方法从中间节点向后遍历到尾部
         let iterator = list.forward(node)
         for (element in iterator) {
             print("${element} ")
@@ -9687,8 +9710,8 @@ main() {
 原始链表: [苹果, 香蕉, 橙子]
 插入分隔符后的链表: [苹果, |, 香蕉, |, 橙子]
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func isEmpty()
 
 ```cangjie
@@ -9829,8 +9852,8 @@ main() {
 平方后的链表: [1, 4, 9, 16, 25]
 转换为字符串后的链表: [数字_1, 数字_2, 数字_3, 数字_4, 数字_5]
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func nodeAt(Int64)
 
 ```cangjie
@@ -9954,6 +9977,7 @@ main() {
 只有负数的链表中没有正数: true
 添加正数后没有正数: false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -10008,8 +10032,8 @@ main() {
 空链表reduce结果: None
 求和结果: Some(10)
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func remove(LinkedListNode\<T>)
 
 ```cangjie
@@ -10257,7 +10281,7 @@ main() {
 public func skip(count: Int64): LinkedList<T>
 ```
 
-功能：跳过特定个数元素并返回一个新链表。
+功能： 跳过特定个数元素并返回一个新链表。
 
 当 count 小于等于 0 时，抛出异常。当 count 等于 0 时，相当没有跳过任何元素，返回包含源链表所有元素的新链表。当 count 大于 0 小于源链表的大小时，跳过前 count 个元素，返回包含剩下的元素的新链表。当 count 大于等于源链表的大小时，返回空链表。
 
@@ -10310,8 +10334,8 @@ main() {
 跳过2个元素后的链表: [3, 4, 5]
 跳过10个元素后的链表: []
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func splitOff(LinkedListNode\<T>)
 
 ```cangjie
@@ -10377,6 +10401,8 @@ public func step(count: Int64): LinkedList<T>
 
 功能：以指定的间隔从链表中提取元素，并返回一个新链表。
 
+当 count 小于等于 0 时，抛出异常
+
 > **注意：**
 >
 > 不支持平台：OpenHarmony。
@@ -10427,6 +10453,7 @@ main() {
 步长为2的链表: [1, 3, 5, 7, 9]
 大步长(15)的链表: [1]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -10486,8 +10513,8 @@ main() {
 取3个元素后的链表: [1, 2, 3]
 从空链表取2个元素后大小: []
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func toArray()
 
 ```cangjie
@@ -10592,10 +10619,6 @@ public func zip<R>(other: LinkedList<R>): LinkedList<(T, R)>
 
 功能：将两个 [LinkedList](./collection_package_class.md#class-linkedlistt) 合并成一个新 [LinkedList](./collection_package_class.md#class-linkedlistt)（长度取决于短的那个链表）。
 
-> **注意：**
->
-> 不支持平台：OpenHarmony。
-
 参数：
 
 - other: [LinkedList](./collection_package_class.md#class-linkedlistt)\<R> - 要合并的其中一个链表。
@@ -10640,8 +10663,8 @@ main() {
 (第三个, 3)
 合并后链表大小: 3
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### extend\<T> LinkedList\<T> <: Equatable\<LinkedList\<T>> where T <: Equatable\<T>
 
 ```cangjie
@@ -11315,7 +11338,7 @@ public init(elements: Collection<(K, V)>)
 
 功能：通过传入的键值对集合构造一个 [TreeMap](collection_package_class.md#class-treemapk-v-where-k--comparablek)。
 
-按照 elements 的迭代器顺序将元素插入到 [TreeMap](collection_package_class.md#class-treemapk-v-where-k--comparablek) 内，由于 [TreeMap](collection_package_class.md#class-treemapk-v-where-k--comparablek) 中不允许出现相同的键，如果 elements 中有相同的键时，后出现（迭代器顺序）的键值对将会覆盖先出现的键值对。
+按照 elements 的迭代器顺序将元素插入到 [TreeMap](collection_package_class.md#class-treemapk-v-where-k--comparablek) 内，由于 [TreeMap](collection_package_class.md#class-treemapk-v-where-k--comparablek) 中不允许出现相同的键，如果 elements 中有相同的键时，后出现(迭代器顺序)的键值对将会覆盖先出现的键值对。
 
 参数：
 
@@ -11555,6 +11578,7 @@ TreeMap内容: [(apple, 10), (banana, 20), (cherry, 30)]
 添加负值后所有值都大于0: false
 所有键都包含字母'a': false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -11616,8 +11640,8 @@ TreeMap内容: [(apple, 10), (banana, 20), (cherry, 30)]
 存在值小于5的键值对: false
 存在键包含字母'e': true
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func backward(K, Bool)
 
 ```cangjie
@@ -12002,6 +12026,7 @@ main() {
 值大于15的键值对: [(banana, 20), (cherry, 30), (elderberry, 40)]
 键包含字母'a'的键值对: [(apple, 10), (banana, 20), (date, 5)]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -12066,6 +12091,7 @@ main() {
 所有值的总和: 65
 所有键组成的字符串: apple,banana,cherry,date
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -12120,8 +12146,8 @@ main() {
   键 'cherry' 的值是 30
   键 'date' 的值是 5
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func forward(K, Bool)
 
 ```cangjie
@@ -12459,6 +12485,7 @@ main() {
 原始TreeMap: [(apple, 10), (banana, 20), (cherry, 30)]
 描述字符串映射: [(apple, 水果apple的数量是10), (banana, 水果banana的数量是20), (cherry, 水果cherry的数量是30)]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -12509,6 +12536,7 @@ main() {
 原始TreeMap: [(apple, 10), (banana, 20), (cherry, 30)]
 值的描述字符串映射: [(apple, 数值: 10), (banana, 数值: 20), (cherry, 数值: 30)]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -12559,6 +12587,7 @@ main() {
 原始TreeMap: [(apple, 10), (banana, 20), (cherry, 30)]
 没有任何值大于100: true
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -12613,8 +12642,8 @@ main() {
 原始TreeMap: [(apple, 10), (banana, 20), (cherry, 30)]
 所有值的总和: 60
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func remove(Collection\<K>)
 
 ```cangjie
@@ -13624,7 +13653,7 @@ main() {
 public func add(element: T): Bool
 ```
 
-功能：将新的元素放入 [TreeSet](collection_package_class.md#class-treesett-where-t--comparablet) 中。若添加的元素在 [TreeSet](collection_package_class.md#class-treesett-where-t--comparablet) 中存在，则添加失败。
+功能：将新的元素放入 [TreeSet](collection_package_class.md#class-treesett-where-t--comparablet) 中。若添加的元素在 [TreeSet](collection_package_class.md#class-treesett-where-t--comparablet) 中存在, 则添加失败。
 
 参数：
 
@@ -13724,6 +13753,7 @@ TreeSet内容: [apple, banana, cherry, date]
 所有元素长度都大于3: true
 所有元素都包含字母'a': false
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -13772,8 +13802,8 @@ main() {
 TreeSet内容: [apple, banana, cherry, date]
 存在包含字母'y'的元素: true
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func backward(T, Bool)
 
 ```cangjie
@@ -14055,6 +14085,7 @@ main() {
 原始TreeSet: [apple, banana, cherry, date, elderberry]
 长度大于5的元素: [banana, cherry, elderberry]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -14109,6 +14140,7 @@ main() {
 原始TreeSet: [, apple, banana, cherry]
 非空字符串的长度: [5, 6]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -14160,6 +14192,7 @@ main() {
 原始TreeSet: [apple, banana, cherry]
 所有字符串的总长度: 17
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -14208,8 +14241,8 @@ main() {
  banana
  cherry
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func forward(T, Bool)
 
 ```cangjie
@@ -14392,6 +14425,7 @@ main() {
 原始TreeSet: [apple, banana, cherry]
 长度集合: [5, 6]
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -14442,6 +14476,7 @@ main() {
 TreeSet内容: [apple, banana, cherry, date]
 没有长度大于10的元素: true
 ```
+
 <!--DelEnd-->
 
 <!--Del-->
@@ -14495,8 +14530,8 @@ main() {
 原始TreeSet: [apple, banana, cherry]
 连接结果: apple_banana_cherry
 ```
-<!--DelEnd-->
 
+<!--DelEnd-->
 ### func remove(Collection\<T>)
 
 ```cangjie
@@ -14507,7 +14542,7 @@ public func remove(all!: Collection<T>): Unit
 
 参数：
 
-- all!: [Collection](../../core/core_package_api/core_package_interfaces.md#interface-collectiont)\<T> - 需要从此 [TreeSet](collection_package_class.md#class-treesett-where-t--comparablet) 中移除的元素的集合。
+- all!: [Collection](../../core/core_package_api/core_package_interfaces.md#interface-collectiont)\<T> - 需要从此[TreeSet](collection_package_class.md#class-treesett-where-t--comparablet) 中移除的元素的集合。
 
 示例：
 
