@@ -24,3 +24,7 @@ public import std.unittest.prop_test.Arbitrary
 public import std.unittest.prop_test.Shrink
 public import std.unittest.prop_test.random
 public import std.unittest.prop_test.KeyRandom
+
+@When[backend == "cjnative"]
+public import std.runtime.blackBox
+

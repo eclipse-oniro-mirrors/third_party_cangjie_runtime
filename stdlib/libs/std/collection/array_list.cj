@@ -31,6 +31,7 @@ class ArrayListIterator<T> <: Iterator<T> {
      * Initializing ArrayListIterator.
      *
      * @param data - data of ArrayList<T>.
+     * @param version - version of Int64.
      *
      * @since 0.18.2
      */

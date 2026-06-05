@@ -95,7 +95,7 @@ void CjHeapDataForIDE::SerializeAllClassLoad()
 {
     writer->WriteContinueString("\\\"CLASSLOAD\\\":[");
     bool isFirstElement = true;
-    for (auto klassInfo : dumpClassMap) {
+    for (const auto& klassInfo : dumpClassMap) {
         if (!isFirstElement) {
             writer->WriteChar(',');
         } else {
@@ -111,7 +111,7 @@ void CjHeapDataForIDE::SerializeAllClass()
 {
     writer->WriteContinueString("\\\"CLASS\\\":[");
     bool isFirstElement = true;
-    for (auto klassInfo : dumpClassMap) {
+    for (const auto& klassInfo : dumpClassMap) {
         if (!isFirstElement) {
             writer->WriteChar(',');
         } else {
@@ -127,7 +127,7 @@ void CjHeapDataForIDE::SerializeAllStructClass()
 {
     writer->WriteContinueString("\\\"STRUCTCLASS\\\":[");
     bool isFirstElement = true;
-    for (auto klassInfo : dumpStructClassMap) {
+    for (const auto& klassInfo : dumpStructClassMap) {
         if (!isFirstElement) {
             writer->WriteChar(',');
         } else {
@@ -152,7 +152,7 @@ void CjHeapDataForIDE::SerializeAllStructClassLoad()
 {
     writer->WriteContinueString("\\\"STRUCTCLASSLOAD\\\":[");
     bool isFirstElement = true;
-    for (auto klassInfo : dumpStructClassMap) {
+    for (const auto& klassInfo : dumpStructClassMap) {
         if (!isFirstElement) {
             writer->WriteChar(',');
         } else {
@@ -268,7 +268,7 @@ void CjHeapDataForIDE::SerializeAllObjects()
 {
     writer->WriteContinueString("\\\"OBJECTS\\\":[");
     bool isFirstElement = true;
-    for (auto objectInfo : dumpObjects) {
+    for (auto& objectInfo : dumpObjects) {
         if (!isFirstElement) {
             writer->WriteChar(',');
         } else {
@@ -359,7 +359,7 @@ void CjHeapDataForIDE::SerializeUnknownRoot(BaseObject*& obj, const u1 tag)
  *     u4 threadIdx;   // thread serial number
  *     u4 frame;       // frame number in stack trace (-1 for empty)
  */
-void CjHeapDataForIDE::SerializeLocalRoot(BaseObject*& obj, const u1 tag, const u4 tid, const u1 depth)
+void CjHeapDataForIDE::SerializeLocalRoot(BaseObject*& obj, const u1 tag, const u4 tid, const u4 depth)
 {
     writer->WriteChar('[');
     writer->WriteNumber(tag);

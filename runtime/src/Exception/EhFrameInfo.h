@@ -6,7 +6,6 @@
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
-
 #ifndef MRT_EH_FRAMEINFO_H
 #define MRT_EH_FRAMEINFO_H
 
@@ -27,7 +26,23 @@
 #endif
 namespace MapleRuntime {
 
-class EHFrameInfo : public FrameInfo {
+class IEHFrameInfo {
+public:
+    virtual ~IEHFrameInfo() = default;
+
+    virtual bool IsCatchException() const = 0;
+    virtual uint64_t GetTTypeIndex() const = 0;
+    virtual uintptr_t GetLandingPad() const = 0;
+    virtual void RestoreToCallerContext(CalleeSavedRegisterContext& context, uint32_t adjustedSize = 0) const = 0;
+
+    virtual const uint32_t* GetIP() const = 0;
+    virtual FrameAddress* GetFA() const = 0;
+    virtual MachineFrame GetMachineFrame() const = 0;
+
+    virtual const CString GetFunctionName() const = 0;
+};
+
+class EHFrameInfo : public FrameInfo, public IEHFrameInfo {
 public:
     EHFrameInfo(const FrameInfo& info, const ExceptionWrapper& eWrapper) : FrameInfo(info)
     {
@@ -51,15 +66,24 @@ public:
     EHFrameInfo() = delete;
     ~EHFrameInfo() override = default;
 
-    bool IsCatchException() const { return result.isCaught; }
-
-    uint64_t GetTTypeIndex() const { return result.typeIndex; }
-
-    uint64_t GetLandingPad() const { return result.landingPad; }
-
-    void RestoreToCallerContext(CalleeSavedRegisterContext& context, uint32_t adjustedSize = 0) const
+    bool IsCatchException() const override
     {
-        constexpr uint8_t sizeOfAddr = sizeof(void*);  // arm32 is 4, aarch64 is 8
+        return result.isCaught;
+    }
+
+    uint64_t GetTTypeIndex() const override
+    {
+        return result.typeIndex;
+    }
+
+    uintptr_t GetLandingPad() const override
+    {
+        return result.landingPad;
+    }
+
+    void RestoreToCallerContext(CalleeSavedRegisterContext& context, uint32_t adjustedSize = 0) const override
+    {
+        constexpr uint8_t sizeOfAddr = sizeof(void*);       // arm32 is 4, aarch64 is 8
         constexpr uint8_t sizeOfStackHead = sizeOfAddr * 2; // callee rbp + return addr
 #if defined(__x86_64__)
         context.rsp = context.rbp + sizeOfStackHead;
@@ -188,6 +212,26 @@ public:
         uint32_t byteLen = bitsLen >> 3; // 8 bits per byte
         *point = reinterpret_cast<Uptr*>(reinterpret_cast<uint8_t*>(*point) + byteLen);
         return res;
+    }
+
+    const uint32_t* GetIP() const override
+    {
+        return mFrame.GetIP();
+    }
+
+    FrameAddress* GetFA() const override
+    {
+        return mFrame.GetFA();
+    }
+
+    MachineFrame GetMachineFrame() const override
+    {
+        return mFrame;
+    }
+
+    const CString GetFunctionName() const override
+    {
+        return FrameInfo::GetFuncName();
     }
 
 private:

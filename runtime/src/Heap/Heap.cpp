@@ -6,11 +6,12 @@
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
-
 #include "Heap.h"
 
 #include "Collector/CollectorProxy.h"
 #include "Collector/CollectorResources.h"
+#include "Interpreter/Options.h"
+#include "Interpreter/InterpreterSpecific.h"
 #include "WCollector/IdleBarrier.h"
 #include "WCollector/EnumBarrier.h"
 #include "WCollector/TraceBarrier.h"
@@ -234,7 +235,13 @@ void HeapImpl::UnregisterStaticRoots(Uptr addr, U32 size)
     staticRootTable.UnregisterRoots(reinterpret_cast<StaticRootTable::StaticRootArray*>(addr), size);
 }
 
-void HeapImpl::VisitStaticRoots(const RefFieldVisitor& visitor) { staticRootTable.VisitRoots(visitor); }
+void HeapImpl::VisitStaticRoots(const RefFieldVisitor& visitor)
+{
+    staticRootTable.VisitRoots(visitor);
+#ifdef INTERPRETER_ENABLED
+    VisitInterpreterGlobalRoots(&visitor);
+#endif
+}
 
 #if defined(_WIN64)
 ssize_t HeapImpl::GetHeapPhysicalMemorySize() const
@@ -360,8 +367,8 @@ void HeapImpl::CrossAccessBarrier(I64 id)
         auto& collector = GetCollector();
         if (collector.IsGhostFromObject(recordObj) &&
             !collector.IsUnmovableFromObject(recordObj)) {
-                recordObj = collector.ForwardObject(recordObj);
-            }
+            recordObj = collector.ForwardObject(recordObj);
+        }
     }
 
     reinterpret_cast<TracingCollector&>(GetCollector()).ResurrectExportObject(recordObj);

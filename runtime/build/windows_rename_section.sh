@@ -38,7 +38,7 @@ process_file() {
     return 0
   fi
     
-  if objcopy -D "${rename_args[@]}" "$input_file" "$output_file" 2>/dev/null; then
+  if objcopy "${rename_args[@]}" "$input_file" "$output_file" 2>/dev/null; then
     return 0
   else
     return 1

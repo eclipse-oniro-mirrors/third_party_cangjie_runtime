@@ -16,6 +16,7 @@ endif()
 
 # 1 means android_aarch64, 2 means android_x86_64, 3 means android_arm
 if (ANDROID_FLAG MATCHES 1 OR ANDROID_FLAG MATCHES 2 OR ANDROID_FLAG MATCHES 3)
+    set(ANDROID_OS "linux")
     if (CMAKE_ANDROID_API MATCHES 26)
         set(ANDROID_TARGET_API "android26")
     elseif (CMAKE_ANDROID_API MATCHES 31)
@@ -29,7 +30,6 @@ if (ANDROID_FLAG MATCHES 1 OR ANDROID_FLAG MATCHES 2 OR ANDROID_FLAG MATCHES 3)
     else ()
         message(FATAL_ERROR "ANDROID_TARGET_API is not set, please check the target option.")
     endif()
-    set(ANDROID_OS "linux")
     set(CMAKE_SYSTEM_NAME Linux)
     set(CMAKE_C_COMPILER_WORKS 1)
     set(CMAKE_CXX_COMPILER_WORKS 1)
@@ -80,11 +80,11 @@ if (ASAN_SUPPORT_FLAG MATCHES 1)
     set(CJTHREAD_SAN_PRARM "cjasan")
     add_compile_definitions(CANGJIE_ASAN_SUPPORT)
     add_compile_definitions(GENERAL_ASAN_SUPPORT_INTERFACE)
-    set(SANITIZER_SUBPATH /asan)
+    set(SANITIZER_SUBPATH "/asan")
 elseif (TSAN_SUPPORT_FLAG MATCHES 1)
     set(CJTHREAD_SAN_PRARM "cjtsan")
     add_compile_definitions(CANGJIE_TSAN_SUPPORT)
-    set(SANITIZER_SUBPATH /tsan)
+    set(SANITIZER_SUBPATH "/tsan")
 elseif (HWASAN_SUPPORT_FLAG MATCHES 1)
     set(CJTHREAD_SAN_PRARM "cjhwasan")
     add_compile_definitions(CANGJIE_HWASAN_SUPPORT)
@@ -201,6 +201,7 @@ endif() # BUILD_CJTHREAD
 
 if (BUILD_RUNTIME)
 include_directories(${DOPRA_INCLUDE})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if (DOPRA_FLAG MATCHES 1)
     add_definitions(-DMRT_USE_CJTHREAD_RENAME)
@@ -350,10 +351,10 @@ endif ()
 # Signal processing use sigaction() as signal-catching function currently, it`s linux related, which can get context when signal was triggered. In Windows, signal() is the only function we can use, but there is no context.
 if (WINDOWS_FLAG MATCHES 1)
     list(APPEND LINK_LIBS "boundscheck" "Base" "Common" "Concurrency" "Loader" "Inspector" "Exception" "Heap" "Mutator" "ObjectModel" "UnwindStack"
-    "Allocator" "Barrier" "Collector" "WCollector" "BinaryFile" "CjFile" "CjFileLoader" "CjSemanticVersion" "Sync" "dbghelp" "ws2_32" "shlwapi" "CpuProfiler" ${SANITIZER_LIB})
+    "Allocator" "Barrier" "Collector" "WCollector" "BinaryFile" "CjFile" "CjFileLoader" "CjSemanticVersion" "Sync" "dbghelp" "ws2_32" "shlwapi" "CpuProfiler" "Interpreter" ${SANITIZER_LIB})
 elseif (WINDOWS_FLAG MATCHES 0)
     list(APPEND LINK_LIBS "boundscheck" "Base" "Common" "Concurrency" "Loader" "Inspector" "Exception" "Heap" "Mutator" "ObjectModel" "UnwindStack" "Signal"
-    "Allocator" "Barrier" "Collector" "WCollector" "BinaryFile" "CjFile" "CjFileLoader" "CjSemanticVersion" "Sync" "CpuProfiler" ${SANITIZER_LIB})
+    "Allocator" "Barrier" "Collector" "WCollector" "BinaryFile" "CjFile" "CjFileLoader" "CjSemanticVersion" "Sync" "CpuProfiler" "Interpreter" ${SANITIZER_LIB})
 endif()
 
 if (DOPRA_FLAG MATCHES 1)
@@ -390,9 +391,15 @@ if (DOPRA_FLAG MATCHES 1 AND OHOS_FLAG MATCHES 0 AND WINDOWS_FLAG MATCHES 0) # l
             "-lstdc++ -lpthread -ldl" ${LINK_LIBS} "cjNativeStartAndEnd" "-Wl,--end-group")
     else ()
         if (ANDROID_FLAG IN_LIST ANDROID_FLAG_LIST) # android
-            target_link_libraries(cangjie-runtime
-                "-Wl,--start-group -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/src/local_export.map"
-                ${LINK_LIBS} "-Wl,--end-group -nodefaultlibs -Wl,-Bdynamic -lc++ -lunwind -lm -lc -ldl -landroid -llog")
+            if (ANDROID_FLAG MATCHES 3) # arm
+                target_link_libraries(cangjie-runtime
+                    "-Wl,--start-group -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/src/arm_local_export.map"
+                    ${LINK_LIBS} "-Wl,--end-group -nodefaultlibs -Wl,-Bdynamic -lc++ -lunwind -lm -lc -ldl -landroid -llog")
+            else()
+                target_link_libraries(cangjie-runtime
+                    "-Wl,--start-group -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/src/local_export.map"
+                    ${LINK_LIBS} "-Wl,--end-group -nodefaultlibs -Wl,-Bdynamic -lc++ -lunwind -lm -lc -ldl -landroid -llog")
+            endif()
         elseif (MACOS_FLAG MATCHES 1 OR IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 2) # macos,ios
             target_link_libraries(cangjie-runtime ${LINK_LIBS} "-Wl,-no_compact_unwind -nodefaultlibs -lc++ -lm -lc -lpthread -ldl")
         else() # normal
@@ -437,6 +444,8 @@ install(TARGETS cangjie-runtime DESTINATION runtime/lib/${TARGET_ARCH}${SANITIZE
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/RuntimeConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/Cangjie.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Interpreter/RuntimeAPI.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Interpreter/RTInterface.h
         DESTINATION include)
 
 if (EULER_FLAG MATCHES 1)
@@ -601,6 +610,7 @@ if (IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MAT
             $<TARGET_OBJECTS:cjthreadmodel>
             $<TARGET_OBJECTS:CjSemanticVersion>
             $<TARGET_OBJECTS:CpuProfiler>
+            $<TARGET_OBJECTS:Interpreter>
             ${SANITIZER_LIB_STATIC}
         )
     else()
@@ -628,6 +638,7 @@ if (IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MAT
             $<TARGET_OBJECTS:cjthreadmodel>
             $<TARGET_OBJECTS:CjSemanticVersion>
             $<TARGET_OBJECTS:CpuProfiler>
+            $<TARGET_OBJECTS:Interpreter>
             ${SANITIZER_LIB_STATIC}
         )
     endif()
@@ -712,12 +723,12 @@ if (IOS_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MATCHES 1 OR IOS_SIMULATOR_FLAG MAT
                 ${CMAKE_INSTALL_PREFIX}/lib/${TARGET_ARCH}${SANITIZER_SUBPATH}/libcangjie-runtime.a)"
             COMPONENT cangjie-runtime)
     else()
-        install(CODE "execute_process(COMMAND ${OBJCOPY_PROGRAM} -D --rename-section .text=.text_runtime \
+        install(CODE "execute_process(COMMAND ${OBJCOPY_PROGRAM} --rename-section .text=.text_runtime \
                     ${CMAKE_INSTALL_PREFIX}/lib/${TARGET_ARCH}${SANITIZER_SUBPATH}/libcangjie-runtime.a)"
                 COMPONENT cangjie-runtime)
     endif()
     if(CMAKE_BUILD_TYPE MATCHES "Release" OR CMAKE_BUILD_TYPE MATCHES "MinSizeRel")
-        install(CODE "execute_process(COMMAND ${STRIP_PROGRAM} -D --strip-unneeded ${CMAKE_INSTALL_PREFIX}/lib${SANITIZER_SUBPATH}/libcangjie-runtime.a)"
+        install(CODE "execute_process(COMMAND ${STRIP_PROGRAM} --strip-unneeded ${CMAKE_INSTALL_PREFIX}/lib${SANITIZER_SUBPATH}/libcangjie-runtime.a)"
             COMPONENT cangjie-runtime)
     endif()
 endif()

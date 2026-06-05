@@ -110,10 +110,6 @@ public:
             // get next object from work stack.
             BaseObject* obj = workStack.back();
             workStack.pop_back();
-
-            // skip dangling object (such as: object already released).
-            DCHECK(obj->IsValidObject());
-
             bool wasMarked = collector.MarkObject(obj);
             if (!wasMarked) {
                 nNewlyMarked++;
@@ -163,10 +159,6 @@ public:
             // get next object from work stack.
             BaseObject* obj = workStack.back();
             workStack.pop_back();
-
-            // skip dangling object (such as: object already released).
-            DCHECK(obj->IsValidObject());
-
             bool wasMarked = collector.MarkObject(obj);
             if (!wasMarked) {
                 collector.DFSTraceExportObject(obj);

@@ -475,7 +475,7 @@ class ConcurrentHashMapEntryView<K, V> <: MapEntryView<K, V> {
 
     public prop key: K {
         get() {
-            key
+            _key
         }
     }
 

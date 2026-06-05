@@ -6,13 +6,13 @@
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
-
 #include "GcStackInfo.h"
 
 #include <stack>
 
 #include "Collector/TracingCollector.h"
 #include "Common/StackType.h"
+#include "Interpreter/InterpreterSpecific.h"
 
 namespace MapleRuntime {
 void GCStackInfo::FillInStackTrace()
@@ -53,6 +53,9 @@ void GCStackInfo::VisitStackRoots(const RootVisitor& func, Mutator& mutator) con
             case FrameType::C2R_STUB:
             case FrameType::C2N_STUB:
             case FrameType::EXSLUSIVE:
+#ifdef INTERPRETER_ENABLED
+            case FrameType::INTERPRETER_C2I:
+#endif
                 TracingCollector::RecordStubCalleeSaved(regSlotsMap, reinterpret_cast<Uptr>(frame.mFrame.GetFA()));
                 break;
             default: {
@@ -60,6 +63,30 @@ void GCStackInfo::VisitStackRoots(const RootVisitor& func, Mutator& mutator) con
             }
         }
     }
+
+#ifdef INTERPRETER_ENABLED
+    auto markingStackVisitor = [this, &func](DYN_VisitingState state) {
+        for (const auto& frame : stack) {
+            switch (frame.GetFrameType()) {
+                case FrameType::INTERPRETER_I2N:
+                    // all roots are saved in interpreted frame producing I2N call, I2N adapter does not save any
+                    // references
+                    break;
+                case FrameType::INTERPRETER:
+                    VisitInterpreterFrameRootsMarking(state, frame, &func);
+                    break;
+            }
+        }
+    };
+
+    IterateFramesWithState(
+        mutator.interpreterCJThreadData,
+        [](DYN_VisitingState state, void* ctx) {
+            auto closure = reinterpret_cast<decltype(markingStackVisitor)*>(ctx);
+            (*closure)(state);
+        },
+        &markingStackVisitor);
+#endif
 }
 
 void GCStackInfo::VisitHeapReferencesOnStack(const RootVisitor& rootVisitor, const DerivedPtrVisitor& derivedPtrVisitor,
@@ -76,6 +103,9 @@ void GCStackInfo::VisitHeapReferencesOnStack(const RootVisitor& rootVisitor, con
             case FrameType::C2R_STUB:
             case FrameType::C2N_STUB:
             case FrameType::EXSLUSIVE:
+#ifdef INTERPRETER_ENABLED
+            case FrameType::INTERPRETER_C2I:
+#endif
                 TracingCollector::RecordStubCalleeSaved(regSlotsMap, reinterpret_cast<Uptr>(frame.mFrame.GetFA()));
                 break;
             case FrameType::SAFEPOINT:
@@ -87,6 +117,26 @@ void GCStackInfo::VisitHeapReferencesOnStack(const RootVisitor& rootVisitor, con
             }
         }
     }
+
+#ifdef INTERPRETER_ENABLED
+    auto adjustingStackVisitor = [this, &rootVisitor, &derivedPtrVisitor](DYN_VisitingState state) {
+        for (const auto& frame : stack) {
+            switch (frame.GetFrameType()) {
+                case FrameType::INTERPRETER:
+                    VisitInterpreterFrameRootsAdjusting(state, frame, &rootVisitor, &derivedPtrVisitor);
+                    break;
+            }
+        }
+    };
+
+    IterateFramesWithState(
+        mutator.interpreterCJThreadData,
+        [](DYN_VisitingState state, void* ctx) {
+            auto closure = reinterpret_cast<decltype(adjustingStackVisitor)*>(ctx);
+            (*closure)(state);
+        },
+        &adjustingStackVisitor);
+#endif
 }
 
 void RecordStackInfo::FillInStackTrace()
@@ -118,7 +168,7 @@ void RecordStackInfo::VisitStackRoots(const RootVisitor &func, Mutator &mutator)
         FrameInfo &ref = *frame;
         switch (frame->GetFrameType()) {
             case FrameType::MANAGED: {
-                currentFrame++;
+                currentFramePtr = frame;
                 TracingCollector::VisitStackRoots(func, regSlotsMap, ref, mutator);
                 break;
             }
@@ -164,9 +214,9 @@ char* CJThreadStackInfo::GetFuncOrFileNameStr(CString originName)
 {
     CString name;
     if (originName.Length() > maxStrSize) {
-            name = originName.SubStr(originName.Length() - maxStrSize);
-        } else {
-            name = originName;
+        name = originName.SubStr(originName.Length() - maxStrSize);
+    } else {
+        name = originName;
     }
     char* nameStr = reinterpret_cast<char*>(malloc(name.Length() + 1));
     int ret = strcpy_s(nameStr, name.Length() + 1, name.Str());

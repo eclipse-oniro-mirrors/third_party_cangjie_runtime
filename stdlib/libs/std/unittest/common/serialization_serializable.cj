@@ -64,7 +64,7 @@ extend Int64 <: Serializable<Int64> {
      *
      * @since 0.17.4
      *
-     * @throws DataModelException if dm is not DataModelInt
+     * @throws DataModelException if dm is not DataModelnt
      */
     public static func deserialize(dm: DataModel): Int64 {
         return match (dm) {
@@ -97,7 +97,7 @@ extend Int32 <: Serializable<Int32> {
      *
      * @since 0.17.4
      *
-     * @throws DataModelException if dm is not DataModelInt
+     * @throws DataModelException if dm is not DataModelnt
      */
     public static func deserialize(dm: DataModel): Int32 {
         return match (dm) {
@@ -130,7 +130,7 @@ extend Int16 <: Serializable<Int16> {
      *
      * @since 0.17.4
      *
-     * @throws DataModelException if dm is not DataModelInt
+     * @throws DataModelException if dm is not DataModelnt
      */
     public static func deserialize(dm: DataModel): Int16 {
         return match (dm) {
@@ -163,7 +163,7 @@ extend Int8 <: Serializable<Int8> {
      *
      * @since 0.17.4
      *
-     * @throws DataModelException if dm is not DataModelInt
+     * @throws DataModelException if dm is not DataModelnt
      */
     public static func deserialize(dm: DataModel): Int8 {
         return match (dm) {
@@ -196,7 +196,7 @@ extend UInt64 <: Serializable<UInt64> {
      *
      * @since 0.17.4
      *
-     * @throws DataModelException if dm is not DataModelInt
+     * @throws DataModelException if dm is not DataModelnt
      */
     public static func deserialize(dm: DataModel): UInt64 {
         return match (dm) {
@@ -229,7 +229,7 @@ extend UInt32 <: Serializable<UInt32> {
      *
      * @since 0.17.4
      *
-     * @throws DataModelException if dm is not DataModelInt
+     * @throws DataModelException if dm is not DataModelnt
      */
     public static func deserialize(dm: DataModel): UInt32 {
         return match (dm) {
@@ -262,7 +262,7 @@ extend UInt16 <: Serializable<UInt16> {
      *
      * @since 0.17.4
      *
-     * @throws DataModelException if dm is not DataModelInt
+     * @throws DataModelException if dm is not DataModelnt
      */
     public static func deserialize(dm: DataModel): UInt16 {
         return match (dm) {
@@ -295,7 +295,7 @@ extend UInt8 <: Serializable<UInt8> {
      *
      * @since 0.17.4
      *
-     * @throws DataModelException if dm is not DataModelInt
+     * @throws DataModelException if dm is not DataModelnt
      */
     public static func deserialize(dm: DataModel): UInt8 {
         return match (dm) {

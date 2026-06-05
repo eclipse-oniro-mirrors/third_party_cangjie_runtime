@@ -75,14 +75,14 @@ void MutatorManager::BindMutator(Mutator& mutator) const
     }
     mutator.SetSafepointStatePtr(&tlData->safepointState);
     mutator.SetSafepointActive(false);
-    tlData->mutator = &mutator;
+    tlData->SetMutator(&mutator);
 }
 
 void MutatorManager::UnbindMutator(Mutator& mutator) const
 {
     ThreadLocalData* tlData = ThreadLocal::GetThreadLocalData();
     MRT_ASSERT(tlData->mutator == &mutator, "mutator in ThreadLocalData doesn't match in cjthread");
-    tlData->mutator = nullptr;
+    tlData->SetMutator(nullptr);
     mutator.SetSafepointStatePtr(nullptr);
 }
 
@@ -159,6 +159,9 @@ Mutator* MutatorManager::CreateRuntimeMutator(ThreadType threadType)
     }
     CHECK_DETAIL(mutator != nullptr, "create mutator out of native memory");
     MutatorManagementRLock();
+#ifdef INTERPRETER_ENABLED
+    mutator->markAsRuntimeMutator();
+#endif
     mutator->Init();
     mutator->InitTid();
     mutator->InitProtectStackAddr();
@@ -168,10 +171,12 @@ Mutator* MutatorManager::CreateRuntimeMutator(ThreadType threadType)
     ThreadLocal::SetMutator(mutator);
     ThreadLocal::SetThreadType(threadType);
     ThreadLocal::SetCJProcessorFlag(true);
+    MutatorManagementRUnlock();
     ThreadLocalData* threadData = reinterpret_cast<ThreadLocalData*>(MRT_GetThreadLocalData());
+    // Managed-entry setup may block on sync/STW, so do not hold the mutator
+    // management lock across it.
     MRT_PreRunManagedCode(mutator, 2, threadData); // 2 layers
     // only running mutator can enter saferegion.
-    MutatorManagementRUnlock();
     return mutator;
 }
 
@@ -246,6 +251,11 @@ void MutatorManager::VisitAllMutators(MutatorVisitor func)
     if (mutator != nullptr) {
         func(*mutator);
     }
+}
+
+void MutatorManager::VisitAllMutatorsExceptFinalizer(MutatorVisitor func)
+{
+    ScheduleAllCJThreadVisitMutator(VisitMuatorHelper, &func);
 }
 
 void MutatorManager::StopTheWorld(bool syncGCPhase, GCPhase phase)
@@ -537,9 +547,8 @@ void MutatorManager::TransitionAllMutatorsToCpuProfile()
         }
     }
     std::list<Mutator*> undoneMutators;
-    VisitAllMutators([&undoneMutators](Mutator& mutator) {
-        if (mutator.GetTid() != Heap::GetHeap().GetFinalizerProcessor().GetTid() &&
-            mutator.GetCjthreadPtr() == MutatorManager::Instance().GetMainThreadHandle()) {
+    VisitAllMutatorsExceptFinalizer([&undoneMutators](Mutator& mutator) {
+        if (mutator.GetCjthreadPtr() == MutatorManager::Instance().GetMainThreadHandle()) {
             mutator.SetSuspensionFlag(Mutator::SuspensionType::SUSPENSION_FOR_CPU_PROFILE);
             mutator.SetSafepointActive(true);
             undoneMutators.push_back(&mutator);

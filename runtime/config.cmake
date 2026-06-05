@@ -84,6 +84,8 @@ set(EXPORT_MAP export.map)
 if (GLOBAL_EXPORT_FLAG MATCHES 0)
     if (OHOS_FLAG MATCHES 1)
         set(EXPORT_MAP ohos_local_export.map)
+    elseif (ANDROID_FLAG MATCHES 3) # arm
+        set(EXPORT_MAP arm_local_export.map)
     else()
         set(EXPORT_MAP local_export.map)
     endif()
@@ -316,7 +318,7 @@ elseif (ANDROID_FLAG MATCHES 3)
     message("android toolchain, clang version=${CLANG_VERSION_STRING}")
     set(CMAKE_INIT_FLAGS "-Wno-unused-command-line-argument -fno-omit-frame-pointer \
     -fvisibility=hidden -fno-exceptions -fno-rtti -ffunction-sections -Wall \
-        -fstack-protector-strong -fPIC -Wunused-variable ${ANDROID_COMPILE_OPTION} ${ANDROID_INCLUDE}"
+        -fstack-protector-strong -fPIC -fno-strict-aliasing -fno-common ${ANDROID_COMPILE_OPTION} ${ANDROID_INCLUDE}"
     )
 elseif (IOS_SIMULATOR_FLAG MATCHES 2)
     set(CMAKE_INIT_FLAGS "-Wno-unused-command-line-argument -fno-omit-frame-pointer -fvisibility=default -fno-exceptions \
