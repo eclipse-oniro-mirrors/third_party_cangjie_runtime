@@ -20,13 +20,14 @@ public type BlockingQueue<E> = LinkedBlockingQueue<E>
  * BlockingQueue is a concurrent queue with a blocking mechanism and supports a user-specified upper bound of capacity.
  */
 public class LinkedBlockingQueue<E> {
-    public let capacity: Int64 // the capacity of the queue
-    private let sendMonitor = Monitor() // Monitor for blocking the fail receivers
-    private let receiveMonitor = Monitor() // Monitor for blocking the fail senders
-    private let sendQSize = AtomicInt64(0) // Number of elements that are enqueuing.
-    private let receiveQSize = AtomicInt64(0) // Number of elements that are being dequeued.
+    public let capacity: Int64 // the capacity of the queue	 
+    private let takeMonitor = Monitor() // Monitor for blocking consumers when the queue is empty
+    private let putMonitor = Monitor() // Monitor for blocking producers when the queue is full
+    private let putQsize = AtomicInt64(0) // Number of elements that are enqueuing.
+    private let takeQsize = AtomicInt64(0) // Number of elements that are being dequeued.
     private let front: AtomicReference<Block<E>> // head of BlockingQueue.
     private let rear: AtomicReference<Block<E>> // tail of BlockingQueue.
+    private let count = AtomicInt64(0)
 
     public init(capacity: Int64) {
         if (capacity <= 0) {
@@ -59,7 +60,7 @@ public class LinkedBlockingQueue<E> {
         rear = AtomicReference<Block<E>>(block)
 
         for (e in elements) {
-            tryEnqueue(e)
+            let _ = tryEnqueue(e)
         }
     }
 
@@ -79,7 +80,7 @@ public class LinkedBlockingQueue<E> {
         rear = AtomicReference<Block<E>>(block)
 
         for (e in elements) {
-            tryEnqueue(e)
+            let _ = tryEnqueue(e)
         }
     }
 
@@ -93,11 +94,7 @@ public class LinkedBlockingQueue<E> {
      */
     public prop size: Int64 {
         get() {
-            let headBlock = front.load()
-            let tailBlock = rear.load()
-            let (headBlockVersion, headBlockReserved) = headBlock.getReserved()
-            let (tailBlockVersion, tailBlockAllocated) = tailBlock.getAllocated()
-            return (tailBlockAllocated - headBlockReserved) + (Int64(tailBlockVersion - headBlockVersion) << BUF_SIZE_BITS)
+            return count.load()
         }
     }
 
@@ -116,18 +113,32 @@ public class LinkedBlockingQueue<E> {
     }
 
     public func add(element: E): Unit {
-        while (true) {
-            if (tryAdd(element)) {
-                return
+        var prevCount: Int64 = -1
+        putMonitor.lock()
+        try {
+            while (true) {
+                if (count.load() != capacity) {
+                    break
+                }
+                putQsize.fetchAdd(1)
+                try {
+                    if (count.load() == capacity) {
+                        putMonitor.wait()
+                    }
+                } finally {
+                    putQsize.fetchSub(1)
+                }
             }
-
-            receiveMonitor.lock()
-            sendQSize.fetchAdd(1)
-            if (isFull()) {
-                receiveMonitor.wait()
+            enqueueUnsafe(element)
+            prevCount = count.fetchAdd(1)
+            if (prevCount + 1 < capacity && putQsize.load() > 0) {
+                putMonitor.notify()
             }
-            sendQSize.fetchSub(1)
-            receiveMonitor.unlock()
+        } finally {
+            putMonitor.unlock()
+        }
+        if (prevCount == 0 && takeQsize.load() > 0) {
+            signalNotEmpty()
         }
     }
 
@@ -144,29 +155,45 @@ public class LinkedBlockingQueue<E> {
      */
     @Deprecated[message: "Use member function `public func add(element: E, timeout: Duration): Bool` instead."]
     public func enqueue(element: E, timeout: Duration): Bool {
-        add(element, timeout)
+        return add(element, timeout)
     }
 
     public func add(element: E, timeout: Duration): Bool {
-        var total = timeout
-        while (true) {
-            if (tryAdd(element)) {
-                return true
+        var prevCount: Int64 = -1
+        putMonitor.lock()
+        try {
+            var remaining = timeout
+            while (true) {
+                if (count.load() != capacity) {
+                    break
+                }
+                if (remaining <= Duration.Zero) {
+                    return false
+                }
+                putQsize.fetchAdd(1)
+                try {
+                    if (count.load() == capacity) {
+                        let startTime = MonoTime.now()
+                        let _ = putMonitor.wait(timeout: remaining)
+                        let endTime = MonoTime.now()
+                        remaining -= endTime - startTime
+                    }
+                } finally {
+                    putQsize.fetchSub(1)
+                }
             }
-            receiveMonitor.lock()
-            let startTime = MonoTime.now()
-            if (total <= Duration.Zero) {
-                receiveMonitor.unlock()
-                break
+            enqueueUnsafe(element)
+            prevCount = count.fetchAdd(1)
+            if (prevCount + 1 < capacity && putQsize.load() > 0) {
+                putMonitor.notify()
             }
-            sendQSize.fetchAdd(1)
-            receiveMonitor.wait(timeout: total)
-            sendQSize.fetchSub(1)
-            let endTime = MonoTime.now()
-            total -= endTime - startTime
-            receiveMonitor.unlock()
+        } finally {
+            putMonitor.unlock()
         }
-        return false
+        if (prevCount == 0 && takeQsize.load() > 0) {
+            signalNotEmpty()
+        }
+        return true
     }
 
     /**
@@ -181,24 +208,39 @@ public class LinkedBlockingQueue<E> {
      */
     @Deprecated[message: "Use member function `public func remove(): E` instead."]
     public func dequeue(): E {
-        remove()
+        return remove()
     }
 
     public func remove(): E {
-        while (true) {
-            if (let Some(e) <- tryRemove()) {
-                return e
+        var prevCount: Int64 = -1
+        var value: E
+        takeMonitor.lock()
+        try {
+            while (true) {
+                if (count.load() != 0) {
+                    break
+                }
+                takeQsize.fetchAdd(1)
+                try {
+                    if (count.load() == 0) {
+                        takeMonitor.wait()
+                    }
+                } finally {
+                    takeQsize.fetchSub(1)
+                }
             }
-
-            sendMonitor.lock()
-            receiveQSize.fetchAdd(1)
-            if (size == 0) {
-                sendMonitor.wait()
+            value = dequeueUnsafe()
+            prevCount = count.fetchSub(1)
+            if (prevCount > 1 && takeQsize.load() > 0) {
+                takeMonitor.notify()
             }
-            receiveQSize.fetchSub(1)
-            sendMonitor.unlock()
+        } finally {
+            takeMonitor.unlock()
         }
-        throw Exception("Unreachable code.")
+        if (prevCount == capacity && putQsize.load() > 0) {
+            signalNotFull()
+        }
+        return value
     }
 
     /**
@@ -213,29 +255,46 @@ public class LinkedBlockingQueue<E> {
      */
     @Deprecated[message: "Use member function `public func remove(timeout: Duration): Option<E>` instead."]
     public func dequeue(timeout: Duration): Option<E> {
-        remove(timeout)
+        return remove(timeout)
     }
 
     public func remove(timeout: Duration): Option<E> {
-        var total = timeout
-        while (true) {
-            if (let Some(e) <- tryRemove()) {
-                return Some(e)
+        var prevCount: Int64 = -1
+        var value: Option<E> = None
+        takeMonitor.lock()
+        try {
+            var remaining = timeout
+            while (true) {
+                if (count.load() != 0) {
+                    break
+                }
+                if (remaining <= Duration.Zero) {
+                    return None<E>
+                }
+                takeQsize.fetchAdd(1)
+                try {
+                    if (count.load() == 0) {
+                        let startTime = MonoTime.now()
+                        let _ = takeMonitor.wait(timeout: remaining)
+                        let endTime = MonoTime.now()
+                        remaining -= endTime - startTime
+                    }
+                } finally {
+                    takeQsize.fetchSub(1)
+                }
             }
-            sendMonitor.lock()
-            let startTime = MonoTime.now()
-            if (total <= Duration.Zero) {
-                sendMonitor.unlock()
-                break
+            value = Some(dequeueUnsafe())
+            prevCount = count.fetchSub(1)
+            if (prevCount > 1 && takeQsize.load() > 0) {
+                takeMonitor.notify()
             }
-            receiveQSize.fetchAdd(1)
-            sendMonitor.wait(timeout: total)
-            receiveQSize.fetchSub(1)
-            let endTime = MonoTime.now()
-            total -= endTime - startTime
-            sendMonitor.unlock()
+        } finally {
+            takeMonitor.unlock()
         }
-        return None<E>
+        if (prevCount == capacity && putQsize.load() > 0) {
+            signalNotFull()
+        }
+        return value
     }
 
     /**
@@ -248,7 +307,7 @@ public class LinkedBlockingQueue<E> {
      */
     @Deprecated[message: "Use member function `public func peek(): Option<E>` instead."]
     public func head(): Option<E> {
-        peek()
+        return peek()
     }
 
     public func peek(): Option<E> {
@@ -278,38 +337,29 @@ public class LinkedBlockingQueue<E> {
      */
     @Deprecated[message: "Use member function `public func tryAdd(element: E): Bool` instead."]
     public func tryEnqueue(element: E): Bool {
-        tryAdd(element)
+        return tryAdd(element)
     }
 
     public func tryAdd(element: E): Bool {
-        while (true) {
-            let tailBlock = rear.load()
-            let headBlock = front.load()
-            let (tailBlockVersion, tailBlockAllocated) = tailBlock.getAllocated()
-            let (headBlockVersion, headBlockReserved) = headBlock.getReserved()
-
-            if (tailBlockVersion < headBlockVersion) {
-                continue
-            }
-
-            // Justifying whether the queue is full.
-            if (isFull(tailBlockVersion, tailBlockAllocated, headBlockVersion, headBlockReserved)) {
+        if (count.load() == capacity) {
+            return false
+        }
+        var prevCount: Int64 = -1
+        putMonitor.lock()
+        try {
+            if (count.load() == capacity) {
                 return false
             }
-
-            // Try to push @p element into the block at index 'allocatedIndex'.
-            match (tailBlock.pushAt(element, tailBlockAllocated)) {
-                case SUCCEED => break
-                case BlockDone => newBlock<E>(tailBlock, rear)
-                case CONFLICT => ()
+            enqueueUnsafe(element)
+            prevCount = count.fetchAdd(1)
+            if (prevCount + 1 < capacity && putQsize.load() > 0) {
+                putMonitor.notify()
             }
+        } finally {
+            putMonitor.unlock()
         }
-
-        // await the receivers that wait for successful sender.
-        if (receiveQSize.load() > 0) {
-            sendMonitor.lock()
-            sendMonitor.notify()
-            sendMonitor.unlock()
+        if (prevCount == 0 && takeQsize.load() > 0) {
+            signalNotEmpty()
         }
         return true
     }
@@ -324,44 +374,76 @@ public class LinkedBlockingQueue<E> {
      */
     @Deprecated[message: "Use member function `public func tryRemove(): Option<E>` instead."]
     public func tryDequeue(): Option<E> {
-        tryRemove()
+        return tryRemove()
     }
 
     public func tryRemove(): Option<E> {
+        if (count.load() == 0) {
+            return None<E>
+        }
+        var value: Option<E> = None
+        var prevCount: Int64 = -1
+        takeMonitor.lock()
+        try {
+            if (count.load() == 0) {
+                return None<E>
+            }
+            value = Some(dequeueUnsafe())
+            prevCount = count.fetchSub(1)
+            if (prevCount > 1 && takeQsize.load() > 0) {
+                takeMonitor.notify()
+            }
+        } finally {
+            takeMonitor.unlock()
+        }
+        if (prevCount == capacity && putQsize.load() > 0) {
+            signalNotFull()
+        }
+        return value
+    }
+
+    private func enqueueUnsafe(element: E): Unit {
+        while (true) {
+            let tailBlock = rear.load()
+            let (_, tailAllocated) = tailBlock.getAllocated()
+            match (tailBlock.pushAt(element, tailAllocated)) {
+                case SUCCEED => return
+                case BlockDone => newBlock<E>(tailBlock, rear)
+                case CONFLICT => ()
+            }
+        }
+    }
+
+    private func dequeueUnsafe(): E {
         while (true) {
             let headBlock = front.load()
             match (headBlock.pop()) {
+                case ELEM(e) => return e
+                case NoEntry => ()
                 case BlockDone =>
                     if (!nextBlock<E>(headBlock, front, rear)) {
-                        return None<E>
+                        break
                     }
-                case NoEntry => break
-                case ELEM(e) =>
-                    if (sendQSize.load() > 0) {
-                        receiveMonitor.lock()
-                        receiveMonitor.notify()
-                        receiveMonitor.unlock()
-                    }
-                    return Some(e)
             }
         }
-        return None<E>
+        throw Exception("Unreachable code.")
     }
 
-    private func isFull(
-        tailVersion: UInt64,
-        tailAllocated: Int64,
-        headVersion: UInt64,
-        headReserved: Int64
-    ): Bool {
-        return (tailAllocated - headReserved) + Int64((tailVersion - headVersion) << BUF_SIZE_BITS) >= capacity
+    private func signalNotEmpty(): Unit {
+        takeMonitor.lock()
+        try {
+            takeMonitor.notify()
+        } finally {
+            takeMonitor.unlock()
+        }
     }
 
-    private func isFull(): Bool {
-        let tailBlock = rear.load()
-        let headBlock = front.load()
-        let (tailBlockVersion, tailBlockAllocated) = tailBlock.getAllocated()
-        let (headBlockVersion, headBlockReserved) = headBlock.getReserved()
-        return isFull(tailBlockVersion, tailBlockAllocated, headBlockVersion, headBlockReserved)
+    private func signalNotFull(): Unit {
+        putMonitor.lock()
+        try {
+            putMonitor.notify()
+        } finally {
+            putMonitor.unlock()
+        }
     }
 }
