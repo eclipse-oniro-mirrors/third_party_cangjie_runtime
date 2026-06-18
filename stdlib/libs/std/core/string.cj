@@ -873,13 +873,16 @@ public struct String <: Collection<Byte> & Comparable<String> & Hashable & ToStr
      */
     @Frozen
     public func padStart(totalWidth: Int64, padding!: String = " "): String {
+        // Left padding validates width before inspecting the padding bytes.
         if (totalWidth < 0) {
             throw IllegalArgumentException("Negative totalWidth.")
         }
         if (totalWidth == 0 || this.size > totalWidth) {
             return this
         }
+        // Padding length is based on the UTF-8 byte count stored by String.
         let runeLen = padding.size
+        // Empty padding cannot advance the prefix fill loop.
         if (runeLen == 0) {
             throw IllegalArgumentException("Padding string cannot be empty.")
         }
@@ -892,6 +895,8 @@ public struct String <: Collection<Byte> & Comparable<String> & Hashable & ToStr
             throw IllegalArgumentException("The size of String is too large.")
         }
 
+        // padStart reserves the whole result before writing padding and source bytes.
+        // Build the prefix padding before appending the receiver bytes.
         var itemBytes: Array<UInt8> = Array<UInt8>(totalBytes, repeat: 0)
         var k: Int64 = 0
         let paddingdata = unsafe { padding.rawData() }
@@ -909,12 +914,14 @@ public struct String <: Collection<Byte> & Comparable<String> & Hashable & ToStr
      */
     @Frozen
     public func padEnd(totalWidth: Int64, padding!: String = " "): String {
+        // Right padding keeps the receiver bytes at the beginning of the result.
         if (totalWidth < 0) {
             throw IllegalArgumentException("Negative totalWidth.")
         }
         if (totalWidth == 0 || this.size > totalWidth) {
             return this
         }
+        // Padding is measured in bytes because String stores UTF-8 data.
         let runeLen = padding.size
         if (runeLen == 0) {
             throw IllegalArgumentException("Padding string cannot be empty.")
@@ -928,6 +935,7 @@ public struct String <: Collection<Byte> & Comparable<String> & Hashable & ToStr
             throw IllegalArgumentException("The size of String is too large.")
         }
 
+        // Copy the original bytes first, then append repeated padding bytes.
         var itemBytes: Array<UInt8> = Array<UInt8>(totalBytes, repeat: 0)
         itemBytes[..size] = unsafe { this.rawData() }
         var k: Int64 = size
