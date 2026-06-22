@@ -65,6 +65,15 @@ public class Future<T> {
         unsafe { futureInit(this) }
     }
 
+    private func unwrapResult(): T {
+        match (result) {
+            case v: FutureOk<T> => return v.value
+            case e: FutureExcept => throw e.except
+            case e: FutureErr => throw e.err
+            case _ => throw IllegalStateException("Future result is in an unexpected state.")
+        }
+    }
+
     public prop thread: Thread {
         get() {
             _thread
@@ -81,12 +90,7 @@ public class Future<T> {
         if (!isComplete) {
             unsafe { futureWait(this, Int64.Max) }
         }
-        match (result) {
-            case v: FutureOk<T> => return v.value
-            case e: FutureExcept => throw e.except
-            case e: FutureErr => throw e.err
-            case _ => throw IllegalStateException("Future result is in an unexpected state.")
-        }
+        return unwrapResult()
     }
 
     /**
@@ -99,12 +103,7 @@ public class Future<T> {
         if (!isComplete) {
             return Option<T>.None
         }
-        match (result) {
-            case v: FutureOk<T> => return v.value
-            case e: FutureExcept => throw e.except
-            case e: FutureErr => throw e.err
-            case _ => throw IllegalStateException("Future result is in an unexpected state.")
-        }
+        return Some(unwrapResult())
     }
 
     /**
@@ -129,12 +128,7 @@ public class Future<T> {
                 throw TimeoutException()
             }
         }
-        match (result) {
-            case v: FutureOk<T> => return v.value
-            case e: FutureExcept => throw e.except
-            case e: FutureErr => throw e.err
-            case _ => throw IllegalStateException("Future result is in an unexpected state.")
-        }
+        return unwrapResult()
     }
 
     /**
