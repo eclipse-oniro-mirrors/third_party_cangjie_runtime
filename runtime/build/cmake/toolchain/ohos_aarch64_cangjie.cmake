@@ -141,6 +141,7 @@ set(CMAKE_SHARED_LINKER_FLAGS
     -Wl,-z,noexecstack \
     -Wl,-z,relro \
     -Wl,-z,now \
+    -Wl,--hash-style=gnu \
     -lpthread"
 )
 

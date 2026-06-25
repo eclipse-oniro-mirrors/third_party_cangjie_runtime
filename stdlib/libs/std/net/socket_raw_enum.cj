@@ -25,12 +25,12 @@ public struct SocketDomain <: Equatable<SocketDomain> & ToString & Hashable {
     public static let NETLINK: SocketDomain = SocketDomain(AF_NETLINK)
     public static let PACKET: SocketDomain = SocketDomain(AF_PACKET)
 
-    private init(domain: Int16) {
-        this(Int32(domain))
-    }
-
     public init(domain: Int32) {
         this.val = domain
+    }
+
+    private init(domain: Int16) {
+        this(Int32(domain))
     }
 
     public operator func ==(r: SocketDomain): Bool {
@@ -81,6 +81,10 @@ public struct SocketDomain <: Equatable<SocketDomain> & ToString & Hashable {
         return !(this == r)
     }
 
+    public func hashCode(): Int64 {
+        return Int64(val)
+    }
+
     public func toString(): String {
         return match {
             case val == Int32(AF_INET) => "IPv4"
@@ -88,10 +92,6 @@ public struct SocketDomain <: Equatable<SocketDomain> & ToString & Hashable {
             case val == Int32(AF_UNIX) => "unix"
             case _ => "Domain(${val})"
         }
-    }
-
-    public func hashCode(): Int64 {
-        return Int64(val)
     }
 }
 

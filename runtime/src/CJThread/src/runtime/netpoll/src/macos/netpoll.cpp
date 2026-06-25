@@ -42,7 +42,7 @@ NetpollFd NetpollCreate(void)
 int NetpollAdd(NetpollFd npfd, int fd, void *data, unsigned int events)
 {
     struct kevent event;
-    struct NetpollMetaData *metaData = reinterpret_cast<struct NetpollMetaData *>(npfd);
+    NetpollMetaData* metaData = static_cast<NetpollMetaData*>(npfd);
     if (metaData == nullptr) {
         LOG_ERROR(ERRNO_NETPOLL_UNINIT, "netpoll uninited");
         return ERRNO_NETPOLL_UNINIT;
@@ -68,7 +68,7 @@ int NetpollAdd(NetpollFd npfd, int fd, void *data, unsigned int events)
 int NetpollDel(NetpollFd npfd, int fd, unsigned int events)
 {
     struct kevent event;
-    struct NetpollMetaData *metaData = reinterpret_cast<struct NetpollMetaData *>(npfd);
+    NetpollMetaData* metaData = static_cast<NetpollMetaData*>(npfd);
     if (metaData == nullptr) {
         LOG_ERROR(ERRNO_NETPOLL_UNINIT, "netpoll uninited");
         return ERRNO_NETPOLL_UNINIT;
@@ -91,7 +91,7 @@ int NetpollWait(NetpollFd npfd, struct kevent *events, int maxevents, int timeou
 {
     int eventsNum;
     struct timespec timeout;
-    struct NetpollMetaData *meta = reinterpret_cast<struct NetpollMetaData *>(npfd);
+    NetpollMetaData* meta = static_cast<NetpollMetaData*>(npfd);
  
     if (meta == nullptr) {
         LOG_ERROR(ERRNO_NETPOLL_UNINIT, "netpoll uninited");
@@ -111,7 +111,7 @@ int NetpollWait(NetpollFd npfd, struct kevent *events, int maxevents, int timeou
  
 void NetpollExit(NetpollFd npfd)
 {
-    struct NetpollMetaData *metaData = reinterpret_cast<struct NetpollMetaData *>(npfd);
+    NetpollMetaData* metaData = static_cast<NetpollMetaData*>(npfd);
     if (npfd == nullptr) {
         return;
     }
