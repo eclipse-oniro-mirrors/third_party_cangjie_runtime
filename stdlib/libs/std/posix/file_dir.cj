@@ -264,6 +264,30 @@ public const SEEK_CUR: Int32 = 0x1
 @Deprecated
 public const SEEK_END: Int32 = 0x2
 
+private func withCheckedCStringPath(path: String, action: (CString) -> Int32): Int32 {
+    checkPath(path)
+    unsafe {
+        var result: Int32 = -1
+        try (p = LibC.mallocCString(path).asResource()) {
+            result = action(p.value)
+        }
+        return result
+    }
+}
+
+private func withCStringPathOrFalse(path: String, action: (CString) -> Bool): Bool {
+    if (path.contains(NULL_BYTE)) {
+        return false
+    }
+    unsafe {
+        var result = false
+        try (p = LibC.mallocCString(path).asResource()) {
+            result = action(p.value)
+        }
+        return result
+    }
+}
+
 /**
  * Open a file and returns a new file descriptor for it, or -1 on an error.
  * When the O_CREAT parameter is present, the permission can be set via flag.
@@ -280,11 +304,7 @@ public const SEEK_END: Int32 = 0x2
  */
 @Deprecated
 public func `open`(path: String, oflag: Int32, flag: UInt32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { open(p, oflag, flag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { open(p, oflag, flag) }}
 }
 
 /**
@@ -301,11 +321,7 @@ public func `open`(path: String, oflag: Int32, flag: UInt32): Int32 {
  */
 @Deprecated
 public func `open`(path: String, oflag: Int32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { open(p, oflag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { open(p, oflag) }}
 }
 
 /**
@@ -325,11 +341,7 @@ public func `open`(path: String, oflag: Int32): Int32 {
 @When[os != "Windows" && os != "macOS" && os != "iOS"]
 @Deprecated
 public func open64(path: String, oflag: Int32, flag: UInt32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { open64(p, oflag, flag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { open64(p, oflag, flag) }}
 }
 
 /**
@@ -347,11 +359,7 @@ public func open64(path: String, oflag: Int32, flag: UInt32): Int32 {
 @When[os != "Windows" && os != "macOS" && os != "iOS"]
 @Deprecated
 public func open64(path: String, oflag: Int32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { open64(p, oflag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { open64(p, oflag) }}
 }
 
 /**
@@ -371,11 +379,7 @@ public func open64(path: String, oflag: Int32): Int32 {
 @When[os != "Windows"]
 @Deprecated
 public func openat(fd: Int32, path: String, oflag: Int32, flag: UInt32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { openat(fd, p, oflag, flag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { openat(fd, p, oflag, flag) }}
 }
 
 /**
@@ -394,11 +398,7 @@ public func openat(fd: Int32, path: String, oflag: Int32, flag: UInt32): Int32 {
 @When[os != "Windows"]
 @Deprecated
 public func openat(fd: Int32, path: String, oflag: Int32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { openat(fd, p, oflag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { openat(fd, p, oflag) }}
 }
 
 /**
@@ -418,11 +418,7 @@ public func openat(fd: Int32, path: String, oflag: Int32): Int32 {
 @When[os != "Windows" && os != "macOS" && os != "iOS"]
 @Deprecated
 public func openat64(fd: Int32, path: String, oflag: Int32, flag: UInt32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { openat64(fd, p, oflag, flag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { openat64(fd, p, oflag, flag) }}
 }
 
 /**
@@ -441,11 +437,7 @@ public func openat64(fd: Int32, path: String, oflag: Int32, flag: UInt32): Int32
 @When[os != "Windows" && os != "macOS" && os != "iOS"]
 @Deprecated
 public func openat64(fd: Int32, path: String, oflag: Int32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { openat64(fd, p, oflag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { openat64(fd, p, oflag) }}
 }
 
 /**
@@ -461,11 +453,7 @@ public func openat64(fd: Int32, path: String, oflag: Int32): Int32 {
  */
 @Deprecated
 public func creat(path: String, flag: UInt32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { creat(p, flag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { creat(p, flag) }}
 }
 
 /**
@@ -663,13 +651,7 @@ public const S_IFSOCK: UInt32 = 0xC000
 @When[os != "Windows"]
 @Deprecated
 public func isType(path: String, mode: UInt32): Bool {
-    if (path.contains(NULL_BYTE)) {
-        return false
-    }
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Bool = unsafe { CJ_OS_IsType(p, mode) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCStringPathOrFalse(path) {p: CString => unsafe { CJ_OS_IsType(p, mode) }}
 }
 
 const REG: Int32 = 1
@@ -691,13 +673,7 @@ const SOCK: Int32 = 7
  */
 @Deprecated
 public func isReg(path: String): Bool {
-    if (path.contains(NULL_BYTE)) {
-        return false
-    }
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Bool = unsafe { CJ_OS_IsTypeFunc(p, REG) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCStringPathOrFalse(path) {p: CString => unsafe { CJ_OS_IsTypeFunc(p, REG) }}
 }
 
 /**
@@ -711,13 +687,7 @@ public func isReg(path: String): Bool {
  */
 @Deprecated
 public func isDir(path: String): Bool {
-    if (path.contains(NULL_BYTE)) {
-        return false
-    }
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Bool = unsafe { CJ_OS_IsTypeFunc(p, DIR) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCStringPathOrFalse(path) {p: CString => unsafe { CJ_OS_IsTypeFunc(p, DIR) }}
 }
 
 /**
@@ -731,13 +701,7 @@ public func isDir(path: String): Bool {
  */
 @Deprecated
 public func isChr(path: String): Bool {
-    if (path.contains(NULL_BYTE)) {
-        return false
-    }
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Bool = unsafe { CJ_OS_IsTypeFunc(p, CHR) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCStringPathOrFalse(path) {p: CString => unsafe { CJ_OS_IsTypeFunc(p, CHR) }}
 }
 
 /**
@@ -751,13 +715,7 @@ public func isChr(path: String): Bool {
  */
 @Deprecated
 public func isBlk(path: String): Bool {
-    if (path.contains(NULL_BYTE)) {
-        return false
-    }
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Bool = unsafe { CJ_OS_IsTypeFunc(p, BLK) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCStringPathOrFalse(path) {p: CString => unsafe { CJ_OS_IsTypeFunc(p, BLK) }}
 }
 
 /**
@@ -771,13 +729,7 @@ public func isBlk(path: String): Bool {
  */
 @Deprecated
 public func isFIFO(path: String): Bool {
-    if (path.contains(NULL_BYTE)) {
-        return false
-    }
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Bool = unsafe { CJ_OS_IsTypeFunc(p, FIFO) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCStringPathOrFalse(path) {p: CString => unsafe { CJ_OS_IsTypeFunc(p, FIFO) }}
 }
 
 /**
@@ -792,13 +744,7 @@ public func isFIFO(path: String): Bool {
 @When[os != "Windows"]
 @Deprecated
 public func isSock(path: String): Bool {
-    if (path.contains(NULL_BYTE)) {
-        return false
-    }
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Bool = unsafe { CJ_OS_IsTypeFunc(p, SOCK) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCStringPathOrFalse(path) {p: CString => unsafe { CJ_OS_IsTypeFunc(p, SOCK) }}
 }
 
 /**
@@ -813,13 +759,7 @@ public func isSock(path: String): Bool {
 @When[os != "Windows"]
 @Deprecated
 public func isLnk(path: String): Bool {
-    if (path.contains(NULL_BYTE)) {
-        return false
-    }
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Bool = unsafe { CJ_OS_IsTypeFunc(p, LNK) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCStringPathOrFalse(path) {p: CString => unsafe { CJ_OS_IsTypeFunc(p, LNK) }}
 }
 
 /**
@@ -834,11 +774,7 @@ public func isLnk(path: String): Bool {
  */
 @Deprecated
 public func chdir(path: String): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { chdir(p) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { chdir(p) }}
 }
 
 /**
@@ -1008,11 +944,7 @@ public func link(path: String, newpath: String): Int32 {
 @When[os != "Windows"]
 @Deprecated
 public func unlink(path: String): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { unlink(p) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { unlink(p) }}
 }
 
 /**
@@ -1102,11 +1034,7 @@ public const AT_REMOVEDIR: Int32 = 0x200
 @When[os != "Windows"]
 @Deprecated
 public func unlinkat(fd: Int32, path: String, ulflag: Int32): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    var r: Int32 = unsafe { unlinkat(fd, p, ulflag) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { unlinkat(fd, p, ulflag) }}
 }
 
 /**
@@ -1182,11 +1110,7 @@ public func symlinkat(path: String, fd: Int32, symPath: String): Int32 {
  */
 @Deprecated
 public func remove(path: String): Int32 {
-    checkPath(path)
-    var p: CString = unsafe { LibC.mallocCString(path) }
-    let r: Int32 = unsafe { remove(p) }
-    unsafe { LibC.free(p) }
-    return r
+    return withCheckedCStringPath(path) {p: CString => unsafe { remove(p) }}
 }
 
 /**

@@ -453,19 +453,11 @@ extend IntNative <: WrappingOp<IntNative> {
     }
 
     public func wrappingShr(y: UInt64): IntNative {
-        if (isNative64) {
-            if (y >= 64) {
-                return this >> (y & 0b111111)
-            } else {
-                return this >> y
-            }
-        } else {
-            if (y >= 32) {
-                return this >> (y & 0b11111)
-            } else {
-                return this >> y
-            }
+        let (nativeWidth, shiftMask) = nativeShiftConfig()
+        if (y >= nativeWidth) {
+            return this >> (y & shiftMask)
         }
+        return this >> y
     }
 }
 
@@ -513,18 +505,10 @@ extend UIntNative <: WrappingOp<UIntNative> {
     }
 
     public func wrappingShr(y: UInt64): UIntNative {
-        if (isNative64) {
-            if (y >= 64) {
-                return this >> (y & 0b111111)
-            } else {
-                return this >> y
-            }
-        } else {
-            if (y >= 32) {
-                return this >> (y & 0b11111)
-            } else {
-                return this >> y
-            }
+        let (nativeWidth, shiftMask) = nativeShiftConfig()
+        if (y >= nativeWidth) {
+            return this >> (y & shiftMask)
         }
+        return this >> y
     }
 }

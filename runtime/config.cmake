@@ -303,6 +303,7 @@ if (OHOS_FLAG IN_LIST OHOS_FLAG_LIST)
         -Wstring-conversion -Wtautological-overlap-compare -Wl,--allow-shlib-undefined \
         -Wno-unused-command-line-argument -fno-omit-frame-pointer -fvisibility=default -fno-exceptions -fno-rtti \
         -ffunction-sections -Wall -fstack-protector-strong -fno-emulated-tls \
+        -Wl,--hash-style=gnu \
         --sysroot=${OHOS_ROOT}/out/sdk/obj/third_party/musl/sysroot ${OHOS_INCLUDE}"
     )
 elseif (WINDOWS_FLAG MATCHES 1)
@@ -336,7 +337,11 @@ endif ()
 set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
 set(HWASAN_FLAGS "-shared-libsan -fsanitize=hwaddress -fno-omit-frame-pointer -fno-emulated-tls -fno-lto -fno-sanitize=cfi -mllvm -hwasan-globals=0 -fno-whole-program-vtables")
 set(CMAKE_INIT_FLAGS "${CMAKE_INIT_FLAGS} -pipe -Wdate-time -Wformat=2 -Wfloat-equal -Wextra \
-    -Wswitch-default -Wunused -Wcast-qual -Wno-unused-parameter -fno-common")
+    -Wconversion -Wcast-align \
+    -Wvla -Wundef \
+    -Wno-implicit-int-conversion -Wno-sign-conversion -Wno-implicit-int-float-conversion \
+    -Wno-shorten-64-to-32 -Wswitch-default -Wunused -Wcast-qual -Wno-unused-parameter \
+    -fno-common")
 
 if (NOT CMAKE_AR_PATH)
     # The command "which llvm-ar" to obtain ar path

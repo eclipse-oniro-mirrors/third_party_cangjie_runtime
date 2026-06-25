@@ -323,9 +323,9 @@ void SchmonCycle(void)
 /* Schedule monitor thread entry function */
 void *SchmonEntry(ScheduleHandle handle)
 {
-    struct Schedule *schedule;
+    Schedule* schedule;
 
-    schedule = (struct Schedule *)handle;
+    schedule = static_cast<Schedule*>(handle);
     if (schedule == nullptr) {
         return nullptr;
     }
@@ -348,10 +348,10 @@ void *SchmonEntry(ScheduleHandle handle)
 int SchmonStart(ScheduleHandle handle)
 {
     pthread_attr_t pthreadAttr;
-    struct Schedule *schedule;
+    Schedule* schedule;
     int error;
 
-    schedule = (struct Schedule *)handle;
+    schedule = static_cast<Schedule*>(handle);
     if (schedule == nullptr) {
         return ERRNO_SCHMON_ARG_INVALID;
     }

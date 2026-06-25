@@ -619,7 +619,7 @@ static char** GetProcessCommandLine(void)
 static char* GetProcessWorkingDir(void)
 {
     DWORD bufLen = BUF_LEN;
-    wchar_t* workingDirW = (char*)calloc(bufLen, sizeof(wchar_t));
+    wchar_t* workingDirW = (wchar_t*)calloc(bufLen, sizeof(wchar_t));
     if (workingDirW == NULL) {
         return NULL;
     }
@@ -628,7 +628,7 @@ static char* GetProcessWorkingDir(void)
     if (len > bufLen) {
         free(workingDirW);
         bufLen = len + 1;
-        workingDirW = (char*)calloc(bufLen, sizeof(wchar_t));
+        workingDirW = (wchar_t*)calloc(bufLen, sizeof(wchar_t));
         if (workingDirW == NULL) {
             return NULL;
         }
@@ -641,6 +641,7 @@ static char* GetProcessWorkingDir(void)
     }
 
     char* workingDir = Wchar2Char(workingDirW);
+    free(workingDirW);
     return workingDir;
 }
 

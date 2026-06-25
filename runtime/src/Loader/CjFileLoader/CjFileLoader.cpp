@@ -176,7 +176,7 @@ void CJFileLoader::ParseEnumCtor(TypeInfo* ti)
     U32 enumCtorNum = ei->GetNumOfEnumCtor();
     for (U32 idx = 0; idx < enumCtorNum; ++idx) {
         EnumCtorInfo* enumCtorInfo = ei->GetEnumCtor(idx);
-        void* fn = reinterpret_cast<void*>(enumCtorInfo->GetCtorFn());
+        void* fn = static_cast<void*>(enumCtorInfo->GetCtorFn());
         if (fn == nullptr) {
             continue;
         }

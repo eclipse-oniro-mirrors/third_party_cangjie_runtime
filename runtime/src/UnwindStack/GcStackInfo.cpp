@@ -164,6 +164,9 @@ void GCStackInfo::VisitStackRoots(const RootVisitor& func, Mutator& mutator) con
                 case FrameType::INTERPRETER:
                     VisitInterpreterFrameRootsMarking(state, frame, &func);
                     break;
+                default: {
+                    break;
+                }
             }
         }
     };
@@ -214,6 +217,9 @@ void GCStackInfo::VisitHeapReferencesOnStack(const RootVisitor& rootVisitor, con
                 case FrameType::INTERPRETER:
                     VisitInterpreterFrameRootsAdjusting(state, frame, &rootVisitor, &derivedPtrVisitor);
                     break;
+                default: {
+                    break;
+                }
             }
         }
     };

@@ -64,7 +64,7 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
             if (address.family != localAddress.family) {
                 throw IllegalArgumentException(
                     "remote address kind (${address.family}) should have the same address " +
-                    " family as local (${localAddress.family})")
+                        " family as local (${localAddress.family})")
             }
         }
         throwIfIPv4ZeroOnWindows(address)
@@ -269,15 +269,8 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
      * @throws IllegalArgumentException if the specified buffer size is negative or 0.
      */
     public mut prop sendBufferSize: Int64 {
-        get() {
-            Int64(impl.getSocketOptionIntNative(SOL_SOCKET, SOCK_SNDBUF))
-        }
-        set(newSize) {
-            if (newSize <= 0) {
-                throw IllegalArgumentException("Buffer size should be positive, got ${newSize}.")
-            }
-            impl.setSocketOptionIntNative(SOL_SOCKET, SOCK_SNDBUF, IntNative(newSize))
-        }
+        get() { impl.getSendBufferSize() }
+        set(newSize) { impl.setSendBufferSize(newSize) }
     }
 
     /**
@@ -293,15 +286,8 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
      * @throws IllegalArgumentException if the specified buffer size is negative or 0.
      */
     public mut prop receiveBufferSize: Int64 {
-        get() {
-            Int64(impl.getSocketOptionIntNative(SOL_SOCKET, SOCK_RCVBUF))
-        }
-        set(newSize) {
-            if (newSize <= 0) {
-                throw IllegalArgumentException("Buffer size should be positive, got ${newSize}.")
-            }
-            impl.setSocketOptionIntNative(SOL_SOCKET, SOCK_RCVBUF, IntNative(newSize))
-        }
+        get() { impl.getReceiveBufferSize() }
+        set(newSize) { impl.setReceiveBufferSize(newSize) }
     }
 
     /**
@@ -372,15 +358,8 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
      *
      * Throws an exception if failed (when getsockopt returns -1).
      */
-    public func getSocketOption(
-        level: Int32,
-        option: Int32,
-        value: CPointer<Unit>,
-        valueLength: CPointer<UIntNative>
-    ): Unit {
-        unsafe {
-            impl.getSocketOption(level, option, value, valueLength)
-        }
+    public func getSocketOption(level: Int32, option: Int32, value: CPointer<Unit>, valueLength: CPointer<UIntNative>): Unit {
+        unsafe { impl.getSocketOption(level, option, value, valueLength) }
     }
 
     /**
@@ -391,15 +370,8 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
      *
      * Throws an exception if failed (when setsockopt returns -1).
      */
-    public func setSocketOption(
-        level: Int32,
-        option: Int32,
-        value: CPointer<Unit>,
-        valueLength: UIntNative
-    ): Unit {
-        unsafe {
-            impl.setSocketOption(level, option, value, valueLength)
-        }
+    public func setSocketOption(level: Int32, option: Int32, value: CPointer<Unit>, valueLength: UIntNative): Unit {
+        unsafe { impl.setSocketOption(level, option, value, valueLength) }
     }
 
     /**
@@ -410,10 +382,7 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
      * Throws an exception if failed (when getsockopt returns -1) or if the result
      * has size different from IntNative.
      */
-    public func getSocketOptionIntNative(
-        level: Int32,
-        option: Int32
-    ): IntNative {
+    public func getSocketOptionIntNative(level: Int32, option: Int32): IntNative {
         impl.getSocketOptionIntNative(level, option)
     }
 
@@ -425,11 +394,7 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
      * Throws an exception if failed (when setsockopt returns -1), for example
      * when the option size is different from IntNative.
      */
-    public func setSocketOptionIntNative(
-        level: Int32,
-        option: Int32,
-        value: IntNative
-    ): Unit {
+    public func setSocketOptionIntNative(level: Int32, option: Int32, value: IntNative): Unit {
         impl.setSocketOptionIntNative(level, option, value)
     }
 
@@ -444,10 +409,7 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
      * Throws an exception if failed (when getsockopt returns -1) or if the result
      * has size different from IntNative.
      */
-    public func getSocketOptionBool(
-        level: Int32,
-        option: Int32
-    ): Bool {
+    public func getSocketOptionBool(level: Int32, option: Int32): Bool {
         impl.getSocketOptionBool(level, option)
     }
 
@@ -461,11 +423,7 @@ public class TcpSocket <: StreamingSocket & Equatable<TcpSocket> & Hashable {
      * Throws an exception if failed (when setsockopt returns -1), for example
      * when the option size is different from IntNative.
      */
-    public func setSocketOptionBool(
-        level: Int32,
-        option: Int32,
-        value: Bool
-    ): Unit {
+    public func setSocketOptionBool(level: Int32, option: Int32, value: Bool): Unit {
         impl.setSocketOptionBool(level, option, value)
     }
 

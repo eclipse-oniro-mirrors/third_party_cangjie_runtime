@@ -31,18 +31,7 @@ struct Linger {
     static const size: UIntNative = 4
 
     static func use<R>(block: (CPointer<Linger>) -> R): R {
-        unsafe {
-            let ptr = LibC.malloc<Linger>()
-            if (ptr.isNull()) {
-                throw IllegalMemoryException("Malloc failed.")
-            }
-
-            try {
-                block(ptr)
-            } finally {
-                LibC.free(ptr)
-            }
-        }
+        useLingerPointer(block)
     }
 }
 
@@ -67,17 +56,21 @@ struct Linger {
     static let size: UIntNative = 8
 
     static func use<R>(block: (CPointer<Linger>) -> R): R {
-        unsafe {
-            let ptr = LibC.malloc<Linger>()
-            if (ptr.isNull()) {
-                throw IllegalMemoryException("Malloc failed.")
-            }
+        useLingerPointer(block)
+    }
+}
 
-            try {
-                block(ptr)
-            } finally {
-                LibC.free(ptr)
-            }
+func useLingerPointer<R>(block: (CPointer<Linger>) -> R): R {
+    unsafe {
+        let ptr = LibC.malloc<Linger>()
+        if (ptr.isNull()) {
+            throw IllegalMemoryException("Malloc failed.")
+        }
+
+        try {
+            block(ptr)
+        } finally {
+            LibC.free(ptr)
         }
     }
 }
@@ -111,7 +104,7 @@ extend<ActualPlatformSocket> SocketCommon<ActualPlatformSocket> {
     func setLinger(newLinger: ?Duration): Unit {
         Linger.use<Unit> {
             ptr => unsafe {
-                var lingerValue = match (newLinger) {
+                let lingerValue = match (newLinger) {
                     case Some(linger) => Linger(true,
                         linger.throwIfNegative("Linger").bumpAtLeast(Duration.second * 1).toSeconds())
                     case _ => Linger(false, 0)
