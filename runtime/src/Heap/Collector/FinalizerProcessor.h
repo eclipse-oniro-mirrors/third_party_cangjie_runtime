@@ -21,13 +21,6 @@
 #include "Heap/Collector/Collector.h"
 
 namespace MapleRuntime {
-#ifdef __APPLE__
-template<typename T>
-using ManagedList = std::list<T>;
-#else
-template<typename T>
-using ManagedList = std::list<T, StdContainerAllocator<T, FINALIZER_PROCESSOR>>;
-#endif
 
 class FinalizerProcessor {
 public:
@@ -87,6 +80,7 @@ public:
 
     void EnqueueFinalizables(const std::function<bool(BaseObject*)>& finalizable, U32 countLimit = UINT_MAX);
     void RegisterFinalizer(BaseObject* obj);
+    void RegisterFinalizers(ManagedList<BaseObject*>& objs);
     bool IsRunning() const { return running; }
     uint32_t GetTid() const { return tid; }
 
