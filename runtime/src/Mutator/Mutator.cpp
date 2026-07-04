@@ -16,6 +16,8 @@
 #include "Collector/CopyCollector.h"
 #include "Common/ScopedObjectAccess.h"
 #include "Concurrency/ConcurrencyModel.h"
+#include "Heap/Collector/FinalizerProcessor.h"
+#include "Heap/WCollector/WCollector.h"
 #include "ObjectModel/RefField.inline.h"
 #include "MutatorManager.h"
 #include "StackManager.h"
@@ -162,6 +164,20 @@ void Mutator::InitProtectStackAddr()
 #endif
     size_t reversedSize = Runtime::Current().GetConcurrencyModel().GetReservedStackSize();
     ThreadLocal::SetProtectAddr(reinterpret_cast<uint8_t*>(reinterpret_cast<uintptr_t>(stackBoundAddr) + reversedSize));
+}
+
+void Mutator::ResetMutator()
+{
+    rawObject.object = nullptr;
+    if (satbNode != nullptr) {
+        SatbBuffer::Instance().RetireNode(satbNode);
+        satbNode = nullptr;
+    }
+    if (!localFinalizers.empty()) {
+        Heap::GetHeap().GetFinalizerProcessor().RegisterFinalizers(localFinalizers);
+    }
+    uwContext.Reset();
+    exceptionWrapper.ClearInfo();
 }
 
 void Mutator::SetManagedContext(bool isManagedContext)
@@ -554,6 +570,15 @@ inline void Mutator::GcPhaseEnum(GCPhase newPhase)
     VisitMutatorRoots(visitor);
 }
 
+inline void Mutator::ForwardLocalFinalizers(Collector& collector)
+{
+    WCollector& wcollector = reinterpret_cast<WCollector&>(collector);
+    RootVisitor visitor = [&wcollector](ObjectRef& root) { wcollector.ForwardUpdateRawRef(root); };
+    for (BaseObject*& obj : localFinalizers) {
+        visitor(reinterpret_cast<ObjectRef&>(obj));
+    }
+}
+
 inline void Mutator::GCPhasePreForward(GCPhase newPhase)
 {
     std::set<BaseObject*> rootSet;
@@ -564,9 +589,7 @@ inline void Mutator::GCPhasePreForward(GCPhase newPhase)
         BaseObject* oldObj = refFieldAddr.GetTargetObject();
         if (Heap::IsHeapAddress(oldObj) && collector.IsGhostFromObject(oldObj) &&
             !collector.IsUnmovableFromObject(oldObj)) {
-            if (!rootFieldSet.insert((void*)(&refFieldAddr)).second) {
-                return;
-            }
+            if (!rootFieldSet.insert((void*)(&refFieldAddr)).second) { return; }
             BaseObject* toObj = collector.ForwardObject(oldObj);
             if (oldObj != toObj) { refFieldAddr.SetTargetObject(toObj); }
         } else if (IsStackAddr(reinterpret_cast<uintptr_t>(oldObj))) {
@@ -578,9 +601,7 @@ inline void Mutator::GCPhasePreForward(GCPhase newPhase)
         BaseObject* oldObj = root.object;
         if (Heap::IsHeapAddress(oldObj) && collector.IsGhostFromObject(oldObj) &&
             !collector.IsUnmovableFromObject(oldObj)) {
-            if (!rootFieldSet.insert((void*)(&root)).second) {
-                return;
-            }
+            if (!rootFieldSet.insert((void*)(&root)).second) { return; }
             BaseObject* toObj = collector.ForwardObject(oldObj);
             if (oldObj != toObj) { root.object = toObj; }
         } else if (IsStackAddr(reinterpret_cast<uintptr_t>(oldObj))) {
@@ -606,6 +627,7 @@ inline void Mutator::GCPhasePreForward(GCPhase newPhase)
         }
     };
     VisitHeapReferences(visitor, derivedPtrVisitor);
+    ForwardLocalFinalizers(collector);
 }
 
 inline void Mutator::HandleGCPhase(GCPhase newPhase)
@@ -616,6 +638,10 @@ inline void Mutator::HandleGCPhase(GCPhase newPhase)
             satbNode->Clear();
         }
     } else if (newPhase == GCPhase::GC_PHASE_ENUM) {
+        auto& localFins = GetLocalFinalizers();
+        if (!localFins.empty()) {
+            Heap::GetHeap().GetFinalizerProcessor().RegisterFinalizers(localFins);
+        }
         GcPhaseEnum(newPhase);
     } else if (newPhase == GCPhase::GC_PHASE_PREFORWARD) {
         GCPhasePreForward(newPhase);

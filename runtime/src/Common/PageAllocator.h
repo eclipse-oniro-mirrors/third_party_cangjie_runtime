@@ -364,9 +364,22 @@ public:
 // vector::swap requires that the allocator defined by ourselves should be comparable during compiling period,
 // so we overload operator == and return true.
 template<typename Tp, AllocationTag tag>
-inline bool operator==(StdContainerAllocator<Tp, tag>&, StdContainerAllocator<Tp, tag>&) noexcept
+inline bool operator==(const StdContainerAllocator<Tp, tag>&, const StdContainerAllocator<Tp, tag>&) noexcept
 {
     return true;
 }
+template<typename Tp, AllocationTag tag>
+inline bool operator!=(const StdContainerAllocator<Tp, tag>&, const StdContainerAllocator<Tp, tag>&) noexcept
+{
+    return false;
+}
+
+#ifdef __APPLE__
+template<typename T>
+using ManagedList = std::list<T>;
+#else
+template<typename T>
+using ManagedList = std::list<T, StdContainerAllocator<T, FINALIZER_PROCESSOR>>;
+#endif
 } // namespace MapleRuntime
 #endif
