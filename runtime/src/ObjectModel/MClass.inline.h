@@ -82,14 +82,6 @@ inline EnumDebugInfo* TypeTemplate::GetEnumDebugInfo()
     return nullptr;
 }
 
-inline EnumCtorReflectInfo* TypeTemplate::GetEnumCtorReflectInfo()
-{
-    if (IsEnumCtor()) {
-        return enumCtorReflectInfo;
-    }
-    return nullptr;
-}
-
 inline const char* TypeInfo::GetName() const { return typeInfoName; }
 
 inline MSize TypeInfo::GetInstanceSize() const { return instanceSize; }
@@ -235,14 +227,6 @@ inline EnumInfo* TypeInfo::GetEnumInfo() const
 {
     if (IsEnum() || IsTempEnum()) {
         return enumInfo;
-    }
-    return nullptr;
-}
-
-inline EnumCtorReflectInfo* TypeInfo::GetEnumCtorReflectInfo() const
-{
-    if ((IsEnum() || IsTempEnum()) && IsEnumCtor()) {
-        return enumCtorReflectInfo;
     }
     return nullptr;
 }

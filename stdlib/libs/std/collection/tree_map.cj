@@ -1183,6 +1183,8 @@ struct TreeMapEntryView<K, V> <: MapEntryView<K, V> where K <: Comparable<K> {
 
             if (v.isNone()) {
                 map.remove(key)
+                lockVersion = this.map.version()
+                curNode = SearchResult<K, V>(-1, None)
             } else {
                 match (curNode.replaceNode) {
                     case Some(node) =>
