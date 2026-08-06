@@ -71,6 +71,7 @@ template("cangjie_prebuilts") {
       install_enable = true
       part_name = "cangjie_runtime"
       subsystem_name = "thirdparty"
+      relative_install_dir = "platformsdk"
       symlink_target_name = full_lib.symlink_target_name
       install_images = [ "system" ]
     }
