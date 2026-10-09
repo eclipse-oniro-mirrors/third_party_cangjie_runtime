@@ -31,7 +31,7 @@ public class ChainedInputStream<T> <: InputStream where T <: InputStream {
      */
     public init(input: Array<T>) {
         if (input.isEmpty()) {
-            throw IllegalArgumentException("The array of input streams cannot be empty!")
+            throw IllegalArgumentException("Invalid argument 'input': the array of input streams cannot be empty.")
         }
         inputArr = input.clone()
         curIndex = 0
@@ -51,7 +51,7 @@ public class ChainedInputStream<T> <: InputStream where T <: InputStream {
         }
 
         if (buffer.isEmpty()) {
-            throw IllegalArgumentException("The buffer cannot be empty!")
+            throw IllegalArgumentException("Invalid argument 'buffer': buffer size is 0.")
         }
 
         while (curIndex < inputArrSize) {
@@ -59,7 +59,7 @@ public class ChainedInputStream<T> <: InputStream where T <: InputStream {
             if (readNum > 0) {
                 return readNum
             } else if (readNum < 0) {
-                throw IOException("Failed to read data!")
+                throw IOException("Failed to read data from input stream at index '${curIndex}'.")
             }
 
             inputArr[curIndex] = unsafe { zeroValue<T>() }

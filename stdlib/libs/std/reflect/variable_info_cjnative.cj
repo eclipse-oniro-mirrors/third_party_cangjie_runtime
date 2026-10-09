@@ -13,7 +13,7 @@ package std.reflect
 func getInstanceFieldNameString(info: CPointer<Unit>, declaringTypeInfo: CPointer<Unit>): String {
     let pointer = getInstanceFieldName(info, declaringTypeInfo)
     if (pointer.isNull()) {
-        throw IllegalStateException("getFieldName Null Pointer!")
+        throw IllegalStateException("Internal error: failed to get instance field name.")
     }
     CString(pointer).toString()
 }
@@ -142,7 +142,7 @@ public class InstanceVariableInfo <: Equatable<InstanceVariableInfo> & Hashable 
      */
     public func setValue(instance: Any, newValue: Any): Unit {
         if (!this.isMutable()) {
-            throw IllegalSetException("Attempt to modify immutable variable '${name}'.")
+            throw IllegalSetException("Cannot modify immutable variable '${name}'.")
         }
         checkDeclaringClassType(instance)
         checkValueType(newValue, typeInfo)
@@ -154,7 +154,7 @@ public class InstanceVariableInfo <: Equatable<InstanceVariableInfo> & Hashable 
         let instanceTypeInfo = TypeInfo.of(instance)
         if (declaringClassTypeInfo != instanceTypeInfo) {
             throw IllegalTypeException(
-                "The input instance should be \"${declaringClassTypeInfo}\", but now it`s \"${instanceTypeInfo}\"")
+                "Invalid instance type: expected '${declaringClassTypeInfo}', got '${instanceTypeInfo}'.")
         }
     }
 
@@ -215,7 +215,7 @@ public class StaticVariableInfo <: Equatable<StaticVariableInfo> & Hashable & To
      */
     public prop name: String {
         get() {
-            getCachedReflectInfo(_name, {=> getStaticFieldNameString(_info, "GetStaticFieldName failed: null pointer!")}) {
+            getCachedReflectInfo(_name, {=> getStaticFieldNameString(_info, "Internal error: failed to get static field name.")}) {
                 variableName: String => _name = variableName
             }
         }
@@ -281,7 +281,7 @@ public class StaticVariableInfo <: Equatable<StaticVariableInfo> & Hashable & To
     public func setValue(newValue: Any): Unit {
         // Keep the mutability check before the type check to preserve the existing error order.
         if (!isMutable()) {
-            throw IllegalSetException("Attempt to modify immutable variable '${name}'.")
+            throw IllegalSetException("Cannot modify immutable variable '${name}'.")
         }
         checkValueType(newValue, typeInfo)
         setStaticFieldValue(_info, newValue)
@@ -339,7 +339,7 @@ public class GlobalVariableInfo <: Equatable<GlobalVariableInfo> & Hashable & To
      */
     public prop name: String {
         get() {
-            getCachedReflectInfo(_name, {=> getStaticFieldNameString(_info, "GetFieldName Null Pointer!")}) {
+            getCachedReflectInfo(_name, {=> getStaticFieldNameString(_info, "Internal error: failed to get global variable name.")}) {
                 variableName: String => _name = variableName
             }
         }
@@ -386,7 +386,7 @@ public class GlobalVariableInfo <: Equatable<GlobalVariableInfo> & Hashable & To
      */
     public func setValue(newValue: Any): Unit {
         if (!isMutable()) {
-            throw IllegalSetException("Attempt to modify immutable variable '${name}'.")
+            throw IllegalSetException("Cannot modify immutable variable '${name}'.")
         }
         checkValueType(newValue, typeInfo)
         setStaticFieldValue(_info, newValue)
@@ -449,7 +449,7 @@ func getInstanceVariableInfos(info: CPointer<Unit>, typeName: String, isStruct: 
             index =>
                 let pointer = getInstanceFieldInfo(info, UInt32(index))
                 if (pointer.isNull()) {
-                    throw InfoNotFoundException("${typeName} find instanceVariables failed!")
+                    throw InfoNotFoundException("Failed to get instance variable info at index ${index} for type '${typeName}'.")
                 }
                 InstanceVariableInfo(pointer, info, isStruct: isStruct)
         }
@@ -464,7 +464,7 @@ func getStaticVariableInfos(info: CPointer<Unit>, typeName: String): Array<Stati
             index =>
                 let pointer = getStaticFieldInfo(info, UInt32(index))
                 if (pointer.isNull()) {
-                    throw InfoNotFoundException("${typeName} find staticVariables failed!")
+                    throw InfoNotFoundException("Failed to get static variable info at index ${index} for type '${typeName}'.")
                 }
                 StaticVariableInfo(pointer, info)
         }

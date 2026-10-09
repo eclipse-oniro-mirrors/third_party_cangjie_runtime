@@ -29,6 +29,7 @@ func getCjGCFreedSize(): UIntNative
 @Intrinsic
 func setCjGCThreshold(value: UInt64): Unit
 
+@FastNative
 @When[backend == "cjnative" && env != "ohos"]
 foreign func CJ_MCC_IsGCRunning(): Bool
 

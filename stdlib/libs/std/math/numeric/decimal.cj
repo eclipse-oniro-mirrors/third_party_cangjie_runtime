@@ -179,7 +179,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
     @Deprecated[message: "Use member function `public static func parse(value: String): Decimal` instead."]
     public init(val: String) {
         if (val.isEmpty()) {
-            throw IllegalArgumentException("String value cannot be empty.")
+            throw IllegalArgumentException("String value is empty.")
         }
 
         var val_scale: Int32 = 0
@@ -232,7 +232,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
             // 2. process r'.'
             if (c == b'.') {
                 if (hasDot) {
-                    throw IllegalArgumentException("String value not allow contains more than one dot.")
+                    throw IllegalArgumentException("String value contains more than one dot.")
                 }
 
                 hasDot = true
@@ -247,7 +247,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
             }
 
             throw IllegalArgumentException(
-                "String value not allow contains other character beyond [digit, \'.\', e, sign].")
+                "String value contains invalid character: only digits, '.', 'e', and signs are allowed.")
         }
 
         // only has head 0, the value is 0.
@@ -259,7 +259,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
 
         // 4. process precision and scale
         if (val_precision == 0) {
-            throw IllegalArgumentException("String value not allow without digits.")
+            throw IllegalArgumentException("String value has no digits.")
         }
 
         if (exponent != 0) {
@@ -488,7 +488,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
      */
     public init(val: Float32) {
         if (val.isNaN() || val.isInf()) {
-            throw IllegalArgumentException("Float value cannot be Inf or NaN.")
+            throw IllegalArgumentException("Float value is Inf or NaN.")
         }
         let f32Bits: Int32 = reinterpretAsInt(val)
         // float32 exponent is 8 bits, abs for exponent will never overflow.
@@ -550,7 +550,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
      */
     public init(val: Float64) {
         if (val.isNaN() || val.isInf()) {
-            throw IllegalArgumentException("Float value cannot be Inf or NaN.")
+            throw IllegalArgumentException("Float value is Inf or NaN.")
         }
         let f64Bits: Int64 = reinterpretAsInt(val)
         var (f64Sign, f64Exponent, f64Fraction): (Int64, Int64, Int64) = parseFloat64Bits(f64Bits)
@@ -779,7 +779,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
             return divWithContext(d, roundingMode)
         }
         if (d.sign == 0) {
-            throw ArithmeticException("Divided by zero!")
+            throw ArithmeticException("Division by zero.")
         }
         let expectedScale: Int64 = Int64(this.scale) - Int64(d.scale)
         if (this.sign == 0) {
@@ -1716,7 +1716,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
                 case 3 =>
                     stringBuilder.append("0.0")
                     resultExponent = resultExponent + 3
-                case _ => throw IllegalArgumentException("Unexpected significant digit value: ${significantDigit}.")
+                case _ => throw IllegalArgumentException("Internal error: unexpected significant digit value '${significantDigit}'.")
             }
         } else if (significantDigit > this.precision) {
             stringBuilder.append(String.fromUtf8(valArr))
@@ -1930,7 +1930,7 @@ public struct Decimal <: Comparable<Decimal> & Hashable & ToString {
 
     private func divWithContext(d: Decimal, rdm: RoundingMode): Decimal {
         if (d.sign == 0) {
-            throw ArithmeticException("Divided by zero!")
+            throw ArithmeticException("Division by zero.")
         }
         let expectedScale: Int32 = saturateI32(Int64(this.scale) - Int64(d.scale))
         if (this.sign == 0) {
@@ -1965,7 +1965,7 @@ func parseExponent(val: String, offset: Int64): Int64 {
     expOffset++
     // check for out of bounds.
     if (expOffset >= val.size) {
-        throw IllegalArgumentException("String value not allow without digits after e.")
+        throw IllegalArgumentException("String value has no digits after 'e'.")
     }
 
     // process sign bit.
@@ -1978,7 +1978,7 @@ func parseExponent(val: String, offset: Int64): Int64 {
 
     // if no digit after sign, throw IllegalArgumentException
     if (expOffset >= val.size) {
-        throw IllegalArgumentException("String value not allow without digits after e.")
+        throw IllegalArgumentException("String value has no digits after 'e'.")
     }
 
     var exponent: Int64 = 0
@@ -1999,7 +1999,7 @@ func parseExponent(val: String, offset: Int64): Int64 {
         } else {
             // character range [r'0', r'9'], other character is not allowed.
             throw IllegalArgumentException(
-                "String exponent value not allow contains other character beyond [digit, sign].")
+                "String exponent value contains invalid character: only digits and signs are allowed.")
         }
     }
 

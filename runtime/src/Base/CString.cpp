@@ -12,6 +12,12 @@
 #include <libgen.h>
 
 namespace MapleRuntime {
+// NOTE: this file is also compiled into the standalone demangler library,
+// which has no Logger implementation; only self-contained macros from
+// Print.h may be used here. PRINT_FATAL_IF aborts on every platform, so an
+// allocation failure terminates the process here instead of leaving a null
+// pointer that callers could dereference.
+
 // The last two characters are units, such as "kb" or "ms".
 constexpr int8_t LAST_CHARACTERS_SIZE = 2;
 // nDecimal = ceil(sizeof(int32_t) * 8 * log(2)) = ceil(2.41 * sizeof(int32_t))
@@ -36,7 +42,8 @@ CString::CString(const char* initStr)
         str = reinterpret_cast<char*>(malloc(capacity));
         PRINT_FATAL_IF(str == nullptr, "CString::Init failed");
         if (*initStr != '\0') {
-            PRINT_FATAL_IF(memcpy_s(str, capacity, initStr, initLen) != EOK, "CString::CString memcpy_s failed");
+            PRINT_FATAL_IF(memcpy_s(str, capacity, initStr, initLen) != EOK,
+                           "CString::CString memcpy_s failed");
         }
         length = initLen;
         str[length] = '\0';
@@ -89,7 +96,7 @@ CString::CString(uint64_t number)
     capacity = sizeof(uint64_t) * MIN_ALIGN_SPACE;
     str = reinterpret_cast<char*>(malloc(capacity));
     PRINT_FATAL_IF(str == nullptr, "CString::Init failed");
-    int ret = sprintf_s(str, capacity, "%lu", number);
+    int ret = sprintf_s(str, capacity, "%llu", number);
     PRINT_FATAL_IF(ret == -1, "CString::Init failed");
     length = ret;
 }
@@ -103,7 +110,8 @@ CString::CString(const CString& other)
     str = reinterpret_cast<char*>(malloc(capacity));
     PRINT_FATAL_IF(str == nullptr, "CString::Init failed");
     if (!other.IsEmpty()) {
-        PRINT_FATAL_IF(memcpy_s(str, capacity, other.Str(), initLen) != EOK, "CString::CString memcpy_s failed");
+        PRINT_FATAL_IF(memcpy_s(str, capacity, other.Str(), initLen) != EOK,
+                       "CString::CString memcpy_s failed");
     }
     length = initLen;
     str[length] = '\0';
@@ -118,7 +126,8 @@ CString::CString(const FixedCString& other)
     str = reinterpret_cast<char*>(malloc(capacity));
     PRINT_FATAL_IF(str == nullptr, "CString::Init failed");
     if (!other.IsEmpty()) {
-        PRINT_FATAL_IF(memcpy_s(str, capacity, other.Str(), initLen) != EOK, "CString::CString memcpy_s failed");
+        PRINT_FATAL_IF(memcpy_s(str, capacity, other.Str(), initLen) != EOK,
+                       "CString::CString memcpy_s failed");
     }
     length = initLen;
     str[length] = '\0';
@@ -142,17 +151,21 @@ CString& CString::operator=(const CString& other)
         return *this;
     }
     size_t initLen = other.Length();
-    while (capacity < initLen + 1) {
-        capacity <<= 1;
+    size_t newCapacity = capacity;
+    while (newCapacity < initLen + 1) {
+        newCapacity <<= 1;
+    }
+    char* newStr = static_cast<char*>(malloc(newCapacity));
+    PRINT_FATAL_IF(newStr == nullptr, "CString::operator= malloc failed");
+    if (!other.IsEmpty()) {
+        PRINT_FATAL_IF(memcpy_s(newStr, newCapacity, other.Str(), initLen) != EOK,
+                       "CString::operator= memcpy_s failed");
     }
     if (str != nullptr) {
         free(str);
     }
-    str = reinterpret_cast<char*>(malloc(capacity));
-    PRINT_FATAL_IF(str == nullptr, "CString::operator= malloc failed");
-    if (!other.IsEmpty()) {
-        PRINT_FATAL_IF(memcpy_s(str, capacity, other.Str(), initLen) != EOK, "CString::operator= memcpy_s failed");
-    }
+    str = newStr;
+    capacity = newCapacity;
     length = initLen;
     str[length] = '\0';
     return *this;
@@ -171,16 +184,20 @@ void CString::EnsureSpace(size_t addLen)
     if (addLen == 0 || capacity >= length + addLen + 1) {
         return;
     }
-    while (capacity < length + addLen + 1) {
-        capacity <<= 1;
+    size_t newCapacity = capacity;
+    while (newCapacity < length + addLen + 1) {
+        newCapacity <<= 1;
     }
-    char* newStr = reinterpret_cast<char*>(malloc(capacity));
-    PRINT_FATAL_IF(newStr == nullptr, "CString::Init failed");
-    PRINT_FATAL_IF(memcpy_s(newStr, capacity, str, length) != EOK, "CString::EnsureSpace memcpy_s failed");
+    char* newStr = static_cast<char*>(malloc(newCapacity));
+    PRINT_FATAL_IF(newStr == nullptr, "CString::EnsureSpace malloc failed");
+    if (length != 0) {
+        PRINT_FATAL_IF(memcpy_s(newStr, newCapacity, str, length) != EOK, "CString::EnsureSpace memcpy_s failed");
+    }
     if (str != nullptr) {
         free(str);
     }
     str = newStr;
+    capacity = newCapacity;
 }
 
 CString& CString::Append(const CString& addStr, size_t addLen)
@@ -208,7 +225,8 @@ CString& CString::Append(const char* addStr, size_t addLen)
         addLen = strlen(addStr);
     }
     EnsureSpace(addLen);
-    PRINT_FATAL_IF(memcpy_s(str + length, capacity - length, addStr, addLen) != EOK, "CString::Append memcpy_s failed");
+    PRINT_FATAL_IF(memcpy_s(str + length, capacity - length, addStr, addLen) != EOK,
+                   "CString::Append memcpy_s failed");
     length += addLen;
     str[length] = '\0';
     return *this;
@@ -320,7 +338,12 @@ CString CString::RemoveBlankSpace() const
 void CString::Replace(size_t pos, CString cStr)
 {
     size_t repLen = cStr.Length();
-    PRINT_FATAL_IF(pos + repLen > length, "CString::Replace failed, input is too long");
+    if (pos + repLen > length) {
+        // PRINT_FATAL only logs on mobile platforms; return early instead of
+        // writing past the end of the buffer.
+        PRINT_FATAL("CString::Replace failed, input is too long");
+        return;
+    }
     PRINT_FATAL_IF(memcpy_s(str + pos, repLen, cStr.Str(), repLen) != EOK, "CString::Replace memcpy_s failed");
 }
 
@@ -425,13 +448,15 @@ uint64_t CString::ParseTimeFromEnv(const CString& env)
     } else {
         return 0;
     }
+
     unit.ToLowerCase();
+
     if (unit == "ns") {
         return tempTime;
     } else if (unit == "us") {
         tempTime *= 1000; // unit: 1000 *  1ns= 1us
     } else if (unit == "ms") {
-        tempTime *= 1000 * 1000; // unit: 1000 * 1000 *  1ns= 1ms
+        tempTime *= 1000 * 1000; // unit: 1000 * 1000 * 1ns= 1ms
     } else {
         return 0;
     }

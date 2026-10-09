@@ -65,7 +65,7 @@ public class FunctionTypeInfo <: TypeInfo {
             } else {
                 let signatureTypes = getSignatureTypes()
                 if (signatureTypes.size == 0) {
-                    throw InfoNotFoundException("Failed to get function return type: signature types are empty.")
+                    throw InfoNotFoundException("Failed to get function return type: signature types are empty for '${qualifiedName}'.")
                 }
                 let info = signatureTypes[0]
                 _returnType = info
@@ -108,7 +108,7 @@ public class FunctionTypeInfo <: TypeInfo {
         match (TypeInfo.of(instance)) {
             case ti: FunctionTypeInfo => ti
             case other => throw IllegalTypeException(
-                "Expected a function type instance, but got `${other.qualifiedName}`.")
+                "Expected a function type instance, but got '${other.qualifiedName}'.")
         }
     }
 
@@ -122,7 +122,7 @@ public class FunctionTypeInfo <: TypeInfo {
         match (TypeInfo.of<T>()) {
             case ti: FunctionTypeInfo => ti
             case other => throw IllegalTypeException(
-                "Expected function type for `T`, but got `${other.qualifiedName}`.")
+                "Expected function type for 'T', but got '${other.qualifiedName}'.")
         }
     }
 
@@ -138,7 +138,7 @@ public class FunctionTypeInfo <: TypeInfo {
     public func apply(instance: Any, args: Array<Any>): Any {
         let instanceType: FunctionTypeInfo = FunctionTypeInfo.of(instance)
         if (instanceType != this) {
-            throw IllegalTypeException("Expected function type `${this}`, but got `${instanceType}`.")
+            throw IllegalTypeException("Expected function type '${this}', but got '${instanceType}'.")
         }
         checkArgsSizeAndType(parameters, args)
         applyCJInstanceMethod(CPointer<Unit>(), instance, args)

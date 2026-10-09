@@ -11,6 +11,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __android__
+#include <sys/system_properties.h>
+#endif
 #ifdef __ohos__
 #include <dlfcn.h>
 
@@ -23,18 +26,12 @@
 extern char* CJ_TIME_GetLocalTimeZoneProperty(void)
 {
 #ifdef __android__
-    FILE *fp = popen("getprop persist.sys.timezone", "r");
-    if (!fp) {
+    char buf[PROP_VALUE_MAX] = {0};
+    int len = __system_property_get("persist.sys.timezone", buf);
+    if (len <= 0) {
         return NULL;
     }
-    char buf[MAX_BUF_LENGTH];
-    if (fgets(buf, sizeof(buf), fp)) {
-        pclose(fp);
-        buf[strcspn(buf, "\n")] = '\0';
-        return strdup(buf); // Need to free
-    }
-    pclose(fp);
-    return NULL;
+    return strdup(buf); // Need to free
 #elif defined __ohos__
     void* timeNdk = dlopen(TIMESERVICE_NDK, RTLD_LAZY);
     if (timeNdk == NULL) {

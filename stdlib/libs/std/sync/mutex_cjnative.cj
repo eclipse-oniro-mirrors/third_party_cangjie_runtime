@@ -29,7 +29,7 @@ public class Mutex <: UniqueLock {
     public init() {
         var isNull = mutexInit(this)
         if (isNull) {
-            throw IllegalSynchronizationStateException("Mutex initialization failure.")
+            throw IllegalSynchronizationStateException("Failed to initialize mutex.")
         }
     }
 
@@ -75,7 +75,7 @@ public class Mutex <: UniqueLock {
     func checkMutexStatus(): Unit {
         let status = mutexCheckStatus(this)
         if (!status) {
-            throw IllegalSynchronizationStateException("Mutex is not locked by current thread.")
+            throw IllegalSynchronizationStateException("Cannot unlock mutex: not locked by current thread.")
         }
     }
 }
@@ -167,7 +167,7 @@ class MutexCondition <: Condition {
 
     func getTimeoutNanos(timeout: Duration): Int64 {
         if (timeout <= Duration.Zero) {
-            throw IllegalArgumentException("Timeout cannot be less than or equal to `Duration.Zero`.")
+            throw IllegalArgumentException("Invalid argument 'timeout': must be positive, got '${timeout}'.")
         }
         return match (timeout > MAX_TIMEOUT_DURATION) {
             case true => MAX_TIMEOUT_NS

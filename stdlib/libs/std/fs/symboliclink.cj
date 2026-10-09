@@ -28,7 +28,7 @@ public class SymbolicLink {
             try (cPath1 = LibC.mallocCString(link).asResource(), cPath2 = LibC.mallocCString(to).asResource()) {
                 let pRet = CJ_FS_SymLink(cPath1.value, cPath2.value)
                 if (pRet.isNull()) {
-                    throw FSException("Failed malloc in C code!")
+                    throw FSException("Memory allocation failed in native code.")
                 }
                 let ret = pRet.read()
                 LibC.free(pRet)
@@ -37,7 +37,7 @@ public class SymbolicLink {
                 }
                 try {
                     let errMessage = ret.msg.toString()
-                    throw FSException("Failed to create symbolic link `${link}` to `${to}` return ${ret.rtnCode}: \"${errMessage.trimAscii()}\".")
+                    throw FSException("Failed to create symbolic link '${link}' to '${to}': error code ${ret.rtnCode}, ${errMessage.trimAscii()}.")
                 } finally {
                     LibC.free(ret.msg)
                 }
@@ -52,7 +52,7 @@ public class SymbolicLink {
     public static func readFrom(path: Path, recursive!: Bool = false): Path {
         PathValidator.throwIfEmptyOrContainsNullByte("path", path, true)
         if (!FileInfo(path).isSymbolicLink()) {
-            throw IllegalArgumentException("The input path `${path}` is not a symbolic link.")
+            throw IllegalArgumentException("Invalid argument 'path': '${path}' is not a symbolic link.")
         }
 
         if (recursive) {
@@ -65,7 +65,7 @@ public class SymbolicLink {
                 let pRet = CJ_FS_ReadLink(cPath.value)
 
                 if (pRet.isNull()) {
-                    throw FSException("Failed malloc in C code!")
+                    throw FSException("Memory allocation failed in native code.")
                 }
                 let ret = pRet.read()
                 LibC.free(pRet)
@@ -76,7 +76,7 @@ public class SymbolicLink {
                 }
 
                 if (ret.rtnCode != 0) {
-                    throw FSException("${result.trimAscii()}.")
+                    throw FSException("Failed to read symbolic link: ${result.trimAscii()}.")
                 }
             }
         }

@@ -118,7 +118,7 @@ class SocketHolder<NS> <: Resource where NS <: PlatformSocket<NS> {
         while (true) {
             let before = SocketState(useCounter.load())
             if (before.bound) {
-                throw IllegalStateException("Socket was already bound")
+                throw IllegalStateException("Socket is already bound.")
             }
             var new = before
             new.bound = true
@@ -273,7 +273,7 @@ class SocketHolder<NS> <: Resource where NS <: PlatformSocket<NS> {
     }
 
     private static func throwAlreadyReading(): Nothing {
-        throw IllegalStateException("Socket is already reading: concurrent read is not allowed")
+        throw IllegalStateException("Socket is already reading: concurrent read is not allowed.")
     }
 
     /**
@@ -341,7 +341,7 @@ class SocketHolder<NS> <: Resource where NS <: PlatformSocket<NS> {
     }
 
     private static func throwAlreadyWriting(): Nothing {
-        throw IllegalStateException("Socket is already writing: concurrent write is not allowed")
+        throw IllegalStateException("Socket is already writing: concurrent write is not allowed.")
     }
 
     // this should be only invoked after incrementing useCounter
@@ -443,7 +443,7 @@ class SocketHolder<NS> <: Resource where NS <: PlatformSocket<NS> {
     }
 
     private static func throwLeaveWithoutEnter(): Nothing {
-        throw IllegalStateException("leave() invoked without tryEnterXXX() invocation")
+        throw IllegalStateException("Cannot invoke leave() without prior tryEnterXXX() invocation.")
     }
 
     @OverflowWrapping

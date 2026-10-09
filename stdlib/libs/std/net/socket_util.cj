@@ -67,7 +67,7 @@ func formatError(errnum: Int32): String {
         }
 
         return try {
-            result.toString()
+            result.toString().trimAsciiEnd().trimEnd(".")
         } finally {
             LibC.free(result)
         }
@@ -78,7 +78,7 @@ func throwIfIPv4ZeroOnWindows(socketAddress: SocketAddress): Unit {
     if (OS == OS_WINDOWS) {
         let ipsa = (socketAddress as IPSocketAddress) ?? return;
         if (ipsa.address.isUnspecified()) {
-            throw SocketException("Impossible to communicate with 0.0.0.0 on windows. Try to use concrete address.")
+            throw SocketException("Cannot communicate with 0.0.0.0 on Windows: use a concrete address.")
         }
     }
 }
@@ -94,5 +94,5 @@ func resolveHelper(address: String): IPAddress {
     if (ips.size > 0) {
         return ips[0]
     }
-    throw SocketException("Failed to resolve address ${address}.")
+    throw SocketException("Failed to resolve address '${address}'.")
 }

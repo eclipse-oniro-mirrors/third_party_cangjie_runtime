@@ -81,7 +81,7 @@ struct SocketState {
     }
 
     private static func incrementFailed(): Nothing {
-        throw OverflowException("Socket usage couter overflow")
+        throw OverflowException("Socket usage counter overflow.")
     }
 
     /**
@@ -122,7 +122,7 @@ struct SocketState {
                 // and reconsidering native state bit layout
             }
             if (nativeStateNum > newValue) {
-                throw IllegalArgumentException("Backward state transition is not allowed")
+                throw IllegalArgumentException("Backward state transition is not allowed.")
             }
             nativeStateNum = newValue
         }

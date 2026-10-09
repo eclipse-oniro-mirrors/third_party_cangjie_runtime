@@ -75,11 +75,7 @@ public class PrimitiveType <: TypeNode {
                 case None => throw ASTException("Cannot construct the 'PrimitiveType' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'PrimitiveType' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'PrimitiveType' node.")
         }
     }
     public init() {}
@@ -145,11 +141,7 @@ public class RefType <: TypeNode {
                 case None => throw ASTException("Cannot construct the 'RefType' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'RefType' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'RefType' node.")
         }
     }
     public init() {}
@@ -275,11 +267,7 @@ public class QualifiedType <: TypeNode {
                 case None => throw ASTException("Cannot construct the 'QualifiedType' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'QualifiedType' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'QualifiedType' node.")
         }
     }
     public init() {}
@@ -418,11 +406,7 @@ public class ParenType <: TypeNode {
                 case None => throw ASTException("Cannot construct the 'ParenType' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'ParenType' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'ParenType' node.")
         }
     }
     private var lParen_: Token = Token(TokenKind.LPAREN)
@@ -505,11 +489,7 @@ public class TupleType <: TypeNode {
                 case None => throw ASTException("Cannot construct the 'TupleType' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'TupleType' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'TupleType' node.")
         }
     }
     public init() {}
@@ -664,11 +644,7 @@ public class PrefixType <: TypeNode {
                 case None => throw ASTException("Cannot construct the 'PrefixType' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'PrefixType' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'PrefixType' node.")
         }
     }
     public init() {}
@@ -750,11 +726,7 @@ public class FuncType <: TypeNode {
                 case None => throw ASTException("Cannot construct the 'FuncType' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'FuncType' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'FuncType' node.")
         }
     }
     public init() {}
@@ -905,11 +877,7 @@ public class VArrayType <: TypeNode {
                 case None => throw ASTException("Cannot construct the 'VArrayType' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'VArrayType' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'VArrayType' node.")
         }
     }
     public init() {}

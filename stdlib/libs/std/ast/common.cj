@@ -14,7 +14,7 @@ import std.collection.ArrayList
 
 const NUM_SPACES: UInt16 = 2
 
-func isValidPosition(pos: NodeFormat_Position): Bool {
+func isValidPosition(pos: ASTFormat_Position): Bool {
     if (pos.line == 0 && pos.column == 0) {
         return false
     }
@@ -32,14 +32,14 @@ func isValidToken(tk: Token): Bool {
     return tk.kind != TokenKind.ILLEGAL
 }
 
-func getNodeBeginPos(nodeBase: Option<NodeFormat_NodeBase>): NodeFormat_Position {
+func getNodeBeginPos(nodeBase: Option<ASTFormat_NodeBase>): ASTFormat_Position {
     return match (nodeBase) {
         case Some(v) => v.GetBegin()
-        case None => throw ParseASTException()
+        case None => throw ParseASTException("'Node' has no begin position.")
     }
 }
 
-func getOperaterKindOrIdentTokens(opKind: Int32, pos: NodeFormat_Position, ident: Tokens): Tokens {
+func getOperaterKindOrIdentTokens(opKind: Int32, pos: ASTFormat_Position, ident: Tokens): Tokens {
     let identifierTokens: Tokens = match (getTokenKind(UInt16(opKind))) {
         case NOT => Tokens().append(Token(TokenKind.NOT).addPosition(pos))
         case ADD => Tokens().append(Token(TokenKind.ADD).addPosition(pos))
@@ -239,7 +239,7 @@ extend Token {
 
 func checkTokenType(tk: Token, kind: TokenKind) {
     if (tk.kind != kind) {
-        throw ASTException("Illegal TokenKind, TokenKind should be ${kind}")
+        throw ASTException("Illegal token kind: expected '${kind}', got '${tk.kind}'.")
     }
 }
 
@@ -257,7 +257,7 @@ func checkTokenTypeAssign(tk: Token) {
             return
         }
     }
-    throw ASTException("Illegal TokenKind, TokenKind should be assign")
+    throw ASTException("Illegal token kind: expected an assignment operator, got '${tk.kind}'.")
 }
 
 func checkPrimitiveType(tk: Token) {
@@ -268,7 +268,7 @@ func checkPrimitiveType(tk: Token) {
             return
         }
     }
-    throw ASTException("Illegal TokenKind, TokenKind should be a primitive type.")
+    throw ASTException("Illegal token kind: expected a primitive type, got '${tk.kind}'.")
 }
 
 func checkValid(input: Token) {

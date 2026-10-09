@@ -338,7 +338,12 @@ public class ConcurrentLinkedQueue<E> <: Collection<E> {
     }
 
     public func toArray(): Array<E> {
-        let arr = ArrayList<E>()
+        let estimatedSize = size
+        let arr = if (estimatedSize > 0) {
+            ArrayList<E>(estimatedSize)
+        } else {
+            ArrayList<E>()
+        }
         for (e in this) {
             arr.add(e)
         }
