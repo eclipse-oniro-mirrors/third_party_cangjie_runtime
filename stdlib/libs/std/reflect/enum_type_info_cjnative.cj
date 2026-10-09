@@ -42,7 +42,7 @@ public class EnumTypeInfo <: TypeInfo {
                         let ctorInfo = getEnumConstructorInfo(_info, UInt32(index))
                         if (ctorInfo.isNull()) {
                             throw InfoNotFoundException(
-                                "Failed to get enum constructors for type `${qualifiedName}`: constructor info at index ${index} is null.")
+                                "Failed to get enum constructors for type '${qualifiedName}': constructor info at index ${index} is null.")
                         }
                         let name: CString = CString(getEnumConstructorName(ctorInfo))
                         infoList.add(EnumConstructorInfo(ctorInfo, _info, ctorName: name))
@@ -72,10 +72,10 @@ public class EnumTypeInfo <: TypeInfo {
             match (TypeInfo.get(qualifiedName)) {
                 case ti: EnumTypeInfo => return ti
                 case other => throw IllegalTypeException(
-                    "Expected enum type `${qualifiedName}`, but got `${other.qualifiedName}`.")
+                    "Expected enum type '${qualifiedName}', but got '${other.qualifiedName}'.")
             }
         } catch (e: InfoNotFoundException) {
-            throw IllegalTypeException("Expected an enum type name (e.g. `default.E`), but got `${qualifiedName}`.")
+            throw IllegalTypeException("Expected an enum type name (e.g. 'default.E'), but got '${qualifiedName}'.")
         }
     }
 
@@ -94,7 +94,7 @@ public class EnumTypeInfo <: TypeInfo {
                 case None => return eti
             }
             case other => throw IllegalTypeException(
-                "Parameter `instance` must be an Enum type instance (expected enum or enum case type), but got `${other.qualifiedName}`.")
+                "Parameter 'instance' must be an enum type instance (expected enum or enum case type), but got '${other.qualifiedName}'.")
         }
     }
 
@@ -112,7 +112,7 @@ public class EnumTypeInfo <: TypeInfo {
                 case None => return eti
             }
             case other => throw IllegalTypeException(
-                "Generic type `T` must be an Enum type, but got `${other.qualifiedName}`.")
+                "Generic type 'T' must be an enum type, but got '${other.qualifiedName}'.")
         }
     }
 
@@ -140,12 +140,12 @@ public class EnumTypeInfo <: TypeInfo {
         let ti = TypeInfo.of(instance)
         if (!ti.isSubtypeOf(this)) {
             throw IllegalTypeException(
-                "Failed to destruct enum `${qualifiedName}`: expected an instance of `${qualifiedName}` (or its case type), but got `${ti.qualifiedName}`.")
+                "Failed to destruct enum '${qualifiedName}': expected an instance of '${qualifiedName}' (or its case type), but got '${ti.qualifiedName}'.")
         }
 
         let ctorInfo = getEnumConstructorInfoFromAny(instance)
         if (ctorInfo.isNull()) {
-            throw IllegalTypeException("Failed to destruct enum `${qualifiedName}`: enum constructor info is null.")
+            throw IllegalTypeException("Failed to destruct enum '${qualifiedName}': enum constructor info is null.")
         }
         let ctor = getCachedConstructor(ctorInfo) ?? EnumConstructorInfo(ctorInfo, _info,
             ctorName: CString(getEnumConstructorName(ctorInfo)))
@@ -159,7 +159,7 @@ public class EnumTypeInfo <: TypeInfo {
      * Finds a constructor by name and optional argument count.
      *
      * @param constructor constructor name without parameters (e.g. "M1").
-     * @param argsCount optional parameter count filter; 0 means no filtering.
+     * @param argsCount exact parameter count to match; 0 (the default) matches only constructors with no parameters (i.e. without associated values).
      * @return matching constructor info.
      * @throws InfoNotFoundException if no matching constructor is found.
      */
@@ -178,7 +178,7 @@ public class EnumTypeInfo <: TypeInfo {
             }
         }
 
-        throw InfoNotFoundException("Enum constructor `${constructor}` not found in `${qualifiedName}`.")
+        throw InfoNotFoundException("Enum constructor '${constructor}' not found in '${qualifiedName}'.")
     }
 
     func getConstructorBySignature(signature: String): EnumConstructorInfo {
@@ -190,7 +190,7 @@ public class EnumTypeInfo <: TypeInfo {
                 return ctor
             }
         }
-        throw InfoNotFoundException("Enum constructor `${signature}` not found in `${qualifiedName}`.")
+        throw InfoNotFoundException("Enum constructor '${signature}' not found in '${qualifiedName}'.")
     }
 
     func getCachedConstructor(ctorInfo: CPointer<Unit>): ?EnumConstructorInfo {
@@ -255,7 +255,7 @@ public class EnumConstructorInfo <: Equatable<EnumConstructorInfo> & Hashable & 
     public prop enumTypeInfo: EnumTypeInfo {
         get() {
             (TypeInfo.getOrCreate(_enumTypeInfoPointer) as EnumTypeInfo) ?? throw MisMatchException(
-                "Declaring type is not an Enum type.")
+                "Declaring type is not an enum type.")
         }
     }
 
@@ -324,7 +324,7 @@ public class EnumConstructorInfo <: Equatable<EnumConstructorInfo> & Hashable & 
     public static func get(qualifiedName: String): EnumConstructorInfo {
         let lastDot = findLastTopLevelDot(qualifiedName)
         if (lastDot < 0) {
-            throw IllegalTypeException("Enum constructor `${qualifiedName}` not found.")
+            throw IllegalTypeException("Enum constructor '${qualifiedName}' not found.")
         }
         let enumQualifiedName = qualifiedName[..lastDot]
         let signature = qualifiedName[lastDot + 1..]
@@ -332,7 +332,7 @@ public class EnumConstructorInfo <: Equatable<EnumConstructorInfo> & Hashable & 
             let enumInfo = EnumTypeInfo.get(enumQualifiedName)
             enumInfo.getConstructorBySignature(signature)
         } catch (e: Exception) {
-            throw IllegalTypeException("Enum constructor `${qualifiedName}` not found: ${e.message.removeSuffix('.')}.")
+            throw IllegalTypeException("Enum constructor '${qualifiedName}' not found: ${e.message.removeSuffix('.')}.")
         }
     }
 
@@ -348,7 +348,7 @@ public class EnumConstructorInfo <: Equatable<EnumConstructorInfo> & Hashable & 
         if (ctorInfo.isNull()) {
             let instanceType = TypeInfo.of(instance)
             throw IllegalTypeException(
-                "Failed to resolve enum constructor for instance type `${instanceType.qualifiedName}`.")
+                "Failed to resolve enum constructor for instance type '${instanceType.qualifiedName}'.")
         }
         let enumInfo = EnumTypeInfo.of(instance)
         if (let Some(cached) <- enumInfo.getCachedConstructor(ctorInfo)) {
@@ -370,7 +370,7 @@ public class EnumConstructorInfo <: Equatable<EnumConstructorInfo> & Hashable & 
             checkArgs(args)
         } catch (e: IllegalArgumentException | IllegalTypeException) {
             throw InvocationTargetException(
-                "Failed to construct enum `${enumTypeInfo.qualifiedName}` with constructor `${signature}`: ${e.message.removeSuffix('.')}.")
+                "Failed to construct enum '${enumTypeInfo.qualifiedName}' with constructor '${signature}': ${e.message.removeSuffix('.')}.")
         }
         newAndInitEnumTupleObject(_info, args)
     }
@@ -386,11 +386,11 @@ public class EnumConstructorInfo <: Equatable<EnumConstructorInfo> & Hashable & 
         let instanceType = TypeInfo.of(instance)
         if (!instanceType.isSubtypeOf(enumTypeInfo)) {
             throw IllegalTypeException(
-                "The instance type `${instanceType.qualifiedName}` does not belong to enum `${enumTypeInfo.qualifiedName}`.")
+                "The instance type '${instanceType.qualifiedName}' does not belong to enum '${enumTypeInfo.qualifiedName}'.")
         }
         let (ctor, values) = enumTypeInfo.destruct(instance)
         if (ctor != this) {
-            throw IllegalTypeException("The constructor `${name}` does not match the instance.")
+            throw IllegalTypeException("The constructor '${name}' does not match the instance.")
         }
         values
     }
@@ -465,12 +465,12 @@ public class EnumConstructorInfo <: Equatable<EnumConstructorInfo> & Hashable & 
     func checkArgs(args: Array<Any>): Unit {
         if (args.size != parameters.size) {
             throw IllegalArgumentException(
-                "Invalid number of arguments, expected ${parameters.size} but got ${args.size}.")
+                "Invalid number of arguments: expected ${parameters.size}, got ${args.size}.")
         }
 
         for (i in 0..args.size where !TypeInfo.of(args[i]).isSubtypeOf(parameters[i])) {
             throw IllegalTypeException(
-                "Argument index ${i} expected ${parameters[i].qualifiedName} but got ${TypeInfo.of(args[i]).qualifiedName}.")
+                "Argument at index ${i} type mismatch: expected '${parameters[i].qualifiedName}', got '${TypeInfo.of(args[i]).qualifiedName}'.")
         }
     }
 

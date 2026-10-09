@@ -344,7 +344,11 @@ public:
     {
         VisitStackRoots(visitor);
         VisitExceptionRoots(visitor);
+        VisitNativeFrameRoots(visitor);
     }
+
+    ObjectRef* AddNativeFrameRoot(BaseObject* obj);
+    void RemoveNativeFrameRoot(ObjectRef* root);
 
     void VisitHeapReferences(const RootVisitor& rootVisitor, const DerivedPtrVisitor& derivedPtrVisitor);
 
@@ -505,6 +509,7 @@ protected:
     // for exception ref
     void VisitExceptionRoots(const RootVisitor& func);
     void VisitRawObjects(const RootVisitor& func);
+    void VisitNativeFrameRoots(const RootVisitor& func);
     void CreateCurrentGCInfo();
 
 private:
@@ -549,6 +554,7 @@ private:
     // Indicate the state of mutator's phase transition
     std::atomic<GCPhaseTransitionState> transitionState = { NO_TRANSITION };
     ObjectRef rawObject{ nullptr };
+    std::list<ObjectRef> nativeFrameRoots;
 
     ManagedList<BaseObject*> localFinalizers;
 

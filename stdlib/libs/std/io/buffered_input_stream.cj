@@ -45,7 +45,7 @@ public class BufferedInputStream<T> <: InputStream where T <: InputStream {
      */
     public init(input: T, capacity: Int64) {
         if (capacity <= 0) {
-            throw IllegalArgumentException("Invalid capacity size: capacity = ${capacity}.")
+            throw IllegalArgumentException("Invalid argument 'capacity': expected a positive value, got '${capacity}'.")
         }
         inputStream = input
         inBuf = Array<Byte>(capacity, repeat: 0)
@@ -53,7 +53,7 @@ public class BufferedInputStream<T> <: InputStream where T <: InputStream {
 
     public init(input: T, buffer: Array<Byte>) {
         if (buffer.size == 0) {
-            throw IllegalArgumentException("The buffer cannot be empty.")
+            throw IllegalArgumentException("Invalid argument 'buffer': buffer size is 0.")
         }
         inputStream = input
         inBuf = buffer
@@ -74,7 +74,7 @@ public class BufferedInputStream<T> <: InputStream where T <: InputStream {
 
         var len = buffer.size
         if (len == 0) {
-            throw IllegalArgumentException("The buffer cannot be empty: `buffer.size() = 0`!")
+            throw IllegalArgumentException("Invalid argument 'buffer': buffer size is 0.")
         }
 
         var count = 0

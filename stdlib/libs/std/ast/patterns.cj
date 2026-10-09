@@ -63,11 +63,7 @@ public class ConstPattern <: Pattern {
                 case None => throw ASTException("Cannot construct the 'ConstPattern' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'ConstPattern' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'ConstPattern' node.")
         }
     }
     public init() {}
@@ -110,7 +106,7 @@ public class ConstPattern <: Pattern {
 public class WildcardPattern <: Pattern {
     public init(keyword: Tokens) {
         if (keyword.size == 0) {
-            throw ASTException("Cannot construct the 'WildcardPattern' node. (Empty Input)")
+            throw ASTException("Cannot construct the 'WildcardPattern' node: input is empty.")
         }
         keyWord_ = keyword[0]
         checkTokenType(keyWord_, WILDCARD)
@@ -261,11 +257,7 @@ public class ExceptTypePattern <: Pattern {
                 case None => throw ASTException("Cannot construct the 'ExceptTypePattern' node.")
             }
         } catch (e: ParseASTException | NoneValueException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'ExceptTypePattern' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'ExceptTypePattern' node.")
         }
     }
     private var pattern_: Pattern = Pattern()
@@ -354,11 +346,7 @@ public class CommandTypePattern <: Pattern {
                 case None => throw ASTException("Cannot construct the 'CommandTypePattern' node.")
             }
         } catch (e: ParseASTException | NoneValueException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'CommandTypePattern' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'CommandTypePattern' node.")
         }
     }
     private var pattern_: Pattern = Pattern()
@@ -441,11 +429,7 @@ public class TypePattern <: Pattern {
                 case None => throw ASTException("Cannot construct the 'TypePattern' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'TypePattern' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'TypePattern' node.")
         }
     }
     private var pattern_: Pattern = Pattern()
@@ -530,11 +514,7 @@ public class EnumPattern <: Pattern {
                 case None => throw ASTException("Cannot construct the 'EnumPattern' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'EnumPattern' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'EnumPattern' node.")
         }
     }
     private var constructor_: Expr = Expr()
@@ -652,11 +632,7 @@ public class TuplePattern <: Pattern {
                 case None => throw ASTException("Cannot construct the 'TuplePattern' node.")
             }
         } catch (e: ParseASTException) {
-            if (e.message == String.empty) {
-                throw ASTException("Cannot construct the 'TuplePattern' node.")
-            } else {
-                throw ASTException(e.message)
-            }
+            throw ASTException("Cannot construct the 'TuplePattern' node.")
         }
     }
 

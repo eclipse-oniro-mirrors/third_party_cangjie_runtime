@@ -108,10 +108,10 @@ public class Random {
      */
     public func nextBits(bits: UInt64): UInt64 {
         if (bits > 64) {
-            throw IllegalArgumentException("Bits must be less than or equal to 64.")
+            throw IllegalArgumentException("Invalid argument 'bits': must be less than or equal to 64, got '${bits}'.")
         }
         if (bits == 0) {
-            throw IllegalArgumentException("Bits cannot be 0.")
+            throw IllegalArgumentException("Invalid argument 'bits': value cannot be 0.")
         }
         var y: UInt64 = 0
         if (mti >= N) {
@@ -250,7 +250,7 @@ public class Random {
      */
     public func nextUInt8(upper: UInt8): UInt8 {
         if (upper == 0) {
-            throw IllegalArgumentException("Upper must be positive, got: ${upper}.")
+            throw IllegalArgumentException("Invalid argument 'upper': must be positive, got '${upper}'.")
         }
         let threshold = UInt8.Max - (UInt8.Max % upper + 1) % upper
         var r = nextUInt8()
@@ -273,7 +273,7 @@ public class Random {
      */
     public func nextUInt16(upper: UInt16): UInt16 {
         if (upper == 0) {
-            throw IllegalArgumentException("Upper must be positive, got: ${upper}.")
+            throw IllegalArgumentException("Invalid argument 'upper': must be positive, got '${upper}'.")
         }
         let threshold = UInt16.Max - (UInt16.Max % upper + 1) % upper
         var r = nextUInt16()
@@ -296,7 +296,7 @@ public class Random {
      */
     public func nextUInt32(upper: UInt32): UInt32 {
         if (upper == 0) {
-            throw IllegalArgumentException("Upper must be positive, got: ${upper}.")
+            throw IllegalArgumentException("Invalid argument 'upper': must be positive, got '${upper}'.")
         }
         let threshold = UInt32.Max - (UInt32.Max % upper + 1) % upper
         var r = nextUInt32()
@@ -319,7 +319,7 @@ public class Random {
      */
     public func nextUInt64(upper: UInt64): UInt64 {
         if (upper == 0) {
-            throw IllegalArgumentException("Upper must be positive, got: ${upper}.")
+            throw IllegalArgumentException("Invalid argument 'upper': must be positive, got '${upper}'.")
         }
         let threshold = UInt64.Max - (UInt64.Max % upper + 1) % upper
         var r = nextUInt64()
@@ -342,7 +342,7 @@ public class Random {
      */
     public func nextInt8(upper: Int8): Int8 {
         if (upper <= 0) {
-            throw IllegalArgumentException("Upper must be positive, got: ${upper}.")
+            throw IllegalArgumentException("Invalid argument 'upper': must be positive, got '${upper}'.")
         }
         let threshold = Int8.Max - (Int8.Max % upper + 1) % upper
         var next = nextInt8()
@@ -365,7 +365,7 @@ public class Random {
      */
     public func nextInt16(upper: Int16): Int16 {
         if (upper <= 0) {
-            throw IllegalArgumentException("Upper must be positive, got: ${upper}.")
+            throw IllegalArgumentException("Invalid argument 'upper': must be positive, got '${upper}'.")
         }
         let threshold = Int16.Max - (Int16.Max % upper + 1) % upper
         var next = nextInt16()
@@ -388,7 +388,7 @@ public class Random {
      */
     public func nextInt32(upper: Int32): Int32 {
         if (upper <= 0) {
-            throw IllegalArgumentException("Upper must be positive, got: ${upper}.")
+            throw IllegalArgumentException("Invalid argument 'upper': must be positive, got '${upper}'.")
         }
         let threshold = Int32.Max - (Int32.Max % upper + 1) % upper
         var next = nextInt32()
@@ -411,7 +411,7 @@ public class Random {
      */
     public func nextInt64(upper: Int64): Int64 {
         if (upper <= 0) {
-            throw IllegalArgumentException("Upper must be positive, got: ${upper}.")
+            throw IllegalArgumentException("Invalid argument 'upper': must be positive, got '${upper}'.")
         }
         let threshold = Int64.Max - (Int64.Max % upper + 1) % upper
         var next = nextInt64()
@@ -450,7 +450,7 @@ public class Random {
      */
     public func nextBytes(length: Int32): Array<Byte> {
         if (length <= 0) {
-            throw IllegalArgumentException("Length must be positive.")
+            throw IllegalArgumentException("Invalid argument 'length': must be positive, got '${length}'.")
         }
         return Array<Byte>(Int64(length), {_ => this.nextUInt8()})
     }

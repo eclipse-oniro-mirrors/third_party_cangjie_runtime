@@ -18,7 +18,7 @@ public class Monitor <: ReentrantMutex {
     public init() {
         var isNull = unsafe { monitorInit(this) }
         if (isNull) {
-            throw IllegalSynchronizationStateException("Initialization failed.")
+            throw IllegalSynchronizationStateException("Failed to initialize monitor.")
         }
     }
 
@@ -26,7 +26,7 @@ public class Monitor <: ReentrantMutex {
         super(mutex)
         let isNull = unsafe { monitorInit(this) }
         if (isNull) {
-            throw IllegalSynchronizationStateException("Initialization failed.")
+            throw IllegalSynchronizationStateException("Failed to initialize monitor.")
         }
     }
 
@@ -40,7 +40,7 @@ public class Monitor <: ReentrantMutex {
     public func wait(timeout!: Duration = Duration.Max): Bool {
         checkMutexStatus()
         if (timeout <= Duration.Zero) {
-            throw IllegalArgumentException("Timeout cannot be less than or equal to `Duration.Zero`.")
+            throw IllegalArgumentException("Invalid argument 'timeout': must be positive, got '${timeout}'.")
         }
         let timeoutNanos = if (timeout > MAX_TIMEOUT_DURATION) {
             MAX_TIMEOUT_NS
@@ -88,7 +88,7 @@ class WaitQueue {
     init() {
         var isNull = unsafe { waitQueueInit(this) }
         if (isNull) {
-            throw IllegalSynchronizationStateException("Initialization failed.")
+            throw IllegalSynchronizationStateException("Failed to initialize WaitQueue.")
         }
     }
 }
@@ -119,11 +119,11 @@ public class MultiConditionMonitor <: ReentrantMutex {
      */
     public func wait(condID: ConditionID, timeout!: Duration = Duration.Max): Bool {
         if (!refEq(this, condID.monitor)) {
-            throw IllegalSynchronizationStateException("Invalid condition.")
+            throw IllegalSynchronizationStateException("Invalid condition: not created by this monitor.")
         }
         checkMutexStatus()
         if (timeout <= Duration.Zero) {
-            throw IllegalArgumentException("Timeout cannot be less than or equal to `Duration.Zero`.")
+            throw IllegalArgumentException("Invalid argument 'timeout': must be positive, got '${timeout}'.")
         }
         let timeoutNanos = if (timeout > MAX_TIMEOUT_DURATION) {
             MAX_TIMEOUT_NS
@@ -140,7 +140,7 @@ public class MultiConditionMonitor <: ReentrantMutex {
      */
     public func notify(condID: ConditionID): Unit {
         if (!refEq(this, condID.monitor)) {
-            throw IllegalSynchronizationStateException("Invalid condition.")
+            throw IllegalSynchronizationStateException("Invalid condition: not created by this monitor.")
         }
         checkMutexStatus()
         unsafe {
@@ -155,7 +155,7 @@ public class MultiConditionMonitor <: ReentrantMutex {
      */
     public func notifyAll(condID: ConditionID): Unit {
         if (!refEq(this, condID.monitor)) {
-            throw IllegalSynchronizationStateException("Invalid condition.")
+            throw IllegalSynchronizationStateException("Invalid condition: not created by this monitor.")
         }
         checkMutexStatus()
         unsafe {

@@ -57,20 +57,20 @@ class TypeTemplateParser {
             let tt = templates[i]
             let template = TypeTemplate.get(tt)
             if (template._info.isNull() || data.size <= i) {
-                throw InfoNotFoundException("TypeInfo `${string}` not found.")
+                throw InfoNotFoundException("TypeInfo '${string}' not found.")
             }
             let genericParams = ArrayList<CPointer<Unit>>(data[i].size) {
                 j =>
                     let typeStr = data[i][j]
                     if (typeStr.contains("<")) {
-                        map.get(typeStr) ?? throw InfoNotFoundException("TypeInfo `${typeStr}` not found.")
+                        map.get(typeStr) ?? throw InfoNotFoundException("TypeInfo '${typeStr}' not found.")
                     } else {
                         TypeInfo.get(typeStr)._info
                     }
             }
             let info = getOrCreateTypeInfoForReflect(template.info, genericParams.toArray())
             if (info.isNull()) {
-                throw InfoNotFoundException("Cannot find ${tt}.")
+                throw InfoNotFoundException("Cannot find '${tt}'.")
             }
             let qualifiedName = tt + "<" + String.join(data[i].toArray(), delimiter: ",") + ">"
             map.add(qualifiedName, info)
@@ -79,7 +79,7 @@ class TypeTemplateParser {
                 return TypeInfo.getOrCreate(info)
             }
         }
-        throw InfoNotFoundException("Cannot find ${name.toString()}.")
+        throw InfoNotFoundException("Cannot find '${name}'.")
     }
 
     func parseGenericString(name: Array<Byte>, begin: Int64, end: Int64, templateName: String): Int64 {
@@ -166,7 +166,7 @@ sealed abstract class TypeInfo <: Equatable<TypeInfo> & Hashable & ToString {
      */
     @Deprecated[message: "Use 'ClassTypeInfo.of(Object)' instead."]
     public static func of(a: Object): ClassTypeInfo {
-        (getOrCreate(getObjClass(a)) as ClassTypeInfo) ?? throw InfoNotFoundException("TypeInfo not found!")
+        (getOrCreate(getObjClass(a)) as ClassTypeInfo) ?? throw InfoNotFoundException("TypeInfo not found.")
     }
 
     /**
@@ -331,7 +331,7 @@ sealed abstract class TypeInfo <: Equatable<TypeInfo> & Hashable & ToString {
 
     static func getOrCreate(typeInfoPointer: CPointer<Unit>): TypeInfo {
         if (typeInfoPointer.isNull()) {
-            throw InfoNotFoundException("TypeInfo not found!")
+            throw InfoNotFoundException("Failed to get TypeInfo from pointer.")
         }
         let isGenericTypeInfo: Bool = isGeneric(typeInfoPointer)
         synchronized(TYPE_INFO_CREATE_LOCK) {
@@ -352,7 +352,7 @@ sealed abstract class TypeInfo <: Equatable<TypeInfo> & Hashable & ToString {
 
     static func createGenericTypeInfo(typeInfoPointer: CPointer<Unit>, qualifiedName: String): TypeInfo {
         if (qualifiedName.isEmpty()) {
-            throw ReflectException("Unexpected empty qualifiedName.")
+            throw ReflectException("Unexpected empty 'qualifiedName'.")
         }
         let typeInfo = GenericTypeInfo(typeInfoPointer)
         CACHE.add(qualifiedName, typeInfo)
@@ -376,7 +376,7 @@ sealed abstract class TypeInfo <: Equatable<TypeInfo> & Hashable & ToString {
         } else if (isTuple(typeInfoPointer)) {
             TupleTypeInfo(typeInfoPointer)
         } else {
-            throw ReflectException("Type \"${qualifiedName}\" is not supported.")
+            throw ReflectException("Type '${qualifiedName}' is not supported.")
         }
     }
 
@@ -391,13 +391,13 @@ sealed abstract class TypeInfo <: Equatable<TypeInfo> & Hashable & ToString {
         } else if (isStruct(typeInfoPointer)) {
             StructTypeInfo(typeInfoPointer)
         } else {
-            throw ReflectException("Type \"${qualifiedName}\" is not supported.")
+            throw ReflectException("Type '${qualifiedName}' is not supported.")
         }
     }
 
     static func createConcreteTypeInfo(typeInfoPointer: CPointer<Unit>, qualifiedName: String, uuid!: ?String = None): TypeInfo {
         if (qualifiedName.isEmpty()) {
-            throw ReflectException("Unexpected empty qualifiedName.")
+            throw ReflectException("Unexpected empty 'qualifiedName'.")
         }
 
         let typeInfo = TypeInfo.getTypeInfoByPointer(typeInfoPointer, qualifiedName)
@@ -558,7 +558,7 @@ sealed abstract class TypeInfo <: Equatable<TypeInfo> & Hashable & ToString {
                         }
                         interfaceList.add(
                             (getOrCreate(pointer) as InterfaceTypeInfo) ?? throw MisMatchException(
-                                "Super interface info of '${qualifiedName}' can not cast to InterfaceTypeInfo."))
+                                "Super interface info of '${qualifiedName}' is not an InterfaceTypeInfo."))
                     }
                     let anyType = (TypeInfo.of<Any>() as InterfaceTypeInfo).getOrThrow()
                     var hasAny = false
@@ -702,12 +702,12 @@ sealed abstract class TypeInfo <: Equatable<TypeInfo> & Hashable & ToString {
             let pointer = getInstanceMethodInfo(_info, UInt32(index))
             if (pointer.isNull()) {
                 throw InfoNotFoundException(
-                    "Failed to get instance functions for type `${qualifiedName}`: method info at index ${index} is null.")
+                    "Failed to get instance functions for type '${qualifiedName}': method info at index ${index} is null.")
             }
             let name = getFuncName(pointer)
             if (name.isEmpty()) {
                 throw ReflectException(
-                    "Unexpected empty instance function name for type `${qualifiedName}` at index ${index}.")
+                    "Unexpected empty instance function name for type '${qualifiedName}' at index ${index}.")
             }
             // prop func starts with $
             // need filter $toAny , which is generated by compiler
@@ -753,12 +753,12 @@ sealed abstract class TypeInfo <: Equatable<TypeInfo> & Hashable & ToString {
             let pointer = getStaticMethodInfo(_info, UInt32(index))
             if (pointer.isNull()) {
                 throw InfoNotFoundException(
-                    "Failed to get static functions for type `${qualifiedName}`: method info at index ${index} is null.")
+                    "Failed to get static functions for type '${qualifiedName}': method info at index ${index} is null.")
             }
             let name = getFuncName(pointer)
             if (name.isEmpty()) {
                 throw ReflectException(
-                    "Unexpected empty static function name for type `${qualifiedName}` at index ${index}.")
+                    "Unexpected empty static function name for type '${qualifiedName}' at index ${index}.")
             }
             // prop func starts with $
             if (name.startsWith("$")) {

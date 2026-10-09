@@ -80,7 +80,7 @@ function(add_cangjie_library target_name)
         IS_JS_BACKEND
         DISABLE_REFLECTION
         NO_SUB_PKG
-        NO_SANCOV)
+        NO_INSTALL)
     set(one_value_args
         OUTPUT_NAME
         OUTPUT_DIR
@@ -369,6 +369,9 @@ function(add_cangjie_library target_name)
 
     if(generate_lto_bc)
         list(APPEND install_files ${output_lto_bc_full_name})
+    endif()
+    if(CANGJIELIB_NO_INSTALL)
+        return()
     endif()
     if(CANGJIE_CODEGEN_CJNATIVE_BACKEND)
         install(FILES ${install_files} DESTINATION ${output_dir})

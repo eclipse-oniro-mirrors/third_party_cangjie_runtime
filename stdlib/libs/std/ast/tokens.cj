@@ -11,6 +11,7 @@
 package std.ast
 
 import std.collection.ArrayList
+import flatbuffers.*
 
 public class TokensIterator <: Iterator<Token> {
     /* Fields */
@@ -149,7 +150,7 @@ public open class Tokens <: ToString & Iterable<Token> & ToBytes {
     /** Returns the token from the index, if the index is out of bound or its element is null then throws IndexOutOfBoundsException. */
     public open func get(index: Int64): Token {
         if (index < 0 || index >= tokens.size) {
-            throw IndexOutOfBoundsException("index is ${index} but the size of tokens is ${tokens.size}")
+            throw IndexOutOfBoundsException("Index '${index}' is out of bounds: tokens size is '${tokens.size}'.")
         }
         return tokens[index]
     }
@@ -241,7 +242,7 @@ public open class Tokens <: ToString & Iterable<Token> & ToBytes {
         var spaceFlag: CPointer<Bool> = unsafe { LibC.malloc<Bool>(count: size) }
         if (spaceFlag.isNull()) {
             unsafe { LibC.free(tokBytes) }
-            throw IllegalMemoryException("malloc failed!")
+            throw IllegalMemoryException("Failed to allocate memory in 'Tokens.toString()'.")
         }
         unsafe { CJ_CheckAddSpace(tokBytes, spaceFlag) }
         var toStr: String = ""
@@ -392,7 +393,7 @@ class ConcatTokens <: Tokens {
     /** Returns the token from the index, if the index is out of bound or its element is null then throws IndexOutOfBoundsException. */
     public override func get(index: Int64): Token {
         if (index < 0 || index >= size) {
-            throw IndexOutOfBoundsException("index is ${index} but the size of tokens is ${size}")
+            throw IndexOutOfBoundsException("Index '${index}' is out of bounds: size is '${size}'.")
         }
         let leftChildSize = leftChild.size
         if (index < leftChildSize) {
@@ -408,7 +409,7 @@ class ConcatTokens <: Tokens {
      */
     public operator func [](range: Range<Int64>): Tokens {
         if (range.step != 1) {
-            throw IllegalArgumentException("Illegal step ${range.step}, step should be 1")
+            throw IllegalArgumentException("Illegal step '${range.step}': step must be 1.")
         }
 
         let start = if (range.hasStart) {
@@ -429,7 +430,7 @@ class ConcatTokens <: Tokens {
 
         if (start < 0 || end < start || end > size) {
             throw IndexOutOfBoundsException(
-                "The length of the array is ${size}, but the actual range is [${start}, ${end}).")
+                "The length of the array is '${size}', but the actual range is [${start}, ${end}).")
         }
 
         let leftChildSize = leftChild.size

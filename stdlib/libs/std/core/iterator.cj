@@ -115,7 +115,7 @@ class StepIterator<T> <: Iterator<T> {
      */
     init(it: Iterator<T>, count: Int64) {
         if (count <= 0) {
-            throw IllegalArgumentException("Step count must be greater than 0!")
+            throw IllegalArgumentException("Invalid argument 'count': expected a positive value, got '${count}'.")
         }
         this.it = it
         this._count = count
@@ -154,7 +154,7 @@ class SkipIterator<T> <: Iterator<T> {
      */
     init(it: Iterator<T>, count: Int64) {
         if (count < 0) {
-            throw IllegalArgumentException("Skip count cannot less than 0!")
+            throw IllegalArgumentException("Invalid argument 'count': expected a non-negative value, got '${count}'.")
         }
         this.it = it
         this._count = count
@@ -199,7 +199,7 @@ class TakeIterator<T> <: Iterator<T> {
      */
     init(it: Iterator<T>, count: Int64) {
         if (count < 0) {
-            throw IllegalArgumentException("Take count cannot less than 0!")
+            throw IllegalArgumentException("Invalid argument 'count': expected a non-negative value, got '${count}'.")
         }
         this.it = it
         this._count = count
