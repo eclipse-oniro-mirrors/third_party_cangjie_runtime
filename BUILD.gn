@@ -22,7 +22,6 @@ template("cangjie_prebuilts") {
                            "prebuilt_libs",
                            "special_libs",
                            "runtime_libs",
-                           "fullname_prebuilt_libs",
                          ])
   foreach(lib_name, prebuilt_libs) {
     ohos_prebuilt_shared_library("lib${lib_name}") {
@@ -63,21 +62,6 @@ template("cangjie_prebuilts") {
     }
     _deps += [ ":lib${lib_name}" ]
   }
-
-  foreach(full_lib, fullname_prebuilt_libs) {
-    ohos_prebuilt_shared_library(full_lib.name) {
-      source = "${prebuilt_libs_path}/${full_lib.name}"
-      enable_strip = true
-      install_enable = true
-      part_name = "cangjie_runtime"
-      subsystem_name = "thirdparty"
-      relative_install_dir = "platformsdk"
-      symlink_target_name = full_lib.symlink_target_name
-      install_images = [ "system" ]
-    }
-    _deps += [ ":${full_lib.name}" ]
-  }
-
   group(target_name) {
     deps = _deps
   }
@@ -123,11 +107,5 @@ cangjie_prebuilts("cangjie_prebuilts_package") {
   runtime_libs = [
     "cangjie-runtime",
     "boundscheck",
-  ]
-  fullname_prebuilt_libs = [
-    {
-      name = "libpcre2-8.so.0.14.0"
-      symlink_target_name = [ "libpcre2-8.so.0" ]
-    },
   ]
 }
