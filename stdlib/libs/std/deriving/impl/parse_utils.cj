@@ -44,7 +44,7 @@ class PushbackTokensIterator {
 
     func pushback(): Unit {
         if (index <= 0) {
-            throw IllegalStateException("Iterator is already at the beginning")
+            throw IllegalStateException("Iterator is already at the beginning.")
         }
         index--
     }
@@ -67,7 +67,8 @@ class PushbackTokensIterator {
 
     unsafe func rewindTo(index: Int64) {
         if (index < 0 || index >= tokens.size) {
-            throw IndexOutOfBoundsException()
+            throw IndexOutOfBoundsException(
+                "Index '${index}' is out of bounds, current tokens size is '${tokens.size}'.")
         }
         this.index = index
     }
@@ -80,7 +81,8 @@ class PushbackTokensIterator {
 struct Mark {
     Mark(let markedAt: Int64) {
         if (markedAt < 0) {
-            throw IllegalArgumentException("Mark position shouldn't be negative")
+            throw IllegalArgumentException(
+                "Argument 'markedAt' cannot be negative, got '${markedAt}'.")
         }
     }
 }

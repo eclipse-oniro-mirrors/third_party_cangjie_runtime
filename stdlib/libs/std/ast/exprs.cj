@@ -2743,6 +2743,7 @@ public class ForInExpr <: Expr {
             where_
         }
         set(v) {
+            checkTokenType(v, WHERE)
             where_ = v
         }
     }

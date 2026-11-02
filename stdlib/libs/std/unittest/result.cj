@@ -33,7 +33,7 @@ interface Result <: Serializable<Result> {
                 suite.doSerialize().add(field<String>("kind", "suite"))
             case group: TestGroupResult =>
                 group.doSerialize().add(field<String>("kind", "group"))
-            case _ => throw Exception("Required due to bug in compiler")
+            case _ => throw Exception("Unreachable.")
         }
     }
 
@@ -45,7 +45,7 @@ interface Result <: Serializable<Result> {
             case "case" => TestCaseResult.doDeserialize(dms)
             case "suite" => TestSuiteResult.doDeserialize(dms)
             case "group" => TestGroupResult.doDeserialize(dms)
-            case _ => throw Exception("invalid kind ${kind}")
+            case _ => throw Exception("Expected serialized Result, got 'kind' = '${kind}'.")
         }
     }
 
@@ -65,7 +65,7 @@ abstract class ResultContainer<T> <: Result where T <: Result {
         if (!finished) {
             subResults.add(child)
         } else {
-            throw IllegalStateException("Should only be called while collecting results")
+            throw IllegalStateException("Function 'add' should only be called while collecting results.")
         }
     }
 
@@ -85,7 +85,7 @@ abstract class ResultContainer<T> <: Result where T <: Result {
             if (_detailsComputed) { return _details }
 
             if (!finished) {
-                throw IllegalStateException("Should be called only after test execution is finished.")
+                throw IllegalStateException("Property 'details' should be called only after test execution is finished.")
             }
 
             visitChildren { child =>
@@ -277,7 +277,7 @@ class TestCaseResult <: ResultContainer<RunStepResult> {
         let steps = if (let Test(steps) <- first.info) {
             steps
         } else {
-            throw IllegalStateException("Unreachable")
+            throw IllegalStateException("Unreachable.")
         }
         let newResult = RunStepResult(
             first.checksPassed + next.checksPassed,
@@ -370,7 +370,7 @@ enum GroupResultPart <: Result {
 
     public func walk(visitor: (Result) -> Unit): Unit {
         match (this) {
-            case SuiteResult(suiteResult) => 
+            case SuiteResult(suiteResult) =>
                 suiteResult.walk(visitor)
             case ProcessError(processError) =>
                 processError.walk(visitor)
@@ -386,9 +386,9 @@ enum GroupResultPart <: Result {
     public prop details: Details {
         get() {
             match (this) {
-                case SuiteResult(suiteResult) => 
+                case SuiteResult(suiteResult) =>
                     suiteResult.details
-                case ProcessError(processError) => 
+                case ProcessError(processError) =>
                     processError.details
             }
         }
@@ -449,14 +449,14 @@ class TestGroupResult <: ResultContainer<GroupResultPart> {
 
     func add(testSuite: Result): Unit {
         match (testSuite) {
-            case suiteResultPart: TestSuiteResult => 
+            case suiteResultPart: TestSuiteResult =>
                 let resultPart = GroupResultPart.SuiteResult(suiteResultPart)
                 this.add(resultPart)
-            case processErrorPart: TestProcessError => 
+            case processErrorPart: TestProcessError =>
                 let resultPart = GroupResultPart.ProcessError(processErrorPart)
                 this.add(resultPart)
             case _ => throw Exception(
-                "Internal error: expected TestSuiteResult or TestProcessError but got another type")
+                "Expected TestSuiteResult or TestProcessError.")
         }
     }
 }

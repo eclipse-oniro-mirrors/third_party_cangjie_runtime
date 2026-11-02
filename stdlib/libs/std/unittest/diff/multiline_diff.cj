@@ -179,7 +179,7 @@ class MultilineDiffBuilder {
                 }
             }
         }
-        throw Exception("Could not find edit script")
+        throw Exception("Internal error. Could not build edit script.")
     }
 
     private static func computeEditScriptMoveDiag(

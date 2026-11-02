@@ -6,9 +6,19 @@
 
 // The Cangjie API is in Beta. For details on its capabilities and limitations, please refer to the README file.
 
+#ifndef MRT_RSET_TYPES_H
+#define MRT_RSET_TYPES_H
 
-#ifndef MRT_ROUTE_INFO_H
-#define MRT_ROUTE_INFO_H
+#include <cstddef>
+#include <cstdint>
+#include <unordered_set>
+
 namespace MapleRuntime {
+
+class RegionInfo;
+
+using RSetRegions = std::unordered_set<RegionInfo*>;
+
 } // namespace MapleRuntime
-#endif // MRT_ROUTE_INFO_H
+
+#endif // MRT_RSET_TYPES_H

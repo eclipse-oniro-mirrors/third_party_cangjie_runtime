@@ -85,7 +85,7 @@ class Framework {
     private func leaveContext(leavingContext: RunContext) {
         synchronized(mtx) {
             if (!refEq(currentlyRunning, leavingContext)) {
-                throw AssertException("Invalid context structure")
+                throw AssertException("Invalid context structure.")
             }
             currentlyRunning = internalContext
         }
@@ -208,7 +208,7 @@ class Framework {
 
         match (channel.receive(limit: 1).next()) {
             case Some(ExecutionPermitPart) => ()
-            case _ => throw Exception("Expected execution permission from the Main process")
+            case _ => throw Exception("Expected execution permission from the main process.")
         }
     }
 

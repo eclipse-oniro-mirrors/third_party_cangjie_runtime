@@ -9,9 +9,11 @@
 set(SRC_LIST
     "Allocator.cpp"
     "MemMap.cpp"
+    "RegionFreeSlotList.cpp"
     "RegionSpace.cpp"
     "RegionManager.cpp"
     "CartesianTree.cpp"
+    "MixedRegionSpace/MixedRegionManager.cpp"
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)

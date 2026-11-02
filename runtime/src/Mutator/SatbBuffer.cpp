@@ -9,6 +9,7 @@
 
 #include "SatbBuffer.h"
 #include "Heap/Allocator/RegionSpace.h"
+#include "Heap/Heap.h"
 
 #include "Base/ImmortalWrapper.h"
 
@@ -19,7 +20,7 @@ SatbBuffer& SatbBuffer::Instance() noexcept { return *g_instance; }
 
 bool SatbBuffer::ShouldEnqueue(const BaseObject* obj)
 {
-    if (UNLIKELY(obj == nullptr)) {
+    if (!Heap::GetHeap().GetCollector().IsTargetAddress(obj)) {
         return false;
     }
     return RegionSpace::ShouldEnqueue(obj);

@@ -33,7 +33,7 @@ func destructEnumCase(enumCase: TargetEnumCase, prefix: String): Tokens {
 func enumFallback(target: DerivingTarget): Tokens {
     match (isEnumHasEllipsis(target)) {
         case true => quote(
-            case _ => throw Exception("Should never happen")
+            case _ => throw Exception("Unreachable.")
         )
         case _ => quote()
     }
@@ -45,4 +45,3 @@ func isEnumHasEllipsis(target: DerivingTarget): Bool {
         case _ => false
     }
 }
-

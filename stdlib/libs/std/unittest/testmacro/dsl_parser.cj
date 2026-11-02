@@ -75,7 +75,7 @@ class DSLParser {
     func expectToken(kind: TokenKind): Token {
         if (currentToken.kind != kind) {
             throw MacroException(
-                "Expected ${kind} at index ${inputIndex}, got `${currentToken.value}` of kind ${currentToken.kind}"
+                "Expected ${kind} at index ${inputIndex}, got `${currentToken.value}` of kind ${currentToken.kind}."
             )
         } else {
             let result = currentToken
@@ -142,7 +142,7 @@ class DSLParser {
                     match ((top, opposite(currentToken.kind))) {
                         case (Some(a), Some(b)) where a == b => ()
                         case _ =>
-                            throw MacroException("Incorrect token sequence: ${tb.toTokens()} ${currentToken.value}")
+                            throw MacroException("Incorrect token sequence: ${tb.toTokens()} ${currentToken.value}.")
                     }
                     if (stack.size == 0) {
                         tb.append(currentToken)
@@ -160,7 +160,7 @@ class DSLParser {
         }
         // if we reached end and stack is not empty, we have unbalanced input
         if (stack.size != 0) {
-            throw MacroException("Incorrect token sequence: ${tb.toTokens()}")
+            throw MacroException("Incorrect token sequence: ${tb.toTokens()}.")
         }
         return tb.toTokens()
     }
