@@ -46,7 +46,7 @@ func fillTimeoutKey(configuration: Configuration): Unit {
             throw UnittestCliOptionsFormatException(
                 OP_TIMEOUT_EACH,
                 actual: timeout,
-                expected: "NUMBER(millis|s|m|h) format is expected. Example: 3s."
+                expected: "Expected format: NUMBER(millis|s|m|h) (example: '3s')"
             )
         }
     }
@@ -60,7 +60,7 @@ private func parseTimeout(raw: String): ?Duration {
             case "s" => Duration.second
             case "m" => Duration.minute
             case "h" => Duration.hour
-            case _ => throw Exception("unreachable")
+            case _ => throw Exception("Unreachable.")
         }
         duration * value
     } else {

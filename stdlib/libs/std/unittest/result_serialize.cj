@@ -31,7 +31,7 @@ extend LStep <: Serializable<LStep> {
             case 1 => BeforeEach
             case 2 => AfterEach
             case 3 => AfterAll
-            case _ => throw Exception("invalid data")
+            case _ => throw Exception("Expected serialized LStep.")
         }
     }
 }
@@ -75,7 +75,7 @@ extend StepKind <: Serializable<StepKind> {
         if (let Some(_) <- dms.tryGet("noRun")) {
             return NoRun
         }
-        throw Exception("invalid serialize step kind")
+        throw Exception("Expected serialized StepKind.")
     }
 }
 
@@ -104,7 +104,7 @@ extend StepInfo <: Serializable<StepInfo> {
             return Failure(Array<CheckResult>.deserialize(failure))
         }
 
-        throw Exception("invalid serialize step kind")
+        throw Exception("Expected serialized StepInfo.")
     }
 }
 
@@ -264,7 +264,7 @@ struct End <: Serializable<End> {
         if (dm is DataModelNull) {
             End()
         } else {
-            throw Exception("invalid json")
+            throw Exception("Expected DataModelNull.")
         }
     }
 }
@@ -313,7 +313,7 @@ func collToHlist3<A,B,C>(col: Collection<(A, B, C)>): HListOfTuples<A, HListOfTu
     let end = Array(data.size) { i =>
         data[i][2]
     }
-    HListOfTuples(left, HListOfTuples(right, HListOfTuples(end, End())))       
+    HListOfTuples(left, HListOfTuples(right, HListOfTuples(end, End())))
 }
 
 func hlistToColl2<A,B>(hlist: HListOfTuples<A, HListOfTuples<B, End>>): Array<(A, B)> {

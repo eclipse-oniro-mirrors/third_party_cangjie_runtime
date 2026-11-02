@@ -90,7 +90,7 @@ struct WarmupInfo {
     private mut func finishWarmup() {
         overallAllocated = memory() - overallAllocated
         gcCount = getGCCount() - gcCount
-    
+
         estimation = ema.result
 
         overallAllocated -= batchMemoryOverhead * Float64(executedBatches * 3) // there are three calls for each batch
@@ -121,7 +121,7 @@ struct WarmupInfo {
             n = n * 12 / 10 + 1  // ~20% increase
 
             if (let Auto <- warmupGC && aggregateTime > Float64(warmupTime.toNanoseconds()) / 2.0) {
-                // select GC strategy for second half of warmup, 
+                // select GC strategy for second half of warmup,
                 // based on information of the first half
                 chooseWarmupGC()
             }
@@ -200,7 +200,7 @@ class BenchRunner {
 
     // whether we need full gc to be invoked before next benchmark
     private static var needFullGc = true
-    
+
     private static var memoryDiff = unsafe { zeroValue<MemoryInfo>() } // prevent cyclic dependency
 
     public BenchRunner(let configuration: Configuration, let progress: ProgressOutput) {
@@ -213,11 +213,12 @@ class BenchRunner {
 
     private func warmupFixedSize(warmupCount: Int64) {
         if (warmupCount < 0 ) {
-            throw IllegalArgumentException("Number of warmup iterations must be non negative")
+            throw IllegalArgumentException("Invalid configuration value 'warmup': must be non negative, got '${warmupCount}'.")
         }
         if (warmupCount == 0) {
             if (maxMeasureBatch >= MAX_BATCH_SIZE) {
-                throw IllegalArgumentException("if 'warmup' parameter is zero then 'batchSize' must be specified")
+                throw IllegalArgumentException(
+                    "Invalid configuration values: if 'warmup' parameter is zero then 'batchSize' must be specified.")
             }
             progress.println { "    Warmup disabled." }
 
@@ -270,7 +271,7 @@ class BenchRunner {
             this.batchSize = size..=size
         }
         if (this.batchSize.end <= 0){
-            throw IllegalArgumentException("batchSize must be positive")
+            throw IllegalArgumentException("Invalid configuration value 'batchSize': maximum must be positive, got '${this.batchSize.end}'.")
         }
     }
 
@@ -281,7 +282,7 @@ class BenchRunner {
         waitGCFinish()
 
         warmupAndEstimate()
-        
+
         let gcPerInv = Float64(warmupInfo.gcCount) / Float64(warmupInfo.aggregateRuns)
 
         if (let Auto <- this.explicitGC) {
@@ -307,7 +308,8 @@ class BenchRunner {
         ensureFullGcIfNecessary()
 
         if (isRunning == true) {
-            throw IllegalStateException("It is not allowed to run benchmark inside another benchmark")
+            throw IllegalStateException("A benchmark is started while other benchmark is running in the same thread."
+                + " It is not permitted to run one benchmark inside another benchmark.")
         }
         isRunning = true
         try {
@@ -371,10 +373,10 @@ Warning: Too many objects survive GC which causes unexpectedly long GC times.
         } else {
             benchExecTime = doMicroBench(maxBatch, batchCount)
         }
-        
+
         // add some overhead calculations to collect at least some overhead statistics if not enough normal batches
         for (i in min(batchCount, 10 - this.batchSize.start * 10 / maxBatch)..10) {
-            runMultipleAndMeasure(0, maxBatch) 
+            runMultipleAndMeasure(0, maxBatch)
         }
 
         progress.println {
@@ -395,7 +397,7 @@ Warning: Too many objects survive GC which causes unexpectedly long GC times.
             runMultipleAndMeasure(maxBatch, maxBatch)
         }
         this.measurements.clear()
-        
+
         let start = DateTime.now()
         for (i in 0..batchCount/2) {
 
@@ -445,7 +447,7 @@ Warning: Too many objects survive GC which causes unexpectedly long GC times.
 
     func calcBatchSize(): (Range<Int64>, Int64) {
         let targetDurationNs = max(Float64(targetDuration.toNanoseconds()), 0.0)
-        
+
         let avgOneIterationTime = warmupInfo.avgIterTime()
 
         // how many batches if executing batches with sizes 1,2,3..N
@@ -458,7 +460,9 @@ Warning: Too many objects survive GC which causes unexpectedly long GC times.
         let avgBatchSize = if (targetDurationNs > 0.0) {
             targetDurationNs / avgOneIterationTime / batches
         } else if (this.batchSize.end >= MAX_BATCH_SIZE) {
-            throw IllegalArgumentException("if 'minDuration' parameter is zero then 'batchSize' must be specified")
+            throw IllegalArgumentException(
+                "Invalid configuration values: if 'minDuration' parameter is zero"
+                + " then 'batchSize' parameter must be specified.")
         } else {
             Float64(this.batchSize.end) / 2.0
         }
@@ -475,7 +479,7 @@ Warning: Too many objects survive GC which causes unexpectedly long GC times.
 
     private func runMultipleAndMeasure(t: Int64, max: Int64) {
         var times = min(t.ceilTo(maxMeasureBatch), max) // to fix rounding errors
-    
+
         let gcCount = getGCCount()
         let dur = benchmark.measureLoopOnce(times, max, this.batchSize.end)
         waitGCFinish()
@@ -494,7 +498,7 @@ Warning: Too many objects survive GC which causes unexpectedly long GC times.
 
 extend Int64 {
     func ceilTo(target: Int64): Int64 {
-        Int64(ceil(Float64(this) / Float64(target)) * Float64(target)) 
+        Int64(ceil(Float64(this) / Float64(target)) * Float64(target))
     }
 }
 
@@ -538,7 +542,7 @@ public enum ExplicitGcType <: ToString {
      */
     | Disabled
     /**
-     * runtime.gc(heavy: false) is invoked before most of measurement batches 
+     * runtime.gc(heavy: false) is invoked before most of measurement batches
      * to try to evenly distribute GC impact between batches.
      * Will *not* wait for the end of GC before starting a measurement
      */
@@ -549,7 +553,7 @@ public enum ExplicitGcType <: ToString {
      *
      * This variant produces the most stable and consistent results so it is more suitable option
      * for most common usecases of benchmarks.
-     * However it completely excludes most effects of GC so results might not 
+     * However it completely excludes most effects of GC so results might not
      * exactly represent real world performance for some allocation heavy benchmarks.
      */
     | Heavy

@@ -617,7 +617,7 @@ extend ExecutionResultPart {
                 case Lifecycle(step) => CNStep(step)
                 case _ => CaseName(b.stepResult.caseId)
             }
-            case _ => throw Exception("Unexpected branch")
+            case _ => throw Exception("Unreachable.")
         }
     }
 }
@@ -646,7 +646,7 @@ extend ExecutionResultBody {
         get() {
             (stepResult.subResults |> filter { it: RunStepResult =>
                 it.hasFailures()
-            } |> first<RunStepResult>) ?? throw Exception("There is no failed check")
+            } |> first<RunStepResult>) ?? throw Exception("Expected failed execution.")
         }
     }
 

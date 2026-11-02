@@ -25,6 +25,7 @@
 #include "Interpreter/Options.h"
 #include "Interpreter/RTInterface.h"
 #include "ObjectModel/RefField.h"
+#include "Heap/GenerationalGC/RSetTypes.h"
 
 
 namespace MapleRuntime {
@@ -255,12 +256,12 @@ public:
 
     __attribute__((always_inline)) inline uint32_t GetSuspensionFlag() const
     {
-        return suspensionFlag.load(std::memory_order_acquire);
+        return suspensionFlag.load(std::memory_order_seq_cst);
     }
 
     __attribute__((always_inline)) inline bool HasSuspensionRequest(SuspensionType flag) const
     {
-        return (suspensionFlag.load(std::memory_order_acquire) & flag) != 0;
+        return (suspensionFlag.load(std::memory_order_seq_cst) & flag) != 0;
     }
 
     // should be merged to SuspensionType.
@@ -275,7 +276,7 @@ public:
     // Check whether current mutator needs to be suspended for GC or other request
     __attribute__((always_inline)) inline bool HasAnySuspensionRequest() const
     {
-        return (suspensionFlag.load(std::memory_order_acquire) != 0) || HasPreemptRequest();
+        return (suspensionFlag.load(std::memory_order_seq_cst) != 0) || HasPreemptRequest();
     }
 
     void SetSafepointStatePtr(uint64_t* slot) { safepointStatePtr = slot; }
@@ -558,6 +559,10 @@ private:
 
     ManagedList<BaseObject*> localFinalizers;
 
+    RSetRegions localRSetRegions;
+public:
+    void RecordLocalRSetSlot(RegionInfo* source, uintptr_t slotAddr);
+private:
     SatbBuffer::Node* satbNode = nullptr;
 #if defined(GCINFO_DEBUG) && GCINFO_DEBUG
     GCInfos gcInfos;

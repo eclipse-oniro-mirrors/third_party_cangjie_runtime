@@ -35,7 +35,7 @@ func expandStrategy(attr: Tokens, input: Tokens): Tokens {
     let strategies = ArrayList(parseDSLMacro(attr))
     let builder = TokensBuilder()
 
-    let funcItem = parseDecl(input) as FuncDecl ?? throw MacroException("@Strategy macro must be placed on a function")
+    let funcItem = parseDecl(input) as FuncDecl ?? throw MacroException("@Strategy macro must be placed on a function.")
     checkFunc(funcItem)
 
     let modifiers = funcItem.modifiers
@@ -79,7 +79,7 @@ func expandStrategy(attr: Tokens, input: Tokens): Tokens {
 
 private func checkFunc(funcItem: FuncDecl) {
     if (let Some(key) <- MacroStorage.loadAllAttrs(funcItem).keys().iterator().next()) {
-        throw MacroException("@Strategy macro can't be used together with ${key}")
+        throw MacroException("@Strategy macro can't be used together with ${key}.")
     }
 
     try {
@@ -92,7 +92,7 @@ private func checkFunc(funcItem: FuncDecl) {
         let kind = modifier.keyword.kind
         if (MacroKey.FORBIDDEN_MODIFIERS |> any<TokenKind> {t => t == kind}) {
             throw MacroException(
-                "Function modifier `${modifier.keyword.value}` is not allowed on @Strategy annotated function")
+                "Function modifier `${modifier.keyword.value}` is not allowed on @Strategy annotated function.")
         }
     }
 }
